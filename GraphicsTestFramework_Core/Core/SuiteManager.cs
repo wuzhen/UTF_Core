@@ -34,7 +34,7 @@ namespace GraphicsTestFramework
         public void BuildSuiteAndSceneLists()
         {
             suites.Clear();
-            GraphicsTestFramework.Suite[] allSuites = Resources.LoadAll<GraphicsTestFramework.Suite>("Suites");
+            GraphicsTestFramework.Suite[] allSuites = Resources.LoadAll<GraphicsTestFramework.Suite>("");
             List<UnityEditor.EditorBuildSettingsScene> buildSettingsScenes = new List<UnityEditor.EditorBuildSettingsScene>();
             string thisScenePath = this.gameObject.scene.path;
             buildSettingsScenes.Add(new UnityEditor.EditorBuildSettingsScene(thisScenePath, true));

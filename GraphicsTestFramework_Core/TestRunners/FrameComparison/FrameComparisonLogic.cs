@@ -138,7 +138,7 @@ namespace GraphicsTestFramework
                 else if (stateType == StateType.CreateBaseline)
                 {
                     m_TempData.DiffPercentage = 0.0f;
-                    m_TempData.comparisonFrame = "";
+                    m_TempData.comparisonFrame = "-";
                     //Destroy(rt2);
                 }
                 if (Master.Instance.debugMode == Master.DebugMode.Messages)

@@ -688,75 +688,81 @@ namespace GraphicsTestFramework
 		//Deserialize single JSON > ResultsIOData
 		ResultsIOData FromJSON (string inputData)
 		{
-			string[] separators = new string[]{ "\",\"", "\":\"" };//split by the two JSON separators
-			string[] splitData = inputData.Substring (2, inputData.Length - 5).Split (separators, System.StringSplitOptions.None);//remove curly brackets
-			ResultsIOData data = new ResultsIOData ();//new ResultsIOData
-			data.resultsRow.Add(new ResultsIORow());
+			if (inputData != null) {
+				string[] separators = new string[]{ "\",\"", "\":\"" };//split by the two JSON separators
+				string[] splitData = inputData.Substring (2, inputData.Length - 5).Split (separators, System.StringSplitOptions.None);//remove curly brackets
+				ResultsIOData data = new ResultsIOData ();//new ResultsIOData
+				data.resultsRow.Add (new ResultsIORow ());
 
-			for (int i = 0; i < splitData.Length; i ++) {
-				int cur = i;
-				//Debug.Log (cur + " data=" + splitData [cur]); - TODO remove if works
-				/*if (i == 18)//inject the common class reference point
+				for (int i = 0; i < splitData.Length; i++) {
+					int cur = i;
+					//Debug.Log (cur + " data=" + splitData [cur]); - TODO remove if works
+					/*if (i == 18)//inject the common class reference point
 				{
 					data.resultsRow [0].resultsColumn.Add ("common");
 					data.resultsRow [0].resultsColumn.Add ("GraphicsTestFramework.ResultsDataCommon");
 				}*/
 
-				data.resultsRow [0].resultsColumn.Add (splitData [cur]);
-			}
-			return data;
+					data.resultsRow [0].resultsColumn.Add (splitData [cur]);
+				}
+				return data;
+			} else
+				return null;
 		}
 
 		//Deserialize multiple JSON > ResultsIOData
 		ResultsIOData FromJSON (string[] inputData)
 		{
-			string[] separators = new string[]{ "\",\"", "\":\"" };//split by the two JSON separators
-			ResultsIOData data = new ResultsIOData ();//new ResultsIOData
+			if (inputData.Length != 0) {
+				string[] separators = new string[]{ "\",\"", "\":\"" };//split by the two JSON separators
+				ResultsIOData data = new ResultsIOData ();//new ResultsIOData
 
-			for (int a = 0; a < inputData.Length; a++) {
-				string[] splitData = inputData[a].Substring (2, inputData[a].Length - 5).Split (separators, System.StringSplitOptions.None);//remove curly brackets
-				ResultsDataCommon RDC = new ResultsDataCommon ();
-				for (int i = 0; i < splitData.Length; i++) {
-					data.resultsRow.Add(new ResultsIORow());
-					int cur = i;
-					/*if (i == 18) {//inject the common class reference point - TODO remove if works
-						data.resultsRow [i].resultsColumn.Add ("common");
-						data.resultsRow [i].resultsColumn.Add ("GraphicsTestFramework.ResultsDataCommon");
-					}*/
-					data.resultsRow [a].resultsColumn.Add (splitData [cur]);
+				for (int a = 0; a < inputData.Length; a++) {
+					string[] splitData = inputData[a].Substring (2, inputData[a].Length - 5).Split (separators, System.StringSplitOptions.None);//remove curly brackets
+					ResultsDataCommon RDC = new ResultsDataCommon ();
+					for (int i = 0; i < splitData.Length; i++) {
+						data.resultsRow.Add(new ResultsIORow());
+						int cur = i;
+						/*if (i == 18) {//inject the common class reference point - TODO remove if works
+							data.resultsRow [i].resultsColumn.Add ("common");
+							data.resultsRow [i].resultsColumn.Add ("GraphicsTestFramework.ResultsDataCommon");
+						}*/
+						data.resultsRow [a].resultsColumn.Add (splitData [cur]);
 
-					switch (i) {
-					case 1:
-						RDC.DateTime = splitData [cur];
-						break;
-					case 3:
-						RDC.UnityVersion = splitData [cur];
-						break;
-					case 5:
-						RDC.AppVersion = splitData [cur];
-						break;
-					case 7:
-						RDC.Platform = splitData [cur];
-						break;
-					case 9:
-						RDC.API = splitData [cur];
-						break;
-					case 11:
-						RDC.RenderPipe = splitData [cur];
-						break;
-					case 13:
-						RDC.SceneName = splitData [cur];
-						break;
-					case 15:
-						RDC.TestName = splitData [cur];
-						break;
-					default:
-						break;
+						switch (i) {
+						case 1:
+							RDC.DateTime = splitData [cur];
+							break;
+						case 3:
+							RDC.UnityVersion = splitData [cur];
+							break;
+						case 5:
+							RDC.AppVersion = splitData [cur];
+							break;
+						case 7:
+							RDC.Platform = splitData [cur];
+							break;
+						case 9:
+							RDC.API = splitData [cur];
+							break;
+						case 11:
+							RDC.RenderPipe = splitData [cur];
+							break;
+						case 13:
+							RDC.SceneName = splitData [cur];
+							break;
+						case 15:
+							RDC.TestName = splitData [cur];
+							break;
+						default:
+							break;
+						}
 					}
+					data.resultsRow [a].commonResultsIOData = RDC;
 				}
-				data.resultsRow [a].commonResultsIOData = RDC;
-			}
-			return data;
+				return data;
+			} else
+				return null;
 		}
 
 		//Serialize ResultsIOData > JSON
