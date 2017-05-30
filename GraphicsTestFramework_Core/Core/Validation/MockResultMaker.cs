@@ -63,9 +63,9 @@ namespace GraphicsTestFramework
 				ResultsIO.Instance.BaselineExists (testSuiteName, testBaselineFetch.RenderPipe, testType, testBaselineFetch.SceneName, testBaselineFetch.TestName);
 			}
 
-			if(Input.GetKeyUp (KeyCode.C)){
+			/*if(Input.GetKeyUp (KeyCode.C)){
 				ResultsIO.Instance.CheckWorksheet (testSuiteName);
-			}
+			}*/
 		}
 
 		ExampleLogic.ResultsData GenerateDummyData (string testName)
