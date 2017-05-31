@@ -32,7 +32,7 @@ namespace GraphicsTestFramework
 			CloudConnectorCore.processedResponseCallback.RemoveListener(ParseCloudData);
 		}
 
-		private void Start ()
+		public void Init ()
 		{
 			#if UNITY_EDITOR
 			cloudMode = true;
@@ -146,6 +146,14 @@ namespace GraphicsTestFramework
 		public void GetBaselineTimestamp(string suiteName){
 			ProgressScreen.Instance.SetState(true, ProgressType.CloudLoad, "Checking for inconsistencies with cloud data");
 			CloudConnectorCore.GetObjectsByField ("SuiteBaselineTimestamps", "suiteName", suiteName, cloudMode);
+		}
+
+		/// <summary>
+		/// Pull relevant baseline data from cloud.
+		/// </summary>
+		public void FetchCloudResults(string suiteName, string testType){
+			string tableName = suiteName + "_" + testType + "_Results";
+			CloudConnectorCore.GetTable (tableName, cloudMode);
 		}
 
 		/// ------------------------------------------------------------------------------------------------------------------------------------------------------------------------

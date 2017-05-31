@@ -23,7 +23,8 @@ public static class CloudConnectorCore
 		updateObjects,		// Updates a field in one or more object(s) specified by field.
 		updateUniqueRow,	// Updates a specific row based on set fields, make sure is unique or will fail
 		// Delete
-		deleteObjects		// Deletes object(s) specified by field.
+		deleteObjects,		// Deletes object(s) specified by field.
+		deleteTable
 	}
 	
 	public const string MSG_OBJ_CREATED_OK = "OBJ_CREATED_OK";
@@ -43,6 +44,7 @@ public static class CloudConnectorCore
 	public const string TYPE_END = "_ENDTYPE\n";
 	public const string TYPE_STRT = "TYPE_";
 	public const string MSG_BAD_PASS = "PASS_ERROR";
+	public const string MSG_TBL_DEL = "TBLS_DEL_DONE";
 	
 	static string currentStatus = "";
 
@@ -199,6 +201,22 @@ public static class CloudConnectorCore
 		
 		SendRequest(form, runtime);
 	}
+
+	/// <summary>
+	/// Retrieves from the spreadsheet an array of all the objects found in the specified table. 
+	/// Expects the table name. 
+	/// </summary>
+	/// <param name="tableTypeName">The name of the table to be retrieved.</param>
+	/// <param name="runtime">Bool value indicating if the request was sent from Unity Editor or running game.</param>
+	public static void DeleteTable(string tableTypeName, bool runtime = true)
+	{
+		isWaiting = true;
+		Dictionary<string, string> form = new Dictionary<string, string>();
+		form.Add ("action", QueryType.deleteTable.ToString ());
+		form.Add("type", tableTypeName);
+
+		SendRequest(form, runtime);
+	}
 	
 	/// <summary>
 	/// Retrieves from the spreadsheet the data from all tables, in the form of one or more array of objects. 
@@ -246,7 +264,6 @@ public static class CloudConnectorCore
 	/// </summary>
 	/// <param name="objTypeName">Name of the table to search.</param>
 	/// <param name="searchFieldNames">Name of the fields to search by.</param>
-	/// <param name="searchValues">Values to search for.</param>
 	/// <param name="jsonObject">new object to replace line with</param>
 	/// <param name="runtime">Bool value indicating if the request was sent from Unity Editor or running game.</param>
 	public static void UpdateUniqueRow( string objTypeName,
@@ -264,6 +281,34 @@ public static class CloudConnectorCore
 		for (int i = 0; i < searchFieldIndex.Length; i++)
 		{
 			form.Add("searchField" + i.ToString(), searchFieldIndex[i].ToString ());
+		}
+
+		SendRequest(form, runtime);
+	}
+
+	/// <summary>
+	/// Fetches specific rows from the sheet based on the fields sent
+	/// </summary>
+	/// <param name="objTypeName">Name of the table to search.</param>
+	/// <param name="searchFieldNames">Name of the fields to search by.</param>
+	/// <param name="searchValues">Values to match.</param>
+	/// <param name="runtime">Bool value indicating if the request was sent from Unity Editor or running game.</param>
+	public static void GetUniqueRows( string objTypeName,
+		int[] searchFieldIndex,
+		string[] searchValues,
+		bool runtime = true )
+	{
+		isWaiting = true;
+		Dictionary<string, string> form = new Dictionary<string, string>();
+		form.Add("action", QueryType.updateUniqueRow.ToString());
+		form.Add("type", objTypeName);
+		form.Add ("num", searchFieldIndex.Length.ToString ());
+
+
+		for (int i = 0; i < searchFieldIndex.Length; i++)
+		{
+			form.Add("searchField" + i.ToString(), searchFieldIndex[i].ToString ());
+			form.Add("searchValue" + i.ToString(), searchValues[i].ToString ());
 		}
 
 		SendRequest(form, runtime);
@@ -494,6 +539,10 @@ public static class CloudConnectorCore
 
 		case MSG_BASELINE_DATA:
 			logOutput = "Baseline data pulled.";
+			break;
+
+		case MSG_TBL_DEL:
+			logOutput = "Table deleted.";
 			break;
 			
 		case MSG_TBL_DATA:

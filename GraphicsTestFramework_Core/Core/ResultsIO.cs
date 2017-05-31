@@ -9,15 +9,9 @@ namespace GraphicsTestFramework
 	public class ResultsIO : MonoBehaviour
 	{
 		private static ResultsIO _Instance = null;
-		//public long spaceUsed;>>>>MOVED TO LOCAL IO
-		//private string dataPath;>>>>MOVED TO LOCAL IO
-		//private string baselinePrefix = "Baseline";>>>>MOVED TO LOCAL IO
-		//private string resultsCurrentPrefix = "ResultsCurrent";>>>>MOVED TO LOCAL IO
 		private List<string> suiteBaselinesPullList = new List<string>();
 		public bool isWaiting = false;
-
-		//cloud specific variables
-		//private bool cloudMode;>>>>>MOVED TO CLOUD IO
+		public bool companionMode = false;
 
 		//List of suiteBaselineData for suites
 		public List<SuiteBaselineData> _suiteBaselineData = new List<SuiteBaselineData>(); //TODO make private once working
@@ -30,9 +24,22 @@ namespace GraphicsTestFramework
 			}
 		}
 
-		private IEnumerator Start ()
+		private void Start ()
 		{
-            yield return new WaitForEndOfFrame(); // TODO - Refactor this
+			//setup local IO
+			if (LocalIO.Instance == null)
+				gameObject.AddComponent<LocalIO> ();
+			LocalIO.Instance.Init ();
+			//setup cloud IO
+			if (CloudIO.Instance == null)
+				gameObject.AddComponent<CloudIO> ();
+			CloudIO.Instance.Init ();
+
+			if (!companionMode)
+				StartCoroutine (Init ());
+		}
+
+		public IEnumerator Init(){
 			//Show loading screen
 			ProgressScreen.Instance.SetState(true, ProgressType.LocalLoad, "Loading local data");
 			_suiteBaselineData = LocalIO.Instance.ReadLocalBaselines ();// - TODO this needs to get called again at some point
@@ -209,6 +216,18 @@ namespace GraphicsTestFramework
 			string rawJSONdata = LocalIO.Instance.FetchDataFile (suiteName, testType, inputData, true);//fetch string from file
 			ResultsIOData data = JSONHelper.FromJSON (rawJSONdata);//take JSON convert to ResultsIOData //REORG
 			return data;
+		}
+
+		/// <summary>
+		/// Retrieves a result file.
+		/// </summary>
+		/// <returns>The result.</returns>
+		/// <param name="suiteName">Suite name.</param>
+		/// <param name="testType">Test type.</param>
+		/// <param name="inputData">Input data.</param>
+		public void RetrieveResults (string suiteName, string testType)
+		{
+			CloudIO.Instance.FetchCloudResults (suiteName, testType);
 		}
 
 		/// ------------------------------------------------------------------------------------------------------------------------------------------------------------------------

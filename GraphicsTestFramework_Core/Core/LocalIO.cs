@@ -28,7 +28,7 @@ namespace GraphicsTestFramework
 		public long spaceUsed;
 
 
-		private void Start ()
+		public void Init ()
 		{
 			#if UNITY_EDITOR
 			dataPath = (Application.dataPath).Substring (0, Application.dataPath.Length - 6) + "EditorResults";
