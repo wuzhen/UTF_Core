@@ -16,7 +16,7 @@ namespace GraphicsTestFramework
         /// ------------------------------------------------------------------------------------
         /// Logic specififc results class
 
-        ResultsData m_TempData; //Dont remove (write result data into this)
+        ResultsData m_TempData; //Dont remove or edit (write result data into this)
 
         //Structure for results (Do not rename class. Class contents can be anything)
         [System.Serializable]
@@ -30,10 +30,20 @@ namespace GraphicsTestFramework
             public string[] SomeStringArray;
 		}
 
+        // Setup the results structs every test (Dont edit)
+        public override void SetupResultsStructs()
+        {
+            ResultsData newResultsData = new ResultsData();
+            newResultsData.common = Common.GetCommonResultsData();
+            newResultsData.common.SceneName = activeTestInfo.SceneName;
+            newResultsData.common.TestName = activeTestInfo.TestName;
+            activeResultData = newResultsData;
+        }
+
         /// ------------------------------------------------------------------------------------
         /// Initial setup methods
         /// All test logic types must override these methods
-        
+
         //Set name
         public override void SetName()
         {
@@ -44,6 +54,17 @@ namespace GraphicsTestFramework
         public override void SetModel(TestModel inputModel)
         {
             model = (ExampleModel)inputModel;
+        }
+
+        //Set reference to logic script for this model
+        public override void SetDisplayType()
+        {
+            displayType = typeof(ExampleDisplay);
+        }
+
+        public override void SetDisplayObject(TestDisplayBase inputDisplay)
+        {
+            displayObject = (ExampleDisplay)inputDisplay;
         }
 
         //Set results type
@@ -139,23 +160,5 @@ namespace GraphicsTestFramework
         {
             TestViewer.Instance.SetTestViewerState(1, ViewerType.Default, null);
         }*/
-
-        /// ------------------------------------------------------------------------------------
-        /// METHODS BELOW ARE NOT CONTEXT SENSITIVE
-        /// DO NOT EDIT
-
-        /// ------------------------------------------------------------------------------------
-        /// Results
-        /// TODO - Attempt to move even more stuff from from here to the abstract class
-
-        // Setup the results structs every test
-        public override void SetupResultsStructs()
-        {
-            ResultsData newResultsData = new ResultsData();
-            newResultsData.common = Common.GetCommonResultsData();
-            newResultsData.common.SceneName = activeTestInfo.SceneName;
-            newResultsData.common.TestName = activeTestInfo.TestName;
-            activeResultData = newResultsData;
-        }
     }
 }

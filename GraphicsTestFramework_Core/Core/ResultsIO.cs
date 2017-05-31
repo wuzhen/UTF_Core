@@ -32,6 +32,7 @@ namespace GraphicsTestFramework
 
 		private IEnumerator Start ()
 		{
+            yield return new WaitForEndOfFrame(); // TODO - Refactor this
 			//Show loading screen
 			ProgressScreen.Instance.SetState(true, ProgressType.LocalLoad, "Loading local data");
 			_suiteBaselineData = LocalIO.Instance.ReadLocalBaselines ();// - TODO this needs to get called again at some point

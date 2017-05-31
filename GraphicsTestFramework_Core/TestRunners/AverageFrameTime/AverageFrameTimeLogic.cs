@@ -17,7 +17,7 @@ namespace GraphicsTestFramework
 		/// ------------------------------------------------------------------------------------
         /// Logic specififc results class
 
-        ResultsData m_TempData; //Dont remove (write result data into this)
+        ResultsData m_TempData; //Dont remove or edit (write result data into this)
 
         //Structure for results
         [System.Serializable]
@@ -27,7 +27,17 @@ namespace GraphicsTestFramework
             public float avgFrameTime;
         }
 
-		/// ------------------------------------------------------------------------------------
+        // Setup the results structs every test  (Dont edit)
+        public override void SetupResultsStructs()
+        {
+            ResultsData newResultsData = new ResultsData();
+            newResultsData.common = Common.GetCommonResultsData();
+            newResultsData.common.SceneName = activeTestInfo.SceneName;
+            newResultsData.common.TestName = activeTestInfo.TestName;
+            activeResultData = newResultsData;
+        }
+
+        /// ------------------------------------------------------------------------------------
         /// Initial setup methods
 
         // Set name
@@ -40,6 +50,17 @@ namespace GraphicsTestFramework
         public override void SetModel(TestModel inputModel)
         {
             model = (AverageFrameTimeModel)inputModel;
+        }
+
+        //Set reference to logic script for this model
+        public override void SetDisplayType()
+        {
+            displayType = typeof(AverageFrameTimeDisplay);
+        }
+
+        public override void SetDisplayObject(TestDisplayBase inputDisplay)
+        {
+            displayObject = (AverageFrameTimeDisplay)inputDisplay;
         }
 
         //Set results type
@@ -68,7 +89,7 @@ namespace GraphicsTestFramework
         public override IEnumerator ProcessResult()
         {
             m_TempData = (ResultsData)GetResultsStruct();
-			ResultsData referenceData = GenerateBaselineData(ResultsIO.Instance.RetrieveBaseline(testSuiteName, testTypeName, m_TempData.common));
+			ResultsData referenceData = (ResultsData)DeserializeResults(ResultsIO.Instance.RetrieveBaseline(testSuiteName, testTypeName, m_TempData.common));
 			for (int i = 0; i < model.settings.waitFrames; i++)
                 yield return new WaitForEndOfFrame();
             Timestamp(false);
@@ -117,66 +138,5 @@ namespace GraphicsTestFramework
 			}
 			return elapsedTime / (float)elapsedSamples;
 		}
-
-		/// ------------------------------------------------------------------------------------
-        /// METHODS BELOW ARE NOT CONTEXT SENSITIVE
-        /// DO NOT EDIT
-
-        /// ------------------------------------------------------------------------------------
-        /// Results
-        /// TODO - Attempt to move even more stuff from from here to the abstract class
-
-        // Setup the results structs every test
-        public override void SetupResultsStructs()
-        {
-            ResultsData newResultsData = new ResultsData();
-            newResultsData.common = Common.GetCommonResultsData();
-            newResultsData.common.SceneName = activeTestInfo.SceneName;
-            newResultsData.common.TestName = activeTestInfo.TestName;
-            activeResultData = newResultsData;
-        }
-
-        // Deserialize ResultsIOData(string arrays) to ResultsData(class)
-        ResultsData GenerateBaselineData(ResultsIOData resultsIOData)
-        {
-            ResultsData resultData = new ResultsData(); //blank results data
-            resultData.common = new ResultsDataCommon(); //blank common data
-
-            BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
-            FieldInfo[] commonFields = typeof(ResultsDataCommon).GetFields(bindingFlags);
-            FieldInfo[] customFields = typeof(ResultsData).GetFields(bindingFlags);
-
-            List<string> commonDataRaw = resultsIOData.resultsRow[0].resultsColumn.GetRange(0, commonFields.Length * 2);
-            List<string> resultsDataRaw = resultsIOData.resultsRow[0].resultsColumn.GetRange(commonFields.Length * 2, resultsIOData.resultsRow[0].resultsColumn.Count - (commonFields.Length * 2));
-
-            for (int f = 0; f < customFields.Length; f++)
-            {
-                if (f == 0)
-                {
-                    //do the common class
-                    for (int cf = 0; cf < commonFields.Length; cf++)
-                    {
-                        string value = commonDataRaw[(cf * 2) + 1];
-                        FieldInfo fieldInfo = resultData.common.GetType().GetField(commonFields[cf].Name);
-                        fieldInfo.SetValue(resultData.common, Convert.ChangeType(value, fieldInfo.FieldType));
-                    }
-                }
-                else
-                {
-                    var value = resultsDataRaw[(f * 2) - 1];
-                    FieldInfo fieldInfo = resultData.GetType().GetField(customFields[f].Name);
-                    if (fieldInfo.FieldType.IsArray) // This handles arrays
-                    {
-                        Type type = resultData.GetType().GetField(customFields[f].Name).FieldType.GetElementType();
-                        GenerateGenericArray(fieldInfo, resultData.GetType(), resultData, type, value);
-                    }
-                    else // Non array types
-                    {
-                        fieldInfo.SetValue(resultData, Convert.ChangeType(value, fieldInfo.FieldType));
-                    }
-                }
-            }
-            return resultData;
-        }
     }
 }

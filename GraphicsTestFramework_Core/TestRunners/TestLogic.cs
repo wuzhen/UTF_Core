@@ -21,6 +21,8 @@ namespace GraphicsTestFramework
         [HideInInspector] public string testTypeName;
 		[HideInInspector] public string testSuiteName;
         [HideInInspector] public TestList.TestInfo activeTestInfo; //Common information about the active test
+        [HideInInspector] public Type displayType;
+        [HideInInspector] public TestDisplayBase displayObject;
 
         /// ------------------------------------------------------------------------------------
         /// Results variables
@@ -72,6 +74,10 @@ namespace GraphicsTestFramework
         public abstract void SetModel(TestModel inputModel);
 
         public abstract void SetResultsType();
+
+        public abstract void SetDisplayType();
+
+        public abstract void SetDisplayObject(TestDisplayBase inputDisplay);
 
         /// ------------------------------------------------------------------------------------
         /// Main logic flow methods
@@ -162,7 +168,7 @@ namespace GraphicsTestFramework
             if (activeRunType == RunnerType.Run)
                 SubmitResults((int)stateType);
             else
-                EnableTestViewer();
+                displayObject.EnableTestViewer();
         }
 
         // Submit results data to ResultsIO
@@ -213,13 +219,13 @@ namespace GraphicsTestFramework
 
         // Enable test viewer (if in View mode)
         // TODO - Revisit this when rewriting the TestViewer
-        public virtual void EnableTestViewer()
+        /*public virtual void EnableTestViewer()
         {
             if (Master.Instance.debugMode == Master.DebugMode.Messages)
                 Debug.Log(this.GetType().Name + " enabling Test Viewer");
             ProgressScreen.Instance.SetState(false, ProgressType.LocalSave, "");
             TestViewer.Instance.SetTestViewerState(1, ViewerType.Default, null);
-        }
+        }*/
 
         // Called by the TestViewer when ending viewing the current test
         // TODO - Revisit this when rewriting the TestViewer

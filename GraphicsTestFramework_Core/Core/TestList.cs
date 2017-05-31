@@ -22,6 +22,7 @@ namespace GraphicsTestFramework
         //Internal
         List<Type> modelList = new List<Type>();
         [HideInInspector] public TestLogicBase activeTestLogic;
+        [HideInInspector] public TestDisplayBase activeTestDisplay;
         string suiteName;
 
         public RunnerType currentRunnerType;
@@ -67,15 +68,42 @@ namespace GraphicsTestFramework
             activeTest.testObject.SetActive(true);
             if (Master.Instance.debugMode == Master.DebugMode.Messages)
                 Debug.Log(this.GetType().Name + " is starting test " + testTypes[currentTypeIndex].tests[currentTestIndex].testName);
+            SetupTestInstances(activeTest);
+            activeTestLogic.SetupTest(testTypes[currentTypeIndex].tests[currentTestIndex].testInformation, inputTest.typeValue, suiteName, runnerType);
+        }
+
+        // TODO - Cleanup
+        void SetupTestInstances(Test activeTest)
+        {
             TestModel activeModelInstance = (TestModel)activeTest.testObject.GetComponent(modelList[testTypes[currentTypeIndex].testType]);
             activeModelInstance.SetLogic();
-            if (!Master.Instance.GetComponent(activeModelInstance.logic))
-                activeTestLogic = (TestLogicBase)Master.Instance.gameObject.AddComponent(activeModelInstance.logic);
+            if (Master.Instance.transform.Find("TestRunners"))
+            {
+                Transform runnerParent = Master.Instance.transform.Find("TestRunners");
+                string childName = activeModelInstance.logic.ToString().Replace("GraphicsTestFramework.", "").Replace("Logic", "");
+                if (!runnerParent.Find(childName))
+                {
+                    GameObject newChild = new GameObject();
+                    newChild.transform.SetParent(runnerParent);
+                    newChild.name = childName;
+                    activeTestLogic = (TestLogicBase)newChild.AddComponent(activeModelInstance.logic);
+                    activeTestLogic.SetDisplayType();
+                    activeTestDisplay = (TestDisplayBase)newChild.AddComponent(activeTestLogic.displayType);
+                    activeTestDisplay.SetLogic(activeTestLogic);
+                    activeTestLogic.SetDisplayObject(activeTestDisplay);
+                    activeTestLogic.SetName();
+                }
+                else
+                {
+                    GameObject activeChild = runnerParent.Find(childName).gameObject;
+                    activeTestLogic = (TestLogicBase)activeChild.GetComponent(activeModelInstance.logic);
+                    activeTestLogic.SetDisplayType();
+                    activeTestDisplay = (TestDisplayBase)activeChild.GetComponent(activeTestLogic.displayType);
+                }
+            }
             else
-                activeTestLogic = (TestLogicBase)Master.Instance.gameObject.GetComponent(activeModelInstance.logic);
+                Debug.LogError("Test Runner parent not found! Aborting");
             activeTestLogic.SetModel(activeModelInstance);
-            activeTestLogic.SetName();
-            activeTestLogic.SetupTest(testTypes[currentTypeIndex].tests[currentTestIndex].testInformation, inputTest.typeValue, suiteName, runnerType);
         }
         
         // Get the array index for a given type by that types index in enum

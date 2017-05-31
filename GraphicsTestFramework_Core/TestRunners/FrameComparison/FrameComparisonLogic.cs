@@ -29,7 +29,7 @@ namespace GraphicsTestFramework
         /// ------------------------------------------------------------------------------------
         /// Logic specififc results class
 
-        ResultsData m_TempData; //Dont remove (write result data into this)
+        ResultsData m_TempData; //Dont remove or edit (write result data into this)
 
         //Structure for results
         [System.Serializable]
@@ -39,6 +39,24 @@ namespace GraphicsTestFramework
             public float DiffPercentage;
             public string resultFrame;
             public string comparisonFrame;
+        }
+
+        //Structure for comparison
+        /*[System.Serializable]
+        public class ComparisonData
+        {
+            public float DiffPercentage;
+            //public string comparisonFrame;
+        }*/
+
+        // Setup the results structs every test (Dont edit)
+        public override void SetupResultsStructs()
+        {
+            ResultsData newResultsData = new ResultsData();
+            newResultsData.common = Common.GetCommonResultsData();
+            newResultsData.common.SceneName = activeTestInfo.SceneName;
+            newResultsData.common.TestName = activeTestInfo.TestName;
+            activeResultData = newResultsData;
         }
 
         /// ------------------------------------------------------------------------------------
@@ -54,6 +72,17 @@ namespace GraphicsTestFramework
         public override void SetModel(TestModel inputModel)
         {
             model = (FrameComparisonModel)inputModel;
+        }
+
+        //Set reference to logic script for this model
+        public override void SetDisplayType()
+        {
+            displayType = typeof(FrameComparisonDisplay);
+        }
+
+        public override void SetDisplayObject(TestDisplayBase inputDisplay)
+        {
+            displayObject = (FrameComparisonDisplay)inputDisplay;
         }
 
         //Set results type
@@ -109,6 +138,11 @@ namespace GraphicsTestFramework
                 m_TempData.common.PassFail = false;
             BuildResultsStruct(m_TempData);
         }
+
+        /*public ComparisonData ProcessComparison()
+        {
+
+        }*/
 
         /// ------------------------------------------------------------------------------------
         /// Custom test logic methods
@@ -175,85 +209,9 @@ namespace GraphicsTestFramework
         void CleanupCameras()
         {
             if (dummyCamera)
-            {
                 Destroy(dummyCamera);
-            }
             if (model.settings.captureCamera)
-            {
                 model.settings.captureCamera.rect = new Rect(0, 0, 1, 1);
-            }
-        }
-
-        /// ------------------------------------------------------------------------------------
-        /// TestViewer related methods
-        /// TODO - Revisit this when rewriting the TestViewer
-
-        // Enable and setup the test viewer
-        // TODO - Revisit this when rewriting the TestViewer
-        public override void EnableTestViewer()
-        {
-            if (Master.Instance.debugMode == Master.DebugMode.Messages)
-                Debug.Log(this.GetType().Name + " enabling Test Viewer");
-            object contextObject = new object();
-            ResultsData currentResults = (ResultsData)activeResultData;
-            switch(stateType)
-            {
-                case StateType.CreateBaseline:
-                    ViewerBarTabData[] tabs = new ViewerBarTabData[2];
-                    for(int i = 0; i < tabs.Length; i++)
-                        tabs[i] = new ViewerBarTabData();
-                    tabs[0].tabName = "Live Camera";
-                    tabs[0].tabType = ViewerBarTabType.Camera;
-                    tabs[0].tabCamera = model.settings.captureCamera;
-                    tabs[1].tabName = "Results Texture";
-                    tabs[1].tabType = ViewerBarTabType.Texture;
-                    tabs[1].tabTexture = currentResults.resultFrame;
-                    tabs[1].textureResolution = model.settings.frameResolution;
-                    contextObject = tabs;
-                    break;
-                case StateType.CreateResults:
-                    ViewerBarTabData[] tabs2 = new ViewerBarTabData[4];
-                    for(int i = 0; i < tabs2.Length; i++)
-                        tabs2[i] = new ViewerBarTabData();
-                    tabs2[0].tabName = "Live Camera";
-                    tabs2[0].tabType = ViewerBarTabType.Camera;
-                    tabs2[0].tabCamera = model.settings.captureCamera;
-                    tabs2[1].tabName = "Results Texture";
-                    tabs2[1].tabType = ViewerBarTabType.Texture;
-                    tabs2[1].tabTexture = currentResults.resultFrame;
-                    tabs2[1].textureResolution = model.settings.frameResolution;
-                    tabs2[2].tabName = "Comparison Texture";
-                    tabs2[2].tabType = ViewerBarTabType.Texture;
-                    tabs2[2].tabTexture = currentResults.comparisonFrame;
-                    tabs2[2].textureResolution = model.settings.frameResolution;
-                    tabs2[3].tabName = "Baseline Texture";
-                    tabs2[3].tabType = ViewerBarTabType.Texture;
-                    ResultsData baselineData = (ResultsData)DeserializeResults(ResultsIO.Instance.RetrieveBaseline(testSuiteName, testTypeName, currentResults.common));
-                    tabs2[3].tabTexture = baselineData.resultFrame;
-                    tabs2[3].textureResolution = model.settings.frameResolution;
-                    contextObject = tabs2;
-                    break;   
-            }
-            ProgressScreen.Instance.SetState(false, ProgressType.LocalSave, ""); // TODO - Move this so its abstracted
-            TestViewer.Instance.SetTestViewerState(1, ViewerType.DefaultTabs, contextObject);
-        }
-
-        /// ------------------------------------------------------------------------------------
-        /// METHODS BELOW ARE NOT CONTEXT SENSITIVE
-        /// DO NOT EDIT
-
-        /// ------------------------------------------------------------------------------------
-        /// Results
-        /// TODO - Attempt to move even more stuff from from here to the abstract class
-
-        // Setup the results structs every test
-        public override void SetupResultsStructs()
-        {
-            ResultsData newResultsData = new ResultsData();
-            newResultsData.common = Common.GetCommonResultsData();
-            newResultsData.common.SceneName = activeTestInfo.SceneName;
-            newResultsData.common.TestName = activeTestInfo.TestName;
-            activeResultData = newResultsData;
         }
     }
 }
