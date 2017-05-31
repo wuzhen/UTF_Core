@@ -6,7 +6,7 @@ namespace GraphicsTestFramework
 {
     public class SuiteManager : MonoBehaviour
     {
-        [HideInInspector] public List<Suite> suites = new List<Suite>();
+        public List<Suite> suites = new List<Suite>();
 
         private static SuiteManager _Instance = null;
         public static SuiteManager Instance

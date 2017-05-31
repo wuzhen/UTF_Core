@@ -247,14 +247,14 @@ namespace GraphicsTestFramework
         public void SendDataToResultsIO(int baseline)
         {
             ProgressScreen.Instance.SetState(true, ProgressType.LocalSave, "Submitting results");
-            ResultsIOData output = GenerateResultsData();
+            ResultsIOData output = SerializeResults();
             if (Master.Instance.debugMode == Master.DebugMode.Messages)
                 Debug.Log(this.GetType().Name + " is sending data to ResultsIO");
             ResultsIO.Instance.ProcessResults(testSuiteName, testTypeName, output, baseline);
         }
 
         // Serialize ResultsData(class) to ResultsIOData(string arrays)
-        public ResultsIOData GenerateResultsData()
+        public ResultsIOData SerializeResults()
         {
             ResultsIOData output = new ResultsIOData();
             for (int r = 0; r < results.Count + 1; r++)
@@ -308,6 +308,49 @@ namespace GraphicsTestFramework
             if (Master.Instance.debugMode == Master.DebugMode.Messages)
                 Debug.Log(this.GetType().Name + " generated resultsIO data");
             return output;
+        }
+
+        // Deserialize ResultsIOData(string arrays) to ResultsData(class)
+        public object DeserializeResults(ResultsIOData resultsIOData)
+        {
+            var resultData = Convert.ChangeType(activeResultData, resultsType); //blank results data
+            var common = new ResultsDataCommon(); //blank common data
+
+            BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
+            FieldInfo[] commonFields = typeof(ResultsDataCommon).GetFields(bindingFlags);
+            FieldInfo[] customFields = resultsType.GetFields(bindingFlags);
+
+            List<string> commonDataRaw = resultsIOData.resultsRow[0].resultsColumn.GetRange(0, commonFields.Length * 2);
+            List<string> resultsDataRaw = resultsIOData.resultsRow[0].resultsColumn.GetRange(commonFields.Length * 2, resultsIOData.resultsRow[0].resultsColumn.Count - (commonFields.Length * 2));
+
+            for (int f = 0; f < customFields.Length; f++)
+            {
+                if (f == 0)
+                {
+                    //do the common class
+                    for (int cf = 0; cf < commonFields.Length; cf++)
+                    {
+                        string value = commonDataRaw[(cf * 2) + 1];
+                        FieldInfo fieldInfo = common.GetType().GetField(commonFields[cf].Name);
+                        fieldInfo.SetValue(common, Convert.ChangeType(value, fieldInfo.FieldType));
+                    }
+                }
+                else
+                {
+                    var value = resultsDataRaw[(f * 2) - 1];
+                    FieldInfo fieldInfo = resultData.GetType().GetField(customFields[f].Name);
+                    if (fieldInfo.FieldType.IsArray) // This handles arrays
+                    {
+                        Type type = resultData.GetType().GetField(customFields[f].Name).FieldType.GetElementType();
+                        GenerateGenericArray(fieldInfo, resultData.GetType(), resultData, type, value);
+                    }
+                    else // Non array types
+                    {
+                        fieldInfo.SetValue(resultData, Convert.ChangeType(value, fieldInfo.FieldType));
+                    }
+                }
+            }
+            return resultData;
         }
 
         //Convert an array on unknown type to a typed array

@@ -95,7 +95,7 @@ namespace GraphicsTestFramework
             m_TempData = (ResultsData)GetResultsStruct();
             for (int i = 0; i < model.settings.waitFrames; i++)
                 yield return new WaitForEndOfFrame();
-            ResultsData referenceData = GenerateBaselineData(ResultsIO.Instance.RetrieveBaseline(testSuiteName, testTypeName, m_TempData.common));
+            ResultsData referenceData = (ResultsData)DeserializeResults(ResultsIO.Instance.RetrieveBaseline(testSuiteName, testTypeName, m_TempData.common));
             //ResultsData referenceData = (ResultsData)baseline;
             activeReferenceTexture = Common.BuildTextureFromByteArray(referenceData.common.TestName + "_Reference", referenceData.resultFrame, model.settings.frameResolution, model.settings.textureFormat, model.settings.filterMode);
             do { yield return null; } while (activeReferenceTexture == null);
@@ -228,7 +228,8 @@ namespace GraphicsTestFramework
                     tabs2[2].textureResolution = model.settings.frameResolution;
                     tabs2[3].tabName = "Baseline Texture";
                     tabs2[3].tabType = ViewerBarTabType.Texture;
-                    tabs2[3].tabTexture = GenerateBaselineData(ResultsIO.Instance.RetrieveBaseline(testSuiteName, testTypeName, currentResults.common)).resultFrame;
+                    ResultsData baselineData = (ResultsData)DeserializeResults(ResultsIO.Instance.RetrieveBaseline(testSuiteName, testTypeName, currentResults.common));
+                    tabs2[3].tabTexture = baselineData.resultFrame;
                     tabs2[3].textureResolution = model.settings.frameResolution;
                     contextObject = tabs2;
                     break;   
@@ -253,49 +254,6 @@ namespace GraphicsTestFramework
             newResultsData.common.SceneName = activeTestInfo.SceneName;
             newResultsData.common.TestName = activeTestInfo.TestName;
             activeResultData = newResultsData;
-        }
-
-        // Deserialize ResultsIOData(string arrays) to ResultsData(class)
-        ResultsData GenerateBaselineData(ResultsIOData resultsIOData)
-        {
-            ResultsData resultData = new ResultsData(); //blank results data
-            resultData.common = new ResultsDataCommon(); //blank common data
-
-            BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
-            FieldInfo[] commonFields = typeof(ResultsDataCommon).GetFields(bindingFlags);
-            FieldInfo[] customFields = typeof(ResultsData).GetFields(bindingFlags);
-
-            List<string> commonDataRaw = resultsIOData.resultsRow[0].resultsColumn.GetRange(0, commonFields.Length * 2);
-            List<string> resultsDataRaw = resultsIOData.resultsRow[0].resultsColumn.GetRange(commonFields.Length * 2, resultsIOData.resultsRow[0].resultsColumn.Count - (commonFields.Length * 2));
-
-            for (int f = 0; f < customFields.Length; f++)
-            {
-                if (f == 0)
-                {
-                    //do the common class
-                    for (int cf = 0; cf < commonFields.Length; cf++)
-                    {
-                        string value = commonDataRaw[(cf * 2) + 1];
-                        FieldInfo fieldInfo = resultData.common.GetType().GetField(commonFields[cf].Name);
-                        fieldInfo.SetValue(resultData.common, Convert.ChangeType(value, fieldInfo.FieldType));
-                    }
-                }
-                else
-                {
-                    var value = resultsDataRaw[(f * 2) - 1];
-                    FieldInfo fieldInfo = resultData.GetType().GetField(customFields[f].Name);
-                    if (fieldInfo.FieldType.IsArray) // This handles arrays
-                    {
-                        Type type = resultData.GetType().GetField(customFields[f].Name).FieldType.GetElementType();
-                        GenerateGenericArray(fieldInfo, resultData.GetType(), resultData, type, value);
-                    }
-                    else // Non array types
-                    {
-                        fieldInfo.SetValue(resultData, Convert.ChangeType(value, fieldInfo.FieldType));
-                    }
-                }
-            }
-            return resultData;
         }
     }
 }
