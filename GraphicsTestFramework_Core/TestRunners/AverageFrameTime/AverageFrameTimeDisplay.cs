@@ -31,7 +31,7 @@ namespace GraphicsTestFramework
         /// TODO - Revisit this when rewriting the ResultsViewer
         /// 
 
-        public override void SetupResultsContext()
+        public override void SetupResultsContext(GameObject contextObject, ResultsEntry inputEntry)
         {
             
         }

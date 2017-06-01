@@ -147,7 +147,7 @@ namespace GraphicsTestFramework
             for(int i = startIndex+1; i < listEntries.Count; i++)
             {
                 RectTransform entryRect = listEntries[i].GetComponent<RectTransform>();
-                entryRect.anchoredPosition = new Vector2(entryRect.anchoredPosition.x, entryRect.anchoredPosition.y + nudgeAmount); 
+                entryRect.anchoredPosition = new Vector2(entryRect.anchoredPosition.x, entryRect.anchoredPosition.y + nudgeAmount);
             }
         }
 
@@ -165,14 +165,16 @@ namespace GraphicsTestFramework
             activeContextObject = Instantiate(display.resultsContextPrefab, listContentRect, false);
             RectTransform contextObjectRect = activeContextObject.GetComponent<RectTransform>();
             contextObjectRect.anchoredPosition = new Vector2(0, (entryIndex+1) * -listEntries[0].GetComponent<RectTransform>().sizeDelta.y);
+            listContentRect.sizeDelta = new Vector2(listContentRect.sizeDelta.x, listContentRect.sizeDelta.y + contextObjectRect.sizeDelta.y);
             NudgeListEntries(entryIndex, -contextObjectRect.sizeDelta.y);
-            display.SetupResultsContext();
+            display.SetupResultsContext(activeContextObject, inputEntry);
         }
 
         void HideContextObject(ResultsEntry inputEntry)
         {
             int entryIndex = FindEntryInList(inputEntry);
             NudgeListEntries(entryIndex, activeContextObject.GetComponent<RectTransform>().sizeDelta.y);
+            listContentRect.sizeDelta = new Vector2(listContentRect.sizeDelta.x, listContentRect.sizeDelta.y - activeContextObject.GetComponent<RectTransform>().sizeDelta.y);
             Destroy(activeContextObject);
             activeContextObject = null;
         }
@@ -186,6 +188,7 @@ namespace GraphicsTestFramework
             common.RenderPipe = "Standard Legacy"; // TODO - Sort this
             common.SceneName = sceneName;
             common.TestName = testName;
+            //Debug.LogWarning("BuildResultsDataCommon: " + common.DateTime + " - " + common.SceneName + " - " + common.TestName);
             return common;
         }
     }

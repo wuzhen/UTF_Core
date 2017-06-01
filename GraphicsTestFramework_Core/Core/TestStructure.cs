@@ -142,6 +142,7 @@ namespace GraphicsTestFramework
                     newChild.name = childName;
                     TestLogicBase logic = (TestLogicBase)newChild.AddComponent(model.logic);
                     logic.SetDisplayType();
+                    logic.SetResultsType();
                     TestDisplayBase display = (TestDisplayBase)newChild.AddComponent(logic.displayType);
                     display.SetLogic(logic);
                     display.GetResultsContextObject();

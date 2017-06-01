@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace GraphicsTestFramework
 {
@@ -26,6 +27,13 @@ namespace GraphicsTestFramework
             material.SetTexture("_MainTex", resultsTex);
         }
 
+        FrameComparisonLogic.ComparisonData comparisonData;
+
+        public RawImage resultsContextImage;
+        public Button button0;
+        public Button button1;
+        public Button button2;
+
         /// ------------------------------------------------------------------------------------
         /// Initial setup methods
 
@@ -48,15 +56,8 @@ namespace GraphicsTestFramework
                 Debug.Log(this.GetType().Name + " enabling Test Viewer");
             object contextObject = new object();
 
-            FrameComparisonLogic.ResultsData resultsInput = (FrameComparisonLogic.ResultsData)resultsObject;
-            ResultsIOData baselineFetch = ResultsIO.Instance.RetrieveBaseline(logic.testSuiteName, logic.testTypeName, resultsInput.common);
-            FrameComparisonLogic.ComparisonData comparisonData = new FrameComparisonLogic.ComparisonData();
-            if (baselineFetch != null)
-            {
-				FrameComparisonLogic.ResultsData resultsData = (FrameComparisonLogic.ResultsData)logic.DeserializeResults(ResultsIO.Instance.RetrieveResult(logic.testSuiteName, logic.testTypeName, resultsInput.common));
-                FrameComparisonLogic.ResultsData baselineData = (FrameComparisonLogic.ResultsData)logic.DeserializeResults(baselineFetch);
-                comparisonData = logic.ProcessComparison(baselineData, resultsData);
-            }
+            FrameComparisonLogic.ResultsData inputResults = (FrameComparisonLogic.ResultsData)resultsObject;
+            GetComparisonData(inputResults.common);
 
             switch (logic.stateType)
             {
@@ -101,14 +102,71 @@ namespace GraphicsTestFramework
             TestViewer.Instance.SetTestViewerState(1, ViewerType.DefaultTabs, contextObject);
         }
 
+        void GetComparisonData(ResultsDataCommon inputCommon)
+        {
+            Debug.LogWarning("GetComparisonData: "+inputCommon.DateTime + " - " + inputCommon.SceneName + " - " + inputCommon.TestName);
+            ResultsIOData baselineFetch = ResultsIO.Instance.RetrieveBaseline(logic.testSuiteName, logic.testTypeName, inputCommon);
+            comparisonData = new FrameComparisonLogic.ComparisonData();
+            if (baselineFetch != null)
+            {
+                FrameComparisonLogic.ResultsData resultsData = (FrameComparisonLogic.ResultsData)logic.DeserializeResults(ResultsIO.Instance.RetrieveResult(logic.testSuiteName, logic.testTypeName, inputCommon));
+                FrameComparisonLogic.ResultsData baselineData = (FrameComparisonLogic.ResultsData)logic.DeserializeResults(baselineFetch);
+                comparisonData = logic.ProcessComparison(baselineData, resultsData);
+            }
+            else
+                Debug.LogWarning("Base fetch failed");
+        }
+
         /// ------------------------------------------------------------------------------------
         /// ResultsViewer related methods
         /// TODO - Revisit this when rewriting the ResultsViewer
         /// 
 
-        public override void SetupResultsContext()
+        public override void SetupResultsContext(GameObject contextObject, ResultsEntry inputEntry)
         {
+            FrameComparisonLogic.ResultsData inputResults = (FrameComparisonLogic.ResultsData)logic.DeserializeResults(inputEntry.resultsData);
 
+            GetComparisonData(inputResults.common);
+            Debug.LogWarning("SetupResultsContext: " + inputResults.common.DateTime + " - " + inputResults.common.SceneName + " - " + inputResults.common.TestName);
+
+            ResultsContext context = contextObject.GetComponent<ResultsContext>();
+            button0 = context.objects[0].GetComponent<Button>();
+            button0.onClick.AddListener(delegate { SetTextureContext(0); });
+            button1 = context.objects[1].GetComponent<Button>();
+            button1.onClick.AddListener(delegate { SetTextureContext(1); });
+            button2 = context.objects[2].GetComponent<Button>();
+            button2.onClick.AddListener(delegate { SetTextureContext(2); });
+            context.objects[3].GetComponent<Text>().text = "Results";
+            context.objects[4].GetComponent<Text>().text = "Comparison";
+            context.objects[5].GetComponent<Text>().text = "Baseline";
+            resultsContextImage = context.objects[6].GetComponent<RawImage>();
+            context.objects[7].GetComponent<Text>().text = comparisonData.DiffPercentage.ToString();
+            SetTextureContext(0);
+        }
+
+        public void SetTextureContext(int context)
+        {
+            button0.interactable = true;
+            button1.interactable = true;
+            button2.interactable = true;
+            switch (context)
+            {
+                case 0:
+                    button0.interactable = false;
+                    resultsContextImage.material = null;
+                    resultsContextImage.texture = comparisonData.resultsTex;
+                    break;
+                case 1:
+                    button1.interactable = false;
+                    SetupMaterial(comparisonData.baselineTex, comparisonData.resultsTex);
+                    resultsContextImage.material = material;
+                    break;
+                case 2:
+                    button2.interactable = false;
+                    resultsContextImage.material = null;
+                    resultsContextImage.texture = comparisonData.baselineTex;
+                    break;
+            }
         }
     }
 }

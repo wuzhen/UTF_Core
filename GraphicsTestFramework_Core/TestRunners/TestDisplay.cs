@@ -21,7 +21,7 @@ namespace GraphicsTestFramework
             resultsContextPrefab = (GameObject)Resources.Load(name);
         }
 
-        public abstract void SetupResultsContext();
+        public abstract void SetupResultsContext(GameObject contextObject, ResultsEntry inputEntry);
 
         // Enable test viewer (if in View mode)
         // TODO - Revisit this when rewriting the TestViewer

@@ -13,8 +13,8 @@ namespace GraphicsTestFramework
         public Image passFailBackground;
         public Button expandButton;
 
-        ResultsIOData resultsData;
-        TestLogicBase logic;
+        public ResultsIOData resultsData;
+        public TestLogicBase logic;
 
         public void Setup(string sceneName, string testName, ResultsIOData inputData, TestLogicBase inputLogic)
         {
@@ -48,7 +48,6 @@ namespace GraphicsTestFramework
 
         public void ToggleContext()
         {
-            Debug.LogWarning(logic);
             ResultsViewer.Instance.ToggleContextObject(this, logic.GetComponent<TestDisplayBase>());
         }
     }

@@ -85,7 +85,7 @@ namespace GraphicsTestFramework
         {
             ProgressScreen.Instance.SetState(true, ProgressType.LocalSave, "Preparing test");
             SetSuiteName(suiteName);
-            SetResultsType();
+            //SetResultsType();
             activeTestInfo = inputInfo;
             activeRunType = run;
             SetupResultsStructs();
@@ -319,6 +319,7 @@ namespace GraphicsTestFramework
         // Deserialize ResultsIOData(string arrays) to ResultsData(class)
         public object DeserializeResults(ResultsIOData resultsIOData)
         {
+            Debug.LogWarning(resultsType);
             var resultData = Convert.ChangeType(activeResultData, resultsType); //blank results data
             var common = new ResultsDataCommon(); //blank common data
 

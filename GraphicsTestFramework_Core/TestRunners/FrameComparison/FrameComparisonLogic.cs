@@ -72,6 +72,9 @@ namespace GraphicsTestFramework
         public override void SetResultsType()
         {
             resultsType = typeof(ResultsData);
+            ResultsData newData = new ResultsData(); // Need to init this so it can be used to deserialize results from the results screen
+            newData.common = new ResultsDataCommon();
+            activeResultData = newData;
         }
 
         /// ------------------------------------------------------------------------------------
