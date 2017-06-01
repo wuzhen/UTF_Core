@@ -109,9 +109,7 @@ namespace GraphicsTestFramework
                     string testName = TestStructure.Instance.testStructure.suites[selectedSuite].types[selectedType].scenes[sc].tests[te].testName;
                     ResultsDataCommon common = BuildResultsDataCommon(sceneName, testName);
                     ResultsIOData data = ResultsIO.Instance.RetrieveResult(TestStructure.Instance.testStructure.suites[selectedSuite].suiteName, TestStructure.Instance.testStructure.suites[selectedSuite].types[selectedType].typeName, common);
-
                     TestLogicBase logic = TestTypeManager.Instance.GetLogicInstanceFromName(TestStructure.Instance.testStructure.suites[selectedSuite].types[selectedType].typeName);
-
                     GameObject go = Instantiate(resultsEntryPrefab, listContentRect, false);
                     listEntries.Add(go);
                     RectTransform goRect = go.GetComponent<RectTransform>();
@@ -138,26 +136,45 @@ namespace GraphicsTestFramework
         {
             for(int i = 0; i < listEntries.Count; i++)
             {
-                if (listEntries[i] == inputEntry)
+                if (listEntries[i] == inputEntry.gameObject)
                     return i;
             }
             return -1;
         }
 
-        void NudgeListEntries(int startIndex)
+        void NudgeListEntries(int startIndex, float nudgeAmount)
         {
-
+            for(int i = startIndex+1; i < listEntries.Count; i++)
+            {
+                RectTransform entryRect = listEntries[i].GetComponent<RectTransform>();
+                entryRect.anchoredPosition = new Vector2(entryRect.anchoredPosition.x, entryRect.anchoredPosition.y + nudgeAmount); 
+            }
         }
 
-        public void ShowContextObject(ResultsEntry inputEntry, TestDisplayBase display)
+        public void ToggleContextObject(ResultsEntry inputEntry, TestDisplayBase display)
         {
-            activeContextObject = Instantiate(display.resultsContextPrefab, listContentRect, false);
+            if (activeContextObject == null)
+                ExpandContextObject(inputEntry, display);
+            else
+                HideContextObject(inputEntry);
+        }
+
+        void ExpandContextObject(ResultsEntry inputEntry, TestDisplayBase display)
+        {
             int entryIndex = FindEntryInList(inputEntry);
+            activeContextObject = Instantiate(display.resultsContextPrefab, listContentRect, false);
+            RectTransform contextObjectRect = activeContextObject.GetComponent<RectTransform>();
+            contextObjectRect.anchoredPosition = new Vector2(0, (entryIndex+1) * -listEntries[0].GetComponent<RectTransform>().sizeDelta.y);
+            NudgeListEntries(entryIndex, -contextObjectRect.sizeDelta.y);
+            display.SetupResultsContext();
         }
 
-        public void HideContextObject(ResultsEntry inputEntry)
+        void HideContextObject(ResultsEntry inputEntry)
         {
-
+            int entryIndex = FindEntryInList(inputEntry);
+            NudgeListEntries(entryIndex, activeContextObject.GetComponent<RectTransform>().sizeDelta.y);
+            Destroy(activeContextObject);
+            activeContextObject = null;
         }
 
         // TODO - This shouldnt be here

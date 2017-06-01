@@ -25,5 +25,15 @@ namespace GraphicsTestFramework
         {
             // TODO
         }*/
+
+        /// ------------------------------------------------------------------------------------
+        /// ResultsViewer related methods
+        /// TODO - Revisit this when rewriting the ResultsViewer
+        /// 
+
+        public override void SetupResultsContext()
+        {
+
+        }
     }
 }

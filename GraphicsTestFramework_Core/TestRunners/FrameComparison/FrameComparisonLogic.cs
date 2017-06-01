@@ -53,7 +53,7 @@ namespace GraphicsTestFramework
         // Set name
         public override void SetName()
         {
-            testTypeName = "Frame Comparison";
+            testTypeName = "FrameComparison";
         }
 
         //Set model

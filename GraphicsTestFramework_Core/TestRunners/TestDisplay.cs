@@ -13,6 +13,16 @@ namespace GraphicsTestFramework
 
         public abstract void SetLogic(TestLogicBase inputLogic);
 
+        public virtual void GetResultsContextObject()
+        {
+            string name = this.GetType().ToString();
+            name = name.Replace("GraphicsTestFramework.", "").Replace("Display", "");
+            name = "ResultsContext_" + name;
+            resultsContextPrefab = (GameObject)Resources.Load(name);
+        }
+
+        public abstract void SetupResultsContext();
+
         // Enable test viewer (if in View mode)
         // TODO - Revisit this when rewriting the TestViewer
         public virtual void EnableTestViewer(object resultsObject)

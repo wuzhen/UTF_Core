@@ -16,11 +16,12 @@ namespace GraphicsTestFramework
         ResultsIOData resultsData;
         TestLogicBase logic;
 
-        public void Setup(string sceneName, string testName, ResultsIOData inputData, TestLogicBase logic)
+        public void Setup(string sceneName, string testName, ResultsIOData inputData, TestLogicBase inputLogic)
         {
             sceneNameText.text = sceneName;
             testNameText.text = testName;
             resultsData = inputData;
+            logic = inputLogic;
 
             int passFail = 2;
             if (resultsData != null)
@@ -41,16 +42,14 @@ namespace GraphicsTestFramework
                     passFailBackground.color = Menu.Instance.colors[1];
                     break;
             }
+
+            expandButton.onClick.AddListener(delegate { ToggleContext(); });
         }
 
-        public void ExpandContext()
+        public void ToggleContext()
         {
-            ResultsViewer.Instance.ShowContextObject(this, logic.GetComponent<TestDisplayBase>());
-        }
-
-        public void HideContext()
-        {
-            ResultsViewer.Instance.HideContextObject(this);
+            Debug.LogWarning(logic);
+            ResultsViewer.Instance.ToggleContextObject(this, logic.GetComponent<TestDisplayBase>());
         }
     }
 }

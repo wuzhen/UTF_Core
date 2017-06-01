@@ -93,6 +93,7 @@ namespace GraphicsTestFramework
                     {
                         TestModel model = (TestModel)testList.testTypes[c].tests[0].testObject.GetComponent(modelList[testList.testTypes[c].testType]);
                         TestLogicBase logic = model.GetLogic();
+                        model.SetLogic();
                         logic.SetName();
                         string typeName = logic.testTypeName;
                         TestType newType = FindDuplicateTypeInSuite(newSuite, typeName);
@@ -102,6 +103,7 @@ namespace GraphicsTestFramework
                             newType.typeName = typeName;
                             newType.typeIndex = testList.testTypes[c].testType;
                             newSuite.types.Add(newType);
+                            GenerateTestRunnerEntry(model);
                         }
                         Scene newScene = FindDuplicateSceneInType(newSuite, newType, sceneName);
                         if (newScene == null)
@@ -125,6 +127,29 @@ namespace GraphicsTestFramework
             if (Master.Instance.debugMode == Master.DebugMode.Messages)
                 Debug.Log("Test Structure finished generating");
             ProgressScreen.Instance.SetState(false, ProgressType.LocalLoad, "");
+        }
+
+        void GenerateTestRunnerEntry(TestModel model)
+        {
+            if (Master.Instance.transform.Find("TestRunners"))
+            {
+                Transform runnerParent = Master.Instance.transform.Find("TestRunners");
+                string childName = model.logic.ToString().Replace("GraphicsTestFramework.", "").Replace("Logic", "");
+                if (!runnerParent.Find(childName))
+                {
+                    GameObject newChild = new GameObject();
+                    newChild.transform.SetParent(runnerParent);
+                    newChild.name = childName;
+                    TestLogicBase logic = (TestLogicBase)newChild.AddComponent(model.logic);
+                    logic.SetDisplayType();
+                    TestDisplayBase display = (TestDisplayBase)newChild.AddComponent(logic.displayType);
+                    display.SetLogic(logic);
+                    display.GetResultsContextObject();
+                    TestTypeManager.Instance.AddType(logic);
+                }
+            }
+            else
+                Debug.LogError("Test Runner parent not found! Aborting");
         }
         
         bool CheckForBaselines()

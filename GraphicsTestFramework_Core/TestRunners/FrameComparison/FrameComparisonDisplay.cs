@@ -49,27 +49,28 @@ namespace GraphicsTestFramework
             object contextObject = new object();
 
             FrameComparisonLogic.ResultsData resultsInput = (FrameComparisonLogic.ResultsData)resultsObject;
-            FrameComparisonLogic.ResultsData resultsData = (FrameComparisonLogic.ResultsData)logic.DeserializeResults(ResultsIO.Instance.RetrieveResult(logic.testSuiteName, logic.testTypeName, resultsInput.common));
             ResultsIOData baselineFetch = ResultsIO.Instance.RetrieveBaseline(logic.testSuiteName, logic.testTypeName, resultsInput.common);
             FrameComparisonLogic.ComparisonData comparisonData = new FrameComparisonLogic.ComparisonData();
             if (baselineFetch != null)
             {
+				FrameComparisonLogic.ResultsData resultsData = (FrameComparisonLogic.ResultsData)logic.DeserializeResults(ResultsIO.Instance.RetrieveResult(logic.testSuiteName, logic.testTypeName, resultsInput.common));
                 FrameComparisonLogic.ResultsData baselineData = (FrameComparisonLogic.ResultsData)logic.DeserializeResults(baselineFetch);
                 comparisonData = logic.ProcessComparison(baselineData, resultsData);
             }
 
             switch (logic.stateType)
             {
-                case TestLogicBase.StateType.CreateBaseline:
-                    ViewerBarTabData[] tabs = new ViewerBarTabData[2];
-                    for (int i = 0; i < tabs.Length; i++)
-                        tabs[i] = new ViewerBarTabData();
-                    tabs[0].tabName = "Live Camera";
-                    tabs[0].tabType = ViewerBarTabType.Camera;
-                    tabs[0].tabObject = logic.model.settings.captureCamera;
-                    tabs[1].tabName = "Results Texture";
-                    tabs[1].tabType = ViewerBarTabType.Texture;
-                    tabs[1].tabObject = Common.BuildTextureFromByteArray("Tab_ResultsFrame", resultsData.resultFrame);
+			case TestLogicBase.StateType.CreateBaseline:
+				ViewerBarTabData[] tabs = new ViewerBarTabData[2];
+				for (int i = 0; i < tabs.Length; i++)
+					tabs [i] = new ViewerBarTabData ();
+					tabs [0].tabName = "Live Camera";
+					tabs [0].tabType = ViewerBarTabType.Camera;
+					tabs [0].tabObject = logic.model.settings.captureCamera;
+					tabs [1].tabName = "Results Texture";
+					tabs [1].tabType = ViewerBarTabType.Texture;
+					FrameComparisonLogic.ResultsData localResultData = (FrameComparisonLogic.ResultsData)logic.activeResultData;
+					tabs[1].tabObject = Common.BuildTextureFromByteArray("Tab_ResultsFrame", localResultData.resultFrame);
                     tabs[1].textureResolution = logic.model.settings.frameResolution;
                     contextObject = tabs;
                     break;
@@ -98,6 +99,16 @@ namespace GraphicsTestFramework
             }
             ProgressScreen.Instance.SetState(false, ProgressType.LocalSave, ""); // TODO - Move this so its abstracted
             TestViewer.Instance.SetTestViewerState(1, ViewerType.DefaultTabs, contextObject);
+        }
+
+        /// ------------------------------------------------------------------------------------
+        /// ResultsViewer related methods
+        /// TODO - Revisit this when rewriting the ResultsViewer
+        /// 
+
+        public override void SetupResultsContext()
+        {
+
         }
     }
 }

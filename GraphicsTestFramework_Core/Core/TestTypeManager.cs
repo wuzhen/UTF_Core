@@ -44,6 +44,7 @@ namespace GraphicsTestFramework
         {
             public string typeName;
             public TestLogicBase typeInstance;
+            public GameObject resultsContextPrefab; // TODO - Move this back to viewer logic, how to set?
         }
     }
 }
