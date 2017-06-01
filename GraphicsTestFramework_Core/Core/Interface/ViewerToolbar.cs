@@ -24,7 +24,22 @@ namespace GraphicsTestFramework
 			thisRect = GetComponent<RectTransform>();
 		}
 
-		public void OnClickShowHide()
+        /// ------------------------------------------------------------------------------------
+        /// Broadcast delegate subscriptions
+
+        //Subscribe to event delegates
+        void OnEnable()
+        {
+            ResultsIO.endResultsSave += OnClickNext;
+        }
+
+        //Desubscribe from event delegates
+        void OnDisable()
+        {
+            ResultsIO.endResultsSave -= OnClickNext;
+        }
+
+        public void OnClickShowHide()
 		{
 			isHidden = !isHidden;
 			switch(isHidden)
@@ -106,8 +121,8 @@ namespace GraphicsTestFramework
 		void SaveBaselineAction()
 		{
 			TestList.Instance.activeTestLogic.SendDataToResultsIO(1); //Send baseline data // TODO - can do this cleaner?
-			if(isBaselineResolution)
-				OnClickNext();
+			//if(isBaselineResolution)
+				//OnClickNext();
 		}
 
 		public void OnClickRestartTest()
