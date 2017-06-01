@@ -110,27 +110,27 @@ namespace GraphicsTestFramework
             ProgressScreen.Instance.SetState(true, ProgressType.LocalSave, "Running test");
             if (Master.Instance.debugMode == Master.DebugMode.Messages)
                 Debug.Log(this.GetType().Name + " starting test " + activeTestInfo.TestName);
-            if (stateType == StateType.CreateBaseline)
+            /*if (stateType == StateType.CreateBaseline)
             {
                 if (Master.Instance.debugMode == Master.DebugMode.Messages)
                     Debug.Log(this.GetType().Name + " is processing references for test " + activeTestInfo.TestName);
                 StartCoroutine(ProcessBaseline());
             }
             else if (stateType == StateType.CreateResults)
-            {
+            {*/
                 if (Master.Instance.debugMode == Master.DebugMode.Messages)
                     Debug.Log(this.GetType().Name + " is processing results for test " + activeTestInfo.TestName);
                 StartCoroutine(ProcessResult());
-            }
+            /*}*/
         }
 
         // Logic for creating baseline data
-        public virtual IEnumerator ProcessBaseline()
+        /*public virtual IEnumerator ProcessBaseline()
         {
             yield return null;
             // Custom test baseline processing logic here
             BuildResultsStruct(null); // Null in base logic. Will not run.
-        }
+        }*/
 
         // Logic for creating results data
         public virtual IEnumerator ProcessResult()

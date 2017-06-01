@@ -7,6 +7,26 @@ namespace GraphicsTestFramework
     public class FrameComparisonDisplay : TestDisplay<FrameComparisonLogic>
     {
         /// ------------------------------------------------------------------------------------
+        /// Logic specific variables
+
+        Material m_Material;
+        public Material material
+        {
+            get
+            {
+                if (m_Material == null)
+                    m_Material = new Material(Shader.Find("Hidden/FrameComparison")) { hideFlags = HideFlags.DontSave };
+                return m_Material;
+            }
+        }
+
+        void SetupMaterial(Texture2D baselineTex, Texture2D resultsTex)
+        {
+            material.SetTexture("_ReferenceTex", baselineTex);
+            material.SetTexture("_MainTex", resultsTex);
+        }
+
+        /// ------------------------------------------------------------------------------------
         /// Initial setup methods
 
         //Set logic
@@ -14,8 +34,6 @@ namespace GraphicsTestFramework
         {
             logic = (FrameComparisonLogic)inputLogic;
         }
-
-        
 
         /// ------------------------------------------------------------------------------------
         /// TestViewer related methods
@@ -28,7 +46,11 @@ namespace GraphicsTestFramework
             if (Master.Instance.debugMode == Master.DebugMode.Messages)
                 Debug.Log(this.GetType().Name + " enabling Test Viewer");
             object contextObject = new object();
-            FrameComparisonLogic.ResultsData currentResults = (FrameComparisonLogic.ResultsData)logic.activeResultData;
+
+            FrameComparisonLogic.ResultsData resultsData = (FrameComparisonLogic.ResultsData)logic.activeResultData;
+            FrameComparisonLogic.ResultsData baselineData = (FrameComparisonLogic.ResultsData)logic.DeserializeResults(ResultsIO.Instance.RetrieveBaseline(logic.testSuiteName, logic.testTypeName, resultsData.common));
+            FrameComparisonLogic.ComparisonData comparisonData = logic.ProcessComparison(baselineData, resultsData);
+            
             switch (logic.stateType)
             {
                 case TestLogicBase.StateType.CreateBaseline:
@@ -37,10 +59,10 @@ namespace GraphicsTestFramework
                         tabs[i] = new ViewerBarTabData();
                     tabs[0].tabName = "Live Camera";
                     tabs[0].tabType = ViewerBarTabType.Camera;
-                    tabs[0].tabCamera = logic.model.settings.captureCamera;
+                    tabs[0].tabObject = logic.model.settings.captureCamera;
                     tabs[1].tabName = "Results Texture";
                     tabs[1].tabType = ViewerBarTabType.Texture;
-                    tabs[1].tabTexture = currentResults.resultFrame;
+                    tabs[1].tabObject = comparisonData.resultsTex;
                     tabs[1].textureResolution = logic.model.settings.frameResolution;
                     contextObject = tabs;
                     break;
@@ -50,19 +72,19 @@ namespace GraphicsTestFramework
                         tabs2[i] = new ViewerBarTabData();
                     tabs2[0].tabName = "Live Camera";
                     tabs2[0].tabType = ViewerBarTabType.Camera;
-                    tabs2[0].tabCamera = logic.model.settings.captureCamera;
+                    tabs2[0].tabObject = logic.model.settings.captureCamera;
                     tabs2[1].tabName = "Results Texture";
                     tabs2[1].tabType = ViewerBarTabType.Texture;
-                    tabs2[1].tabTexture = currentResults.resultFrame;
+                    tabs2[1].tabObject = comparisonData.resultsTex;
                     tabs2[1].textureResolution = logic.model.settings.frameResolution;
                     tabs2[2].tabName = "Comparison Texture";
-                    tabs2[2].tabType = ViewerBarTabType.Texture;
-                    tabs2[2].tabTexture = currentResults.comparisonFrame;
+                    tabs2[2].tabType = ViewerBarTabType.Material;
+                    SetupMaterial(comparisonData.baselineTex, comparisonData.resultsTex);
+                    tabs2[2].tabObject = material;
                     tabs2[2].textureResolution = logic.model.settings.frameResolution;
                     tabs2[3].tabName = "Baseline Texture";
                     tabs2[3].tabType = ViewerBarTabType.Texture;
-                    FrameComparisonLogic.ResultsData baselineData = (FrameComparisonLogic.ResultsData)logic.DeserializeResults(ResultsIO.Instance.RetrieveBaseline(logic.testSuiteName, logic.testTypeName, currentResults.common));
-                    tabs2[3].tabTexture = baselineData.resultFrame;
+                    tabs2[3].tabObject = comparisonData.baselineTex;
                     tabs2[3].textureResolution = logic.model.settings.frameResolution;
                     contextObject = tabs2;
                     break;

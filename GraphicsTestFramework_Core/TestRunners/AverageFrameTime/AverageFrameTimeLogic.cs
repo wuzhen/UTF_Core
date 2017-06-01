@@ -73,7 +73,7 @@ namespace GraphicsTestFramework
         /// Main logic flow methods (overrides) 
 
         // Logic for creating baseline data
-        public override IEnumerator ProcessBaseline()
+        /*public override IEnumerator ProcessBaseline()
         {
 			m_TempData = (ResultsData)GetResultsStruct();
             for (int i = 0; i < model.settings.waitFrames; i++)
@@ -83,7 +83,7 @@ namespace GraphicsTestFramework
                 yield return new WaitForEndOfFrame();
 			m_TempData.avgFrameTime = Timestamp(true);
             BuildResultsStruct(m_TempData);
-        }
+        }*/
 
         // Logic for creating results data
         public override IEnumerator ProcessResult()

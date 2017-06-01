@@ -13,18 +13,8 @@ namespace GraphicsTestFramework
 
         Camera dummyCamera;
         RenderTexture temporaryRt;
-        Texture2D activeReferenceTexture;
+        //Texture2D activeReferenceTexture;
         bool doCapture;
-        Material m_Material;
-        public Material material
-        {
-            get
-            {
-                if (m_Material == null)
-                    m_Material = new Material(Shader.Find("Hidden/FrameComparison")) { hideFlags = HideFlags.DontSave };
-                return m_Material;
-            }
-        }
 
         /// ------------------------------------------------------------------------------------
         /// Logic specififc results class
@@ -36,18 +26,17 @@ namespace GraphicsTestFramework
         public class ResultsData
         {
             public ResultsDataCommon common; //Dont remove (set automatically)
-            public float DiffPercentage;
             public string resultFrame;
-            public string comparisonFrame;
         }
 
         //Structure for comparison
-        /*[System.Serializable]
+        [System.Serializable]
         public class ComparisonData
         {
             public float DiffPercentage;
-            //public string comparisonFrame;
-        }*/
+            public Texture2D baselineTex;
+            public Texture2D resultsTex;
+        }
 
         // Setup the results structs every test (Dont edit)
         public override void SetupResultsStructs()
@@ -106,8 +95,8 @@ namespace GraphicsTestFramework
             StartTest();
         }
 
-        // Logic for creating baseline data
-        public override IEnumerator ProcessBaseline()
+        // Logic for creating results data
+        public override IEnumerator ProcessResult()
         {
             m_TempData = (ResultsData)GetResultsStruct();
             for (int i = 0; i < model.settings.waitFrames; i++)
@@ -115,34 +104,30 @@ namespace GraphicsTestFramework
             model.settings.captureCamera.targetTexture = temporaryRt;
             doCapture = true;
             do { yield return null; } while (m_TempData.resultFrame == null);
-            BuildResultsStruct(m_TempData);
-        }
-
-        // Logic for creating results data
-        public override IEnumerator ProcessResult()
-        {
-            m_TempData = (ResultsData)GetResultsStruct();
-            for (int i = 0; i < model.settings.waitFrames; i++)
-                yield return new WaitForEndOfFrame();
-            ResultsData referenceData = (ResultsData)DeserializeResults(ResultsIO.Instance.RetrieveBaseline(testSuiteName, testTypeName, m_TempData.common));
-            //ResultsData referenceData = (ResultsData)baseline;
-            activeReferenceTexture = Common.BuildTextureFromByteArray(referenceData.common.TestName + "_Reference", referenceData.resultFrame, model.settings.frameResolution, model.settings.textureFormat, model.settings.filterMode);
-            do { yield return null; } while (activeReferenceTexture == null);
-            model.settings.captureCamera.targetTexture = temporaryRt;
-            doCapture = true;
-            do { yield return null; } while (m_TempData.comparisonFrame == null);
             CleanupCameras(); // Need to reset cameras rects here
-            if (m_TempData.DiffPercentage < model.settings.passFailThreshold)
-                m_TempData.common.PassFail = true;
-            else
-                m_TempData.common.PassFail = false;
+            ResultsIOData ioData = ResultsIO.Instance.RetrieveBaseline(testSuiteName, testTypeName, m_TempData.common);
+            if (ioData != null)
+            {
+                ResultsData referenceData = (ResultsData)DeserializeResults(ioData);
+                ComparisonData comparison = ProcessComparison(referenceData, m_TempData);
+                if (comparison.DiffPercentage < model.settings.passFailThreshold)
+                    m_TempData.common.PassFail = true;
+                else
+                    m_TempData.common.PassFail = false;
+                comparison = null; // TODO - Check for leaks here
+            }
             BuildResultsStruct(m_TempData);
         }
 
-        /*public ComparisonData ProcessComparison()
+        // TODO - Will use last run test model, need to get this for every call from Viewers? :/
+        public ComparisonData ProcessComparison(ResultsData baselineData, ResultsData resultsData)
         {
-
-        }*/
+            ComparisonData newComparison = new ComparisonData();
+            newComparison.baselineTex = Common.BuildTextureFromByteArray(baselineData.common.TestName + "_Reference", baselineData.resultFrame, model.settings.frameResolution, model.settings.textureFormat, model.settings.filterMode);
+            newComparison.resultsTex = Common.BuildTextureFromByteArray(resultsData.common.TestName + "_Results", resultsData.resultFrame, model.settings.frameResolution, model.settings.textureFormat, model.settings.filterMode);
+            newComparison.DiffPercentage = Common.GetTextureComparisonValue(newComparison.baselineTex, newComparison.resultsTex);
+            return newComparison;
+        }
 
         /// ------------------------------------------------------------------------------------
         /// Custom test logic methods
@@ -158,23 +143,6 @@ namespace GraphicsTestFramework
                 Graphics.Blit(temporaryRt, rt1); //Blit camera to the RT
                 Texture2D resultsTex = Common.ConvertRenderTextureToTexture2D(activeTestInfo.TestName + "_Result", rt1, model.settings.frameResolution, model.settings.textureFormat, model.settings.filterMode);
                 m_TempData.resultFrame = System.Convert.ToBase64String(resultsTex.EncodeToPNG());
-                if (stateType == StateType.CreateResults)
-                {
-                    var rt2 = RenderTexture.GetTemporary((int)model.settings.frameResolution.x, (int)model.settings.frameResolution.y, 24, temporaryRt.format, RenderTextureReadWrite.sRGB);
-                    material.SetTexture("_ReferenceTex", activeReferenceTexture);
-                    Graphics.Blit(rt1, rt2, material, 0);
-                    Texture2D comparisonTex = Common.ConvertRenderTextureToTexture2D(activeTestInfo.TestName + "_Comparison", rt2, model.settings.frameResolution, model.settings.textureFormat, model.settings.filterMode);
-                    m_TempData.DiffPercentage = Common.GetTextureComparisonValue(comparisonTex);
-                    m_TempData.comparisonFrame = System.Convert.ToBase64String(comparisonTex.EncodeToPNG());
-                    RenderTexture.ReleaseTemporary(rt2);
-                    //Destroy(rt2);
-                }
-                else if (stateType == StateType.CreateBaseline)
-                {
-                    m_TempData.DiffPercentage = 0.0f;
-                    m_TempData.comparisonFrame = "-";
-                    //Destroy(rt2);
-                }
                 if (Master.Instance.debugMode == Master.DebugMode.Messages)
                     Debug.Log(this.GetType().Name + " completed blit operations for test " + activeTestInfo.TestName);
                 model.settings.captureCamera.targetTexture = null;

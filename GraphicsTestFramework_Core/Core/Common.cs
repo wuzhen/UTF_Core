@@ -75,7 +75,8 @@ namespace GraphicsTestFramework
             Texture2D output = new Texture2D((int)resolution.x, (int)resolution.y, format, false);
             output.name = textureName;
             output.filterMode = filterMode;
-
+            Debug.LogWarning("res = " + resolution.x + ":" + resolution.y + " image length = " + input.Length);
+            Debug.LogWarning(input);
             byte[] decodedBytes = Convert.FromBase64String(input);
             output.LoadImage(decodedBytes);
             //output.LoadImage(input);
@@ -96,7 +97,7 @@ namespace GraphicsTestFramework
         }
 
         //Gets a comparison value from a texture
-        public static float GetTextureComparisonValue(Texture2D input)
+        /*public static float GetTextureComparisonValue(Texture2D input)
         {
             float value = 0;
             int i = 0;
@@ -106,6 +107,28 @@ namespace GraphicsTestFramework
                 {
                     Color c = input.GetPixel(x, y);
                     value += ((c.r + c.g + c.b) / 3);
+                    i++;
+                }
+            }
+            return (value / i) * 100;
+        }*/
+
+        //Gets a comparison value from a texture
+        public static float GetTextureComparisonValue(Texture2D baselineInput, Texture2D resultsInput)
+        {
+            float value = 0;
+            int i = 0;
+            for (int x = 0; x < resultsInput.width; x++)
+            {
+                for (int y = 0; y < resultsInput.height; y++)
+                {
+                    Color c1 = baselineInput.GetPixel(x, y);
+                    Color c2 = resultsInput.GetPixel(x, y);
+                    float compR = Mathf.Abs(c2.r - c1.r);
+                    float compG = Mathf.Abs(c2.g - c1.g);
+                    float compB = Mathf.Abs(c2.b - c1.b);
+                    //Color comp = new Color(compR, compG, compB);
+                    value += ((compR + compG + compB) / 3);
                     i++;
                 }
             }

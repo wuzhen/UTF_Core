@@ -97,7 +97,7 @@ namespace GraphicsTestFramework
         }*/
 
         // Logic for creating baseline data
-        public override IEnumerator ProcessBaseline()
+        /*public override IEnumerator ProcessBaseline()
         {
             m_TempData = (ResultsData)GetResultsStruct(); //Must get results struct and cast to this logics results type
             if (timeWaited < model.settings.waitTime) //Check if waited time specified by active test options
@@ -107,7 +107,7 @@ namespace GraphicsTestFramework
             }
             m_TempData = GetDummyData(m_TempData.common);
             BuildResultsStruct(m_TempData); //Must pass results struct to be built at the end of this logic
-        }
+        }*/
 
         // Logic for creating results data
         public override IEnumerator ProcessResult()
