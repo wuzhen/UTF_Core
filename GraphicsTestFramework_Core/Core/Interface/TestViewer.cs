@@ -77,26 +77,32 @@ namespace GraphicsTestFramework
                     currentCamera.depth = 9;
                     cameraDepth = currentCamera.depth;
                     textureImage.gameObject.SetActive(false);
-					break;
+                    textureImage.material = null;
+                    break;
 				case ViewerBarTabType.Texture:
                     textureImage.texture = (Texture2D)content;
                     textureImage.gameObject.SetActive(true);
-					break;
-			}
+                    textureImage.material = null;
+                    break;
+                case ViewerBarTabType.Material:
+                    //textureImage.texture = null;
+                    textureImage.material = (Material)content;
+                    textureImage.gameObject.SetActive(true);
+                    break;
+            }
         }        
 	}
 
     public enum ViewerType { Default, DefaultTabs }
 
-    public enum ViewerBarTabType { Camera, Texture }
+    public enum ViewerBarTabType { Camera, Texture, Material }
 
     [System.Serializable]
     public class ViewerBarTabData
     {
         public string tabName;
         public ViewerBarTabType tabType;
-        public Camera tabCamera;
-        public string tabTexture;
+        public object tabObject;
         public Vector2 textureResolution;
     }
 }

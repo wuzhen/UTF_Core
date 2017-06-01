@@ -69,12 +69,7 @@ namespace GraphicsTestFramework
 
 		public void UpdateNavigationBar(ViewerType type, object contextObject)
         {
-			if(tabs != null)
-			{
-				foreach(ViewerBarTab tab in tabs)
-					Destroy(tab.gameObject);
-                tabs = null;
-			}
+            CleanupNavigationBar();
             TestRunner.TestEntry currentTest = TestRunner.Instance.GetCurrentTestEntry();
             breadcrumbLabel.text = currentTest.suiteName+" - "+currentTest.sceneName+" - "+currentTest.typeName+" - "+currentTest.testName;
 			switch(type)
@@ -98,6 +93,19 @@ namespace GraphicsTestFramework
 					tabs[0].EnableTab();
 					break;
 			}
+        }
+
+        void CleanupNavigationBar()
+        {
+            if (tabs != null)
+            {
+                foreach (ViewerBarTab tab in tabs)
+                {
+                    tab.CleanupTab();
+                    Destroy(tab.gameObject);
+                }
+                tabs = null;
+            }
         }
 	}
 }

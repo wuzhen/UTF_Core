@@ -10,6 +10,7 @@ namespace GraphicsTestFramework
 		ViewerBarTabData tabData;
 		public Text tabLabel;
 		public Texture2D tabTexture;
+        public Material tabMaterial;
 		Button button;
 		int tabIndex;
 
@@ -27,13 +28,17 @@ namespace GraphicsTestFramework
 			switch(tabData.tabType)
 			{
 				case ViewerBarTabType.Camera:
-					TestViewer.Instance.SetViewerContent(tabData.tabType, tabData.tabCamera);
+                    TestViewer.Instance.SetViewerContent(tabData.tabType, tabData.tabObject);
 					break;
 				case ViewerBarTabType.Texture:
-					tabTexture = Common.BuildTextureFromByteArray("Temporary Tab Texture", tabData.tabTexture, tabData.textureResolution, TextureFormat.RGB24, FilterMode.Bilinear);
+                    tabTexture = (Texture2D)tabData.tabObject;
 					TestViewer.Instance.SetViewerContent(tabData.tabType, tabTexture);
 					break;
-			}
+                case ViewerBarTabType.Material:
+                    tabMaterial = (Material)tabData.tabObject;
+                    TestViewer.Instance.SetViewerContent(tabData.tabType, tabData.tabObject);
+                    break;
+            }
 			button.interactable = false;
 		}
 
@@ -44,10 +49,27 @@ namespace GraphicsTestFramework
 				case ViewerBarTabType.Camera:
 					break;
 				case ViewerBarTabType.Texture:
-					Destroy(tabTexture);
 					break;
-			}
+                case ViewerBarTabType.Material:
+                    break;
+            }
 			button.interactable = true;
 		}
-	}
+
+        public void CleanupTab()
+        {
+            switch (tabData.tabType)
+            {
+                case ViewerBarTabType.Camera:
+                    break;
+                case ViewerBarTabType.Texture:
+                    Destroy(tabTexture); // TODO - Check for leaks here
+                    break;
+                case ViewerBarTabType.Material:
+                    tabMaterial = null; // TODO - Check for leaks here
+                    break;
+            }
+            button.interactable = true;
+        }
+    }
 }
