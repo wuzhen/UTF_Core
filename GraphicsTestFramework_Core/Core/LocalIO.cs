@@ -71,9 +71,6 @@ namespace GraphicsTestFramework
 
 			List<string> jsonRows = new List<string>();
 
-			foreach (string s in objTypeNames)
-				Debug.Log (s);
-
 			for(int i = 0; i < objTypeNames.Count; i++)
 			{
 				string[] typeSplit = objTypeNames [i].Split (new char[]{ '_' }, System.StringSplitOptions.None);
@@ -83,7 +80,6 @@ namespace GraphicsTestFramework
 				api = splitJson [11].Substring (1, splitJson [11].Length-2);
 				pipe = splitJson [13].Substring (1, splitJson [13].Length-2);
 
-				Debug.LogWarning (suite + "|" + testType + "|" + api + "|" + pipe);
 				if ((lastSuite != suite || lastTestType != testType || lastApi != api || pipe != lastPipe) && jsonRows.Count > 0) {
 					isWaiting = true;
 					StartCoroutine(WriteDataFiles(lastSuite, lastTestType, JSONHelper.FromJSON (jsonRows.ToArray ()), jsonRows.ToArray (), fileType.Baseline));//REORG
@@ -163,8 +159,6 @@ namespace GraphicsTestFramework
 				StartCoroutine (UpdateSuiteDataFiles());
 			}
 
-			//BroadcastEndResultsSave (); TODO - commented out but needs to still be called somewhere
-
 			yield return new WaitForEndOfFrame ();
 		}
 
@@ -196,7 +190,21 @@ namespace GraphicsTestFramework
 		}
 
 		/// <summary>
-		/// Creates the data directory string and local directory file.
+		/// Write large files to EXTERNAL_DATA folder to replicate cloud sorting.
+		/// </summary>
+		/// <param name="value">Contents to write.</param>
+		/// <param name="key">Key for file(also file name).</param>
+		public void LargeFileWrite(string value, string key){
+			string filePath = dataPath + "/EXTERNAL_DATA";
+			string fileName = key + ".txt";
+			if (!Directory.Exists (filePath))
+				Directory.CreateDirectory (filePath);
+
+			File.WriteAllText (filePath + "/" + fileName, value);
+		}
+
+		/// <summary>
+		/// Creates the data directory string and local directory file for test data.
 		/// </summary>
 		/// <returns>The data directory as a string.</returns>
 		/// <param name="suite">Suite.</param>
@@ -292,6 +300,20 @@ namespace GraphicsTestFramework
 				} else {
 					return File.ReadAllText (filePath + "/" + fileName);
 				}
+			}
+		}
+
+		/// <summary>
+		/// Read large file in EXTERNAL_DATA folder.
+		/// </summary>
+		/// <param name="key">Key for file(also file name).</param>
+		public string LargeFileRead(string key){
+			string filePath = dataPath + "/EXTERNAL_DATA";
+			string fileName = key + ".txt";
+			if (!File.Exists (filePath + "/" + fileName))
+				return null;
+			else{
+				return File.ReadAllText (filePath + "/" + fileName);
 			}
 		}
 
