@@ -6,32 +6,22 @@ namespace GraphicsTestFramework
 {
     public abstract class TestDisplayBase : MonoBehaviour
     {
+        public GameObject resultsContextPrefab;
+
         /// ------------------------------------------------------------------------------------
         /// Initial setup methods
-
-        /*public virtual void SetName()
-        {
-            testTypeName = "Untitled Logic";
-        }
-
-        public void SetSuiteName(string name)
-        {
-            testSuiteName = name;
-        }*/
 
         public abstract void SetLogic(TestLogicBase inputLogic);
 
         // Enable test viewer (if in View mode)
         // TODO - Revisit this when rewriting the TestViewer
-        public virtual void EnableTestViewer()
+        public virtual void EnableTestViewer(object resultsObject)
         {
             if (Master.Instance.debugMode == Master.DebugMode.Messages)
                 Debug.Log(this.GetType().Name + " enabling Test Viewer");
             ProgressScreen.Instance.SetState(false, ProgressType.LocalSave, "");
             TestViewer.Instance.SetTestViewerState(1, ViewerType.Default, null);
         }
-
-        //public abstract void SetResultsType();
     }
 
     public abstract class TestDisplay<T> : TestDisplayBase where T : TestLogicBase

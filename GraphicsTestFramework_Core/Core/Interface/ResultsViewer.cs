@@ -26,6 +26,8 @@ namespace GraphicsTestFramework
         public RectTransform typeTabContentRect;
         public RectTransform listContentRect;
 
+        GameObject activeContextObject;
+
         int selectedSuite;
         int selectedType;
         List<GameObject> suiteTabs = new List<GameObject>();
@@ -108,16 +110,14 @@ namespace GraphicsTestFramework
                     ResultsDataCommon common = BuildResultsDataCommon(sceneName, testName);
                     ResultsIOData data = ResultsIO.Instance.RetrieveResult(TestStructure.Instance.testStructure.suites[selectedSuite].suiteName, TestStructure.Instance.testStructure.suites[selectedSuite].types[selectedType].typeName, common);
 
-                    int passFail = 2;
-                    if (data != null)
-                        passFail = data.resultsRow[0].resultsColumn[17] == "True" ? 1 : 0; // TODO - Cast this back to correct results
+                    TestLogicBase logic = TestTypeManager.Instance.GetLogicInstanceFromName(TestStructure.Instance.testStructure.suites[selectedSuite].types[selectedType].typeName);
 
                     GameObject go = Instantiate(resultsEntryPrefab, listContentRect, false);
                     listEntries.Add(go);
                     RectTransform goRect = go.GetComponent<RectTransform>();
                     goRect.anchoredPosition = new Vector2(0, entryHeight);
                     ResultsEntry newEntry = go.GetComponent<ResultsEntry>();
-                    newEntry.Setup(common.SceneName, common.TestName, passFail);
+                    newEntry.Setup(common.SceneName, common.TestName, data, logic);
                     entryHeight -= goRect.sizeDelta.y;
                 }
             }
@@ -134,6 +134,33 @@ namespace GraphicsTestFramework
             entryHeight = 0;
         }
 
+        int FindEntryInList(ResultsEntry inputEntry)
+        {
+            for(int i = 0; i < listEntries.Count; i++)
+            {
+                if (listEntries[i] == inputEntry)
+                    return i;
+            }
+            return -1;
+        }
+
+        void NudgeListEntries(int startIndex)
+        {
+
+        }
+
+        public void ShowContextObject(ResultsEntry inputEntry, TestDisplayBase display)
+        {
+            activeContextObject = Instantiate(display.resultsContextPrefab, listContentRect, false);
+            int entryIndex = FindEntryInList(inputEntry);
+        }
+
+        public void HideContextObject(ResultsEntry inputEntry)
+        {
+
+        }
+
+        // TODO - This shouldnt be here
         ResultsDataCommon BuildResultsDataCommon(string sceneName, string testName)
         {
             ResultsDataCommon common = new ResultsDataCommon();

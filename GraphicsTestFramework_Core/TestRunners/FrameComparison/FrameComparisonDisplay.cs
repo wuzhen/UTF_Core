@@ -41,16 +41,23 @@ namespace GraphicsTestFramework
 
         // Enable and setup the test viewer
         // TODO - Revisit this when rewriting the TestViewer
-        public override void EnableTestViewer()
+        // TODO - All the fetch logic is dirty
+        public override void EnableTestViewer(object resultsObject)
         {
             if (Master.Instance.debugMode == Master.DebugMode.Messages)
                 Debug.Log(this.GetType().Name + " enabling Test Viewer");
             object contextObject = new object();
 
-            FrameComparisonLogic.ResultsData resultsData = (FrameComparisonLogic.ResultsData)logic.activeResultData;
-            FrameComparisonLogic.ResultsData baselineData = (FrameComparisonLogic.ResultsData)logic.DeserializeResults(ResultsIO.Instance.RetrieveBaseline(logic.testSuiteName, logic.testTypeName, resultsData.common));
-            FrameComparisonLogic.ComparisonData comparisonData = logic.ProcessComparison(baselineData, resultsData);
-            
+            FrameComparisonLogic.ResultsData resultsInput = (FrameComparisonLogic.ResultsData)resultsObject;
+            FrameComparisonLogic.ResultsData resultsData = (FrameComparisonLogic.ResultsData)logic.DeserializeResults(ResultsIO.Instance.RetrieveResult(logic.testSuiteName, logic.testTypeName, resultsInput.common));
+            ResultsIOData baselineFetch = ResultsIO.Instance.RetrieveBaseline(logic.testSuiteName, logic.testTypeName, resultsInput.common);
+            FrameComparisonLogic.ComparisonData comparisonData = new FrameComparisonLogic.ComparisonData();
+            if (baselineFetch != null)
+            {
+                FrameComparisonLogic.ResultsData baselineData = (FrameComparisonLogic.ResultsData)logic.DeserializeResults(baselineFetch);
+                comparisonData = logic.ProcessComparison(baselineData, resultsData);
+            }
+
             switch (logic.stateType)
             {
                 case TestLogicBase.StateType.CreateBaseline:
@@ -62,7 +69,7 @@ namespace GraphicsTestFramework
                     tabs[0].tabObject = logic.model.settings.captureCamera;
                     tabs[1].tabName = "Results Texture";
                     tabs[1].tabType = ViewerBarTabType.Texture;
-                    tabs[1].tabObject = comparisonData.resultsTex;
+                    tabs[1].tabObject = Common.BuildTextureFromByteArray("Tab_ResultsFrame", resultsData.resultFrame);
                     tabs[1].textureResolution = logic.model.settings.frameResolution;
                     contextObject = tabs;
                     break;

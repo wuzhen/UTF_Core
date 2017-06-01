@@ -27,6 +27,13 @@ namespace GraphicsTestFramework
             public float avgFrameTime;
         }
 
+        //Structure for comparison
+        [System.Serializable]
+        public class ComparisonData
+        {
+            public float delta;
+        }
+
         // Setup the results structs every test  (Dont edit)
         public override void SetupResultsStructs()
         {
@@ -46,21 +53,16 @@ namespace GraphicsTestFramework
             testTypeName = "Average Frame Time";
         }
 
-        //Set model
+        // Set model
         public override void SetModel(TestModel inputModel)
         {
             model = (AverageFrameTimeModel)inputModel;
         }
 
-        //Set reference to logic script for this model
+        // Set display
         public override void SetDisplayType()
         {
             displayType = typeof(AverageFrameTimeDisplay);
-        }
-
-        public override void SetDisplayObject(TestDisplayBase inputDisplay)
-        {
-            displayObject = (AverageFrameTimeDisplay)inputDisplay;
         }
 
         //Set results type
@@ -72,42 +74,44 @@ namespace GraphicsTestFramework
 		/// ------------------------------------------------------------------------------------
         /// Main logic flow methods (overrides) 
 
-        // Logic for creating baseline data
-        /*public override IEnumerator ProcessBaseline()
-        {
-			m_TempData = (ResultsData)GetResultsStruct();
-            for (int i = 0; i < model.settings.waitFrames; i++)
-                yield return new WaitForEndOfFrame();
-            Timestamp(false);
-            for (int i = 0; i < model.settings.sampleFrames; i++)
-                yield return new WaitForEndOfFrame();
-			m_TempData.avgFrameTime = Timestamp(true);
-            BuildResultsStruct(m_TempData);
-        }*/
-
         // Logic for creating results data
         public override IEnumerator ProcessResult()
         {
             m_TempData = (ResultsData)GetResultsStruct();
-			ResultsData referenceData = (ResultsData)DeserializeResults(ResultsIO.Instance.RetrieveBaseline(testSuiteName, testTypeName, m_TempData.common));
 			for (int i = 0; i < model.settings.waitFrames; i++)
                 yield return new WaitForEndOfFrame();
             Timestamp(false);
             for (int i = 0; i < model.settings.sampleFrames; i++)
                 yield return new WaitForEndOfFrame();
 			m_TempData.avgFrameTime = Timestamp(true);
-			if(m_TempData.avgFrameTime - referenceData.avgFrameTime < model.settings.passFailThreshold)
-				m_TempData.common.PassFail = true;
-			else
-				m_TempData.common.PassFail = false;
+            //Comparison
+            if (stateType == StateType.CreateResults)
+            {
+                ResultsData referenceData = (ResultsData)DeserializeResults(ResultsIO.Instance.RetrieveBaseline(testSuiteName, testTypeName, m_TempData.common));
+                ComparisonData comparisonData = ProcessComparison(referenceData, m_TempData);
+                if (m_TempData.avgFrameTime - comparisonData.delta < model.settings.passFailThreshold)
+                    m_TempData.common.PassFail = true;
+                else
+                    m_TempData.common.PassFail = false;
+                comparisonData = null; // TODO - Check for leaks here
+            }
+            //Finalise
             BuildResultsStruct(m_TempData);
         }
 
-		/// ------------------------------------------------------------------------------------
+        // TODO - Will use last run test model, need to get this for every call from Viewers? :/
+        public ComparisonData ProcessComparison(ResultsData baselineData, ResultsData resultsData)
+        {
+            ComparisonData newComparison = new ComparisonData();
+            newComparison.delta = resultsData.avgFrameTime - baselineData.avgFrameTime;
+            return newComparison;
+        }
+
+        /// ------------------------------------------------------------------------------------
         /// Custom test logic methods
         /// No relation to base class or any other test type
 
-		float Timestamp(bool debug)
+        float Timestamp(bool debug)
 		{
 			float multiplier = 1;
 			switch(model.settings.timingType)

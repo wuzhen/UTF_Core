@@ -70,13 +70,12 @@ namespace GraphicsTestFramework
         }
 
         //Builds a Texture2D from a byte array
-        public static Texture2D BuildTextureFromByteArray(string textureName, /*byte[] input*/string input, Vector2 resolution, TextureFormat format, FilterMode filterMode)
+        public static Texture2D BuildTextureFromByteArray(string textureName, /*byte[] input*/string input/*, Vector2 resolution, TextureFormat format, FilterMode filterMode*/)
         {
-            Texture2D output = new Texture2D((int)resolution.x, (int)resolution.y, format, false);
+            //Texture2D output = new Texture2D((int)resolution.x, (int)resolution.y, format, false);
+            Texture2D output = new Texture2D(2, 2);
             output.name = textureName;
-            output.filterMode = filterMode;
-            Debug.LogWarning("res = " + resolution.x + ":" + resolution.y + " image length = " + input.Length);
-            Debug.LogWarning(input);
+            //output.filterMode = filterMode;
             byte[] decodedBytes = Convert.FromBase64String(input);
             output.LoadImage(decodedBytes);
             //output.LoadImage(input);

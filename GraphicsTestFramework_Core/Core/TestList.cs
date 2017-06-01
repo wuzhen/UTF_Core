@@ -90,8 +90,8 @@ namespace GraphicsTestFramework
                     activeTestLogic.SetDisplayType();
                     activeTestDisplay = (TestDisplayBase)newChild.AddComponent(activeTestLogic.displayType);
                     activeTestDisplay.SetLogic(activeTestLogic);
-                    activeTestLogic.SetDisplayObject(activeTestDisplay);
                     activeTestLogic.SetName();
+                    TestTypeManager.Instance.AddType(activeTestLogic);
                 }
                 else
                 {

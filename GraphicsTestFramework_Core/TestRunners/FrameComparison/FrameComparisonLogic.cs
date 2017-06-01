@@ -13,7 +13,6 @@ namespace GraphicsTestFramework
 
         Camera dummyCamera;
         RenderTexture temporaryRt;
-        //Texture2D activeReferenceTexture;
         bool doCapture;
 
         /// ------------------------------------------------------------------------------------
@@ -63,15 +62,10 @@ namespace GraphicsTestFramework
             model = (FrameComparisonModel)inputModel;
         }
 
-        //Set reference to logic script for this model
+        //Set display
         public override void SetDisplayType()
         {
             displayType = typeof(FrameComparisonDisplay);
-        }
-
-        public override void SetDisplayObject(TestDisplayBase inputDisplay)
-        {
-            displayObject = (FrameComparisonDisplay)inputDisplay;
         }
 
         //Set results type
@@ -105,17 +99,18 @@ namespace GraphicsTestFramework
             doCapture = true;
             do { yield return null; } while (m_TempData.resultFrame == null);
             CleanupCameras(); // Need to reset cameras rects here
-            ResultsIOData ioData = ResultsIO.Instance.RetrieveBaseline(testSuiteName, testTypeName, m_TempData.common);
-            if (ioData != null)
+            //Comparison
+            if (stateType == StateType.CreateResults)
             {
-                ResultsData referenceData = (ResultsData)DeserializeResults(ioData);
-                ComparisonData comparison = ProcessComparison(referenceData, m_TempData);
-                if (comparison.DiffPercentage < model.settings.passFailThreshold)
+                ResultsData referenceData = (ResultsData)DeserializeResults(ResultsIO.Instance.RetrieveBaseline(testSuiteName, testTypeName, m_TempData.common));
+                ComparisonData comparisonData = ProcessComparison(referenceData, m_TempData);
+                if (comparisonData.DiffPercentage < model.settings.passFailThreshold)
                     m_TempData.common.PassFail = true;
                 else
                     m_TempData.common.PassFail = false;
-                comparison = null; // TODO - Check for leaks here
+                comparisonData = null; // TODO - Check for leaks here
             }
+            //Finalise
             BuildResultsStruct(m_TempData);
         }
 
@@ -123,8 +118,8 @@ namespace GraphicsTestFramework
         public ComparisonData ProcessComparison(ResultsData baselineData, ResultsData resultsData)
         {
             ComparisonData newComparison = new ComparisonData();
-            newComparison.baselineTex = Common.BuildTextureFromByteArray(baselineData.common.TestName + "_Reference", baselineData.resultFrame, model.settings.frameResolution, model.settings.textureFormat, model.settings.filterMode);
-            newComparison.resultsTex = Common.BuildTextureFromByteArray(resultsData.common.TestName + "_Results", resultsData.resultFrame, model.settings.frameResolution, model.settings.textureFormat, model.settings.filterMode);
+            newComparison.baselineTex = Common.BuildTextureFromByteArray(baselineData.common.TestName + "_Reference", baselineData.resultFrame/*, model.settings.frameResolution, model.settings.textureFormat, model.settings.filterMode*/);
+            newComparison.resultsTex = Common.BuildTextureFromByteArray(resultsData.common.TestName + "_Results", resultsData.resultFrame/*, model.settings.frameResolution, model.settings.textureFormat, model.settings.filterMode*/);
             newComparison.DiffPercentage = Common.GetTextureComparisonValue(newComparison.baselineTex, newComparison.resultsTex);
             return newComparison;
         }

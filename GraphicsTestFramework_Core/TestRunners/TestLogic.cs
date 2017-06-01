@@ -22,7 +22,7 @@ namespace GraphicsTestFramework
 		[HideInInspector] public string testSuiteName;
         [HideInInspector] public TestList.TestInfo activeTestInfo; //Common information about the active test
         [HideInInspector] public Type displayType;
-        [HideInInspector] public TestDisplayBase displayObject;
+        //[HideInInspector] public TestDisplayBase displayObject;
 
         /// ------------------------------------------------------------------------------------
         /// Results variables
@@ -76,8 +76,6 @@ namespace GraphicsTestFramework
         public abstract void SetResultsType();
 
         public abstract void SetDisplayType();
-
-        public abstract void SetDisplayObject(TestDisplayBase inputDisplay);
 
         /// ------------------------------------------------------------------------------------
         /// Main logic flow methods
@@ -168,7 +166,9 @@ namespace GraphicsTestFramework
             if (activeRunType == RunnerType.Run)
                 SubmitResults((int)stateType);
             else
-                displayObject.EnableTestViewer();
+            {
+                GetComponent<TestDisplayBase>().EnableTestViewer(activeResultData);
+            }
         }
 
         // Submit results data to ResultsIO

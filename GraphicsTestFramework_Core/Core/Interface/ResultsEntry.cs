@@ -13,11 +13,20 @@ namespace GraphicsTestFramework
         public Image passFailBackground;
         public Button expandButton;
 
-        public void Setup(string sceneName, string testName, int passFail)
+        ResultsIOData resultsData;
+        TestLogicBase logic;
+
+        public void Setup(string sceneName, string testName, ResultsIOData inputData, TestLogicBase logic)
         {
             sceneNameText.text = sceneName;
             testNameText.text = testName;
-            switch(passFail)
+            resultsData = inputData;
+
+            int passFail = 2;
+            if (resultsData != null)
+                passFail = resultsData.resultsRow[0].resultsColumn[17] == "True" ? 1 : 0; // TODO - Cast this back to correct results?
+
+            switch (passFail)
             {
                 case 0: //Fail
                     passFailText.text = "FAIL";
@@ -32,6 +41,16 @@ namespace GraphicsTestFramework
                     passFailBackground.color = Menu.Instance.colors[1];
                     break;
             }
+        }
+
+        public void ExpandContext()
+        {
+            ResultsViewer.Instance.ShowContextObject(this, logic.GetComponent<TestDisplayBase>());
+        }
+
+        public void HideContext()
+        {
+            ResultsViewer.Instance.HideContextObject(this);
         }
     }
 }

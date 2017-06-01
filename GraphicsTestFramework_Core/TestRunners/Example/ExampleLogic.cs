@@ -62,11 +62,6 @@ namespace GraphicsTestFramework
             displayType = typeof(ExampleDisplay);
         }
 
-        public override void SetDisplayObject(TestDisplayBase inputDisplay)
-        {
-            displayObject = (ExampleDisplay)inputDisplay;
-        }
-
         //Set results type
         public override void SetResultsType()
         {
