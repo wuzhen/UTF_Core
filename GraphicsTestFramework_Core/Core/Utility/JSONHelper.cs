@@ -117,11 +117,13 @@ namespace GraphicsTestFramework
 
 				for (int i = 0; i < splitData.Length; i++) {
 					int cur = i;
+					string entry = splitData [cur];
 					//if entry has been replaced by file ID then fetch it
 					if(splitData[cur].Contains ("REPLACEMENT_")){
-						CloudIO.Instance.FetchLargeEntry (splitData [cur]);
+						//CloudIO.Instance.FetchLargeEntry (splitData [cur]); // TODO - might need to do cloud sometimes?
+						entry = LocalIO.Instance.LargeFileRead (entry);
 					}
-					data.resultsRow [0].resultsColumn.Add (splitData [cur]);
+					data.resultsRow [0].resultsColumn.Add (entry);
 				}
 				return data;
 			} else

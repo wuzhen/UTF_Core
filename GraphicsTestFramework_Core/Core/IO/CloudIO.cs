@@ -230,7 +230,10 @@ namespace GraphicsTestFramework
 			if(responseType == "DATA_")
 			{
 				//process cloud data coming down
-				//LocalIO.Instance.LargeFileWrite ();
+				string value = response.Split(new string[]{"_FILE_NAME_"}, System.StringSplitOptions.None)[1];
+				string name = response.Remove(response.IndexOf("_FILE_NAME_")).TrimEnd ((".png").ToCharArray ());
+				//Debug.LogWarning (value);
+				LocalIO.Instance.LargeFileWrite (value, name);
 			}
 		}
 

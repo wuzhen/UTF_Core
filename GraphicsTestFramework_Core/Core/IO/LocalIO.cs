@@ -199,7 +199,7 @@ namespace GraphicsTestFramework
 			string fileName = key + ".txt";
 			if (!Directory.Exists (filePath))
 				Directory.CreateDirectory (filePath);
-
+			Debug.LogWarning (fileName);
 			File.WriteAllText (filePath + "/" + fileName, value);
 		}
 
