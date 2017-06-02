@@ -121,8 +121,9 @@ namespace GraphicsTestFramework
         public ComparisonData ProcessComparison(ResultsData baselineData, ResultsData resultsData)
         {
             ComparisonData newComparison = new ComparisonData();
-            newComparison.baselineTex = Common.BuildTextureFromByteArray(baselineData.common.TestName + "_Reference", baselineData.resultFrame/*, model.settings.frameResolution, model.settings.textureFormat, model.settings.filterMode*/);
-            newComparison.resultsTex = Common.BuildTextureFromByteArray(resultsData.common.TestName + "_Results", resultsData.resultFrame/*, model.settings.frameResolution, model.settings.textureFormat, model.settings.filterMode*/);
+            Debug.LogWarning(baselineData.resultFrame);
+            newComparison.baselineTex = Common.ConvertStringToTexture(baselineData.common.TestName + "_Reference", baselineData.resultFrame/*, model.settings.frameResolution, model.settings.textureFormat, model.settings.filterMode*/);
+            newComparison.resultsTex = Common.ConvertStringToTexture(resultsData.common.TestName + "_Results", resultsData.resultFrame/*, model.settings.frameResolution, model.settings.textureFormat, model.settings.filterMode*/);
             newComparison.DiffPercentage = Common.GetTextureComparisonValue(newComparison.baselineTex, newComparison.resultsTex);
             return newComparison;
         }

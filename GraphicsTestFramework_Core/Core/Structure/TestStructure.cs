@@ -94,7 +94,7 @@ namespace GraphicsTestFramework
                         TestModel model = (TestModel)testList.testTypes[c].tests[0].testObject.GetComponent(modelList[testList.testTypes[c].testType]);
                         TestLogicBase logic = model.GetLogic();
                         model.SetLogic();
-                        logic.SetName();
+                        logic.SetName(); // TODO - Need this for type name to exist when checking for baseline
                         string typeName = logic.testTypeName;
                         TestType newType = FindDuplicateTypeInSuite(newSuite, typeName);
                         if(newType == null)
@@ -141,6 +141,7 @@ namespace GraphicsTestFramework
                     newChild.transform.SetParent(runnerParent);
                     newChild.name = childName;
                     TestLogicBase logic = (TestLogicBase)newChild.AddComponent(model.logic);
+                    logic.SetName(); // Need this to set type name on instance of logic script
                     logic.SetDisplayType();
                     logic.SetResultsType();
                     TestDisplayBase display = (TestDisplayBase)newChild.AddComponent(logic.displayType);

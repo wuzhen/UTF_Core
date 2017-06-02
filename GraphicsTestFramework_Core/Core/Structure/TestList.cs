@@ -4,8 +4,18 @@ using UnityEngine;
 
 namespace GraphicsTestFramework
 {
+    // ------------------------------------------------------------------------------------
+    // TestList
+    // - User defined test list per scene
+    // - Contains tests of multiple types
+    // - Handles running of tests from the list
+
     public class TestList : MonoBehaviour
     {
+        // ------------------------------------------------------------------------------------
+        // Variables
+
+        // Singleton
         private static TestList _Instance = null;
         public static TestList Instance
         {
@@ -17,14 +27,14 @@ namespace GraphicsTestFramework
             }
         }
 
-        //Public
+        // Global Data
         public List<TestType> testTypes = new List<TestType>();
-        //Internal
-        List<Type> modelList = new List<Type>();
         [HideInInspector] public TestLogicBase activeTestLogic;
         [HideInInspector] public TestDisplayBase activeTestDisplay;
-        string suiteName;
 
+        // Local Data
+        List<Type> modelList = new List<Type>();
+        string suiteName;
         public RunnerType currentRunnerType;
         public int currentTypeIndex;
         public int currentTestIndex;

@@ -18,7 +18,7 @@ namespace GraphicsTestFramework
         /// ------------------------------------------------------------------------------------
         /// Test specific variables
 
-        [HideInInspector] public string testTypeName;
+        public string testTypeName;
 		[HideInInspector] public string testSuiteName;
         [HideInInspector] public TestList.TestInfo activeTestInfo; //Common information about the active test
         [HideInInspector] public Type displayType;
@@ -63,7 +63,7 @@ namespace GraphicsTestFramework
 
         public virtual void SetName()
         {
-            testTypeName = "Untitled Logic";
+            testTypeName = "UntitledLogic";
         }
 
         public void SetSuiteName(string name)

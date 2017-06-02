@@ -1,10 +1,12 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-using UnityEngine.SceneManagement;
+﻿using UnityEngine;
 
 namespace GraphicsTestFramework
 {
+    // ------------------------------------------------------------------------------------
+    // Suite Scriptable Object
+    // - One instance for each Suite entry
+    // - Managed by SuiteController
+
     [CreateAssetMenu]
     public class Suite : ScriptableObject
     {

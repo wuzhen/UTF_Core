@@ -1,17 +1,27 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
-
-namespace GraphicsTestFramework
+﻿namespace GraphicsTestFramework
 {
-	public abstract class Broadcast
+    // ------------------------------------------------------------------------------------
+    // Broadcast
+    // - Delegates for broadcasting messages between scripts
+
+    public abstract class Broadcast
 	{
-		public delegate void EndTestAction ();
+        // TestLogic > TesList
+        // Current test complete. Continue.
+        public delegate void EndTestAction ();
 
-		public delegate void EndBuildSetup (); // TODO - Set this up
+        // TODO - Set this up
+        public delegate void EndBuildSetup ();
 
-		public delegate void EndResultsSave ();
+        // CloudIO > TestLogic
+        // Current results saved by CloudIO. End test and continue.
+        // --------
+        // CloudIO > ViewerToolbar
+        // Current results saved by CloudIO. View next test. Used on Baseline resolve path.
+        public delegate void EndResultsSave ();
 
+        // ResultsIO > TestStructure
+        // Baselines have been parsed. Start structure generation.
 		public delegate void LocalBaselineParsed ();
 	}
 }
