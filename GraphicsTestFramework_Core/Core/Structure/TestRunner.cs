@@ -6,18 +6,28 @@ using UnityEngine.SceneManagement;
 
 namespace GraphicsTestFramework
 {
-    public enum RunnerType { Default, Run, View, ResolveBaseline };
-    
+    // ------------------------------------------------------------------------------------
+    // Global Enums
+
+    public enum RunnerType
+    {
+        Automation,
+        Manual,
+        Resolve
+    };
+
+    // ------------------------------------------------------------------------------------
+    // TestRunner
+    // - Global test execution management
+    // - Converts TestStructure to a runner based on menu selections
+    // - Handles running of tests across multiple TestList
+
     public class TestRunner : MonoBehaviour
     {
-        public RunnerType runnerType;
-        TestStructure.Structure testStructure;
-        public TestID selectedEntry;
-        public Runner runner;
-        bool runnerIsWaiting;
-        int currentTestIndex;
-        //TestList activeTestList;
+        // ------------------------------------------------------------------------------------
+        // Variables
 
+        // Singleton
         private static TestRunner _Instance = null;
         public static TestRunner Instance
         {
@@ -29,93 +39,61 @@ namespace GraphicsTestFramework
             }
         }
 
+        // Data
+        public RunnerType runnerType;
+        public Runner runner;
+        bool runnerIsWaiting;
+        int currentTestIndex;
+
+        // Level load (TODO - Update API)
         private bool levelWasLoaded = false;
         private void OnLevelWasLoaded(int iLevel)
         {
             levelWasLoaded = true;
         }
 
-        /// ------------------------------------------------------------------------------------
-        /// Setup
+        // ------------------------------------------------------------------------------------
+        // Initialization
 
         // Setup the runner after instantiation
         public void SetupRunner(RunnerType runType)
         {
-            ProgressScreen.Instance.SetState(true, ProgressType.LocalLoad, "Generating and processing new Test Runner");
-            runnerType = runType;
-            switch(runnerType)
-            {
-                case RunnerType.Default: // TODO - This mode should never be passed to the Runner. Remove when sure.
-                    Debug.LogWarning("Default runner type was passed to the TestRunner. This shouldnt happen!");
-                    break;
-                case RunnerType.Run:
-                    break;
-                case RunnerType.View:
-                    GetSelectedEntry();
-                    break;
-                case RunnerType.ResolveBaseline:
-                    break;
-            }
-            GetTestStructure();
-            if (Master.Instance.debugMode == Master.DebugMode.Messages)
-                Debug.Log("Test Runner finished setup");
-            GenerateTestRunner();
+            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Setting up runner"); // Write to console
+            ProgressScreen.Instance.SetState(true, ProgressType.LocalLoad, "Generating and processing new Test Runner"); // Enable ProgressScreen
+            runnerType = runType; // Set runner type
+            GenerateTestRunner(TestStructure.Instance.GetStructure()); // Generate test runner
         }
-        
-        // Get the final test structure ready to convert to a runner
-        void GetTestStructure()
-        {
-            testStructure = TestStructure.Instance.GetStructure();
-            if (Master.Instance.debugMode == Master.DebugMode.Messages)
-                Debug.Log("Test Runner received test structure");
-        }
-
-        // Get the selected entry from the menu to start the runner at a specific point
-        void GetSelectedEntry()
-        {
-            selectedEntry = Menu.Instance.GetSelectedEntry();
-            if (Master.Instance.debugMode == Master.DebugMode.Messages)
-                Debug.Log("Test Runner receieved selected entry");
-        }
-
-        /// ------------------------------------------------------------------------------------
-        /// Generate a new runner
 
         // Convert the test structure into a runner based on current selection and runner type
-        void GenerateTestRunner()
+        void GenerateTestRunner(TestStructure.Structure inputStructure)
         {
-            runner = new Runner();
-            for (int su = 0; su < testStructure.suites.Count; su++)
+            runner = new Runner(); // Create new Runner instance
+            for (int su = 0; su < inputStructure.suites.Count; su++) // Iterate suites
             {
-                if (testStructure.suites[su].selectionState != 0 || runnerType != RunnerType.Run)
+                if (inputStructure.suites[su].selectionState != 0 || runnerType != RunnerType.Automation) // If selected or automation
                 {
-                    for (int ty = 0; ty < testStructure.suites[su].types.Count; ty++)
+                    string suiteName = inputStructure.suites[su].suiteName;
+                    for (int ty = 0; ty < inputStructure.suites[su].types.Count; ty++) // Iterate types
                     {
-                        if (testStructure.suites[su].types[ty].selectionState != 0 || runnerType != RunnerType.Run) // TODO - This check works?
+                        if (inputStructure.suites[su].types[ty].selectionState != 0 || runnerType != RunnerType.Automation) // If selected or automation
                         {
-                            for (int sc = 0; sc < testStructure.suites[su].types[ty].scenes.Count; sc++)
+                            string typeName = inputStructure.suites[su].types[ty].typeName;
+                            int typeIndex = inputStructure.suites[su].types[ty].typeIndex;
+                            for (int sc = 0; sc < inputStructure.suites[su].types[ty].scenes.Count; sc++) // Iterate scenes
                             {
-                                if (testStructure.suites[su].types[ty].scenes[sc].selectionState != 0 || runnerType != RunnerType.Run) // TODO - This check works?
+                                if (inputStructure.suites[su].types[ty].scenes[sc].selectionState != 0 || runnerType != RunnerType.Automation) // If selected or automation
                                 {
-                                    for (int te = 0; te < testStructure.suites[su].types[ty].scenes[sc].tests.Count; te++)
+                                    string sceneName = inputStructure.suites[su].types[ty].scenes[sc].sceneName;
+                                    string scenePath = inputStructure.suites[su].types[ty].scenes[sc].scenePath;
+                                    for (int te = 0; te < inputStructure.suites[su].types[ty].scenes[sc].tests.Count; te++) // Iterate tests
                                     {
-                                        if (testStructure.suites[su].types[ty].scenes[sc].tests[te].selectionState != 0 || runnerType != RunnerType.Run)
+                                        if (inputStructure.suites[su].types[ty].scenes[sc].tests[te].selectionState != 0 || runnerType != RunnerType.Automation) // If selected or automation
                                         {
-                                            // This last check is for baseline resolution mode. If in that runner type only returns all tests missing baselines
-                                            if(!testStructure.suites[su].types[ty].scenes[sc].tests[te].baseline || runnerType != RunnerType.ResolveBaseline)
+                                            string testName = inputStructure.suites[su].types[ty].scenes[sc].tests[te].testName;
+                                            if (!inputStructure.suites[su].types[ty].scenes[sc].tests[te].baseline || runnerType != RunnerType.Resolve) // If baseline resolution mode return all with no baselines
                                             {
-                                                TestEntry newTest = new TestEntry();
-                                                newTest.suiteName = testStructure.suites[su].suiteName;
-                                                newTest.sceneName = testStructure.suites[su].types[ty].scenes[sc].sceneName;
-                                                newTest.scenePath = testStructure.suites[su].types[ty].scenes[sc].scenePath;
-                                                newTest.typeName = testStructure.suites[su].types[ty].typeName;
-                                                newTest.testName = testStructure.suites[su].types[ty].scenes[sc].tests[te].testName;
-                                                newTest.typeValue = testStructure.suites[su].types[ty].typeIndex;
-                                                newTest.suiteIndex = su;
-                                                newTest.sceneIndex = sc;
-                                                newTest.typeIndex = ty;
-                                                newTest.testIndex = te;
-                                                runner.tests.Add(newTest);
+                                                TestEntry newTest = new TestEntry(suiteName, sceneName, scenePath, typeName, testName, typeIndex, su, sc, ty, te); // Create new TestEntry instance
+                                                runner.tests.Add(newTest); // Add to runner
                                             }
                                         }
                                     }
@@ -125,193 +103,181 @@ namespace GraphicsTestFramework
                     }
                 }
             }
-            if (Master.Instance.debugMode == Master.DebugMode.Messages)
-                Debug.Log("Test Runner generated runner");
-            if(runnerType != RunnerType.ResolveBaseline) // If RunnerType == ResolveBAseline we start tests manually
-                StartTests();
+            Console.Instance.Write(DebugLevel.Logic, MessageLevel.Log, "Generated test runner"); // Write to console
+            if (runnerType != RunnerType.Resolve) // If in Resolve mode we start tests manually
+                StartTests(); // Start tests
         }
 
-        /// ------------------------------------------------------------------------------------
-        /// Run execution
-        
+        // ------------------------------------------------------------------------------------
+        // Runner Execution
+
         public void StartTests()
         {
-            if (Master.Instance.debugMode == Master.DebugMode.Messages)
-                Debug.Log("Test Runner started executing the run");
-            Menu.Instance.SetMenuState(0);
-            switch(runnerType)
+            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Starting runner execution"); // Write to console
+            Menu.Instance.SetMenuState(0); // Disable menu
+            switch (runnerType) // Switch execution logic based on RunnerType
             {
-                case RunnerType.Default: // TODO - This mode should never be passed to the Runner. Remove when sure.
-                    Debug.LogWarning("Default runner type was passed to the TestRunner. This shouldnt happen!");
+                case RunnerType.Automation: // Automation ("Run" in menu)
+                    StartCoroutine(IterateTests()); // Iterate the runner
                     break;
-                case RunnerType.Run:
-                    StartCoroutine(IterateTests());
+                case RunnerType.Manual: // Manual ("View" in menu)
+                    LoadSelectedTest(); // Load selected from menu
                     break;
-                case RunnerType.View:
-                    LoadSelectedTest();
-                    break;
-                case RunnerType.ResolveBaseline:
-                    currentTestIndex = 0;
-                    StartCoroutine(LoadTest());
+                case RunnerType.Resolve: // Resolve (When forcing baseline resolution in menu)
+                    currentTestIndex = 0; // Current index is always 0
+                    StartCoroutine(LoadTest()); // Load tests manually from 0
                     break;
             }
         }
 
-        public void PreviousTest()
+        // Iterate tests (Automation)
+        IEnumerator IterateTests()
         {
-            if (Master.Instance.debugMode == Master.DebugMode.Messages)
-                Debug.Log("Test Runner is selecting previous test");
-            if(currentTestIndex > 0)
-                currentTestIndex--;
-            else
-                currentTestIndex = runner.tests.Count - 1;
-            StartCoroutine(LoadTest());
+            Console.Instance.Write(DebugLevel.Logic, MessageLevel.Log, "Starting automation run"); // Write to console
+            for (int i = 0; i < runner.tests.Count; i++) // Iterate tests
+            {
+                do { yield return null; } while (runnerIsWaiting == true); // Wait for previous test to finish before next test
+                runnerIsWaiting = true; // Set waiting
+                currentTestIndex = i; // Set current test index
+                StartCoroutine(LoadTest()); // Load test
+            }
+            do { yield return null; } while (runnerIsWaiting == true); // Wait for previous test to finish before enabling menus
+            Console.Instance.Write(DebugLevel.Logic, MessageLevel.Log, "Ended automation run"); // Write to console
+            Menu.Instance.SetMenuState(1); // Enable menu
         }
 
-        public void NextTest()
-        {
-            if (Master.Instance.debugMode == Master.DebugMode.Messages)
-                Debug.Log("Test Runner is selecting next test");
-            if(currentTestIndex < runner.tests.Count - 1)
-                currentTestIndex++;
-            else
-                currentTestIndex = 0;
-            StartCoroutine(LoadTest());
-        }
-
+        // Load Test of currentTestIndex
         IEnumerator LoadTest()
         {
-            string currentSceneName = SceneManager.GetActiveScene().name;
-            string requestedSceneName = runner.tests[currentTestIndex].sceneName;
-            if(currentSceneName != requestedSceneName)
+            if (SceneManager.GetActiveScene().name != runner.tests[currentTestIndex].sceneName) // If current scene name does not match requested
             {
-                SceneManager.LoadScene(requestedSceneName);
-                while (!levelWasLoaded)
+                SceneManager.LoadScene(runner.tests[currentTestIndex].sceneName); // Load requested scene
+                while (!levelWasLoaded) // Wait for load
                     yield return null;
-                levelWasLoaded = false;
-                //activeTestList = FindObjectOfType<TestList>();
+                levelWasLoaded = false; // Reset
             }
-            //if(activeTestList == null)
-               // activeTestList = FindObjectOfType<TestList>();
-            if(TestList.Instance == null)
-                Debug.LogWarning("Test List not found!");
-
-            //activeTestList.Setup(runner.tests[currentTestIndex].suiteName);
-            TestList.Instance.Setup(runner.tests[currentTestIndex].suiteName);
-            yield return new WaitForEndOfFrame();
-            TestInstance newTest = new TestInstance(runner.tests[currentTestIndex].typeValue, runner.tests[currentTestIndex].testIndex);
-            selectedEntry = null; // Null this so it doesnt affect next iteration
-            if (Master.Instance.debugMode == Master.DebugMode.Messages)
-                Debug.Log("Test Runner is loading test");
-            //activeTestList.RunTest(newTest, runnerType);
-            TestList.Instance.RunTest(newTest, runnerType);
+            Console.Instance.Write(DebugLevel.Logic, MessageLevel.Log, "Loading test "+ runner.tests[currentTestIndex].testName); // Write to console
+            TestList.Instance.StartTest(runner.tests[currentTestIndex], runnerType); // Start the test
         }
 
         // Load the currently selected test for view
         void LoadSelectedTest()
         {
-            GetSelectedEntry();
-            currentTestIndex = FindSelectedTestIndex();
-            StartCoroutine(LoadTest());
+            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Loading selected test"); // Write to console
+            MenuTestEntry selectedEntry = Menu.Instance.GetSelectedEntry(); // Get selected menu entry
+            currentTestIndex = FindSelectedTestIndex(selectedEntry); // Find selected entry in runner (will be -1 in failure case)
+            StartCoroutine(LoadTest()); // Start load
         }
 
-        // Find the runner index of the selected test
-        int FindSelectedTestIndex()
+        // Find and load previous test
+        public void PreviousTest()
         {
-            for(int i = 0; i < runner.tests.Count; i++)
-            {
-                if (runner.tests[i].suiteIndex == selectedEntry.suiteId &&
-                    runner.tests[i].sceneIndex == selectedEntry.sceneId &&
-                    runner.tests[i].typeIndex == selectedEntry.typeId &&
-                    runner.tests[i].testIndex == selectedEntry.testId)
-                {
-                    return i;
-                }
-            }
-            if (Master.Instance.debugMode == Master.DebugMode.Messages)
-                Debug.LogWarning("Test index not found!");
-            return -1;
+            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Selecting previous test"); // Write to console
+            if (currentTestIndex > 0) // If not first test
+                currentTestIndex--; // Select previous test
+            else
+                currentTestIndex = runner.tests.Count - 1; // Select last test
+            StartCoroutine(LoadTest()); // Load test
         }
 
-        // Iterate tests in Run mode
-        IEnumerator IterateTests()
+        // Find and load next test
+        public void NextTest()
         {
-            for(int i = 0; i < runner.tests.Count; i++)
-            {
-                do { yield return null; } while (runnerIsWaiting == true);
-                runnerIsWaiting = true;
-                currentTestIndex = i;
-                StartCoroutine(LoadTest());
-            }
-            do { yield return null; } while (runnerIsWaiting == true);
-            if (Master.Instance.debugMode == Master.DebugMode.Messages)
-                Debug.Log("Test Runner finished executing the run");
-            Menu.Instance.SetMenuState(1);
+            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Selecting next test"); // Write to console
+            if (currentTestIndex < runner.tests.Count - 1) // If not last test
+                currentTestIndex++; // Select next test
+            else
+                currentTestIndex = 0; // Select first test
+            StartCoroutine(LoadTest()); // Load test
         }
 
-        // Finalise test in Run mode so iteration can continue
-        public void FinaliseTest()
+        // Finalise test (Called by TestList.EndTest)
+        public void FinalizeTest()
         {
-            runnerIsWaiting = false;
+            Console.Instance.Write(DebugLevel.Logic, MessageLevel.Log, "Finalizing test " + runner.tests[currentTestIndex].testName); // Write to console
+            runnerIsWaiting = false; // To waiting to false so automation can continue
         }
 
-        /// ------------------------------------------------------------------------------------
-        /// Get Data from Runner
+        // ------------------------------------------------------------------------------------
+        // Get Data
 
         // Get the entry for the current test index
         public TestEntry GetCurrentTestEntry()
         {
-            return runner.tests[currentTestIndex];
+            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Getting current test entry"); // Write to console
+            return runner.tests[currentTestIndex]; // Return current test entry
+        }
+
+        // ------------------------------------------------------------------------------------
+        // Helper Methods
+
+        // Find the runner index of the selected test
+        int FindSelectedTestIndex(MenuTestEntry selectedEntry)
+        {
+            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Finding selected test index"); // Write to console
+            for (int i = 0; i < runner.tests.Count; i++) // Iterate tests
+            {
+                if (runner.tests[i].suiteIndex == selectedEntry.suiteId &&
+                    runner.tests[i].sceneIndex == selectedEntry.sceneId &&
+                    runner.tests[i].typeIndex == selectedEntry.typeId &&
+                    runner.tests[i].testIndex == selectedEntry.testId) // If all data matches
+                {
+                    return i; // Return it
+                }
+            }
+            Console.Instance.Write(DebugLevel.Critical, MessageLevel.LogError, "Test index not found!"); // Write to console
+            return -1; // Return failure
         }
 
         // Check if the current test is the last in the current runner
         public bool CheckEndOfRunner()
         {
-            if (currentTestIndex < runner.tests.Count - 1)
-                return false;
+            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Checking for end of runner"); // Write to console
+            if (currentTestIndex < runner.tests.Count - 1) // If tests remain
+                return false; // Return false
             else
-                return true;
+                return true; // Return true
         }
 
-        /// ------------------------------------------------------------------------------------
-        /// Member Data Structures
+        // ------------------------------------------------------------------------------------
+        // Local Data Structures
 
         [Serializable]
         public class Runner
         {
-            //public List<Suite> suites = new List<Suite>();
             public List<TestEntry> tests = new List<TestEntry>();
-        }
-
-        [Serializable]
-        public class TestEntry
-        {
-            public string suiteName;
-            public string sceneName;
-            public string scenePath;
-            public string typeName;
-            public string testName;
-            public int typeValue;
-            public int suiteIndex;
-            public int sceneIndex;
-            public int typeIndex;
-            public int testIndex;
         }
     }
 
-    /// ------------------------------------------------------------------------------------
-    /// Public Data Structures
+    // ------------------------------------------------------------------------------------
+    // Global Data Structures
 
     [Serializable]
-    public class TestInstance // Sent to test list
+    public class TestEntry
     {
+        public string suiteName;
+        public string sceneName;
+        public string scenePath;
+        public string typeName;
+        public string testName;
         public int typeValue;
+        public int suiteIndex;
+        public int sceneIndex;
+        public int typeIndex;
         public int testIndex;
 
-        public TestInstance(int typeVal, int testInt)
+        public TestEntry(string inputSuiteName, string inputSceneName, string inputScenePath, string inputTypeName, string inputTestName, int inputTypeValue, int inputSuiteIndex, int inputSceneIndex, int inputTypeIndex, int inputTestIndex)
         {
-            typeValue = typeVal;
-            testIndex = testInt;
+            suiteName = inputSuiteName;
+            sceneName = inputSceneName;
+            scenePath = inputScenePath;
+            typeName = inputTypeName;
+            testName = inputTestName;
+            typeValue = inputTypeValue;
+            suiteIndex = inputSuiteIndex;
+            sceneIndex = inputSceneIndex;
+            typeIndex = inputTypeIndex;
+            testIndex = inputTestIndex;
         }
     }
 }

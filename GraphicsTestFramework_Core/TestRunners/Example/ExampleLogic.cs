@@ -1,159 +1,139 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using System.Reflection;
-using System;
 
 namespace GraphicsTestFramework
 {
-	public class ExampleLogic : TestLogic<ExampleModel> //Set type here to matching model type
+    // ------------------------------------------------------------------------------------
+    // ExampleLogic
+    // - Serves only as example of logic custom setup
+
+    public class ExampleLogic : TestLogic<ExampleModel, ExampleDisplay> // Set types here for matching: < ModelType , DisplayType >
 	{
-		/// ------------------------------------------------------------------------------------
-        /// Logic specific variables
-        
-        float timeWaited; //Used for example
+        // ------------------------------------------------------------------------------------
+        // Variables
 
-        /// ------------------------------------------------------------------------------------
-        /// Logic specififc results class
+        float timeWaited; // Used for example
 
-        ResultsData m_TempData; //Dont remove or edit (write result data into this)
+        // ------------------------------------------------------------------------------------
+        // Results Data Structures
 
-        //Structure for results (Do not rename class. Class contents can be anything)
+        // Structure for results (Do not rename class. Class contents can be anything)
         [System.Serializable]
 		public class ResultsData
 		{
-			public ResultsDataCommon common; //Dont remove (set automatically)
-			public string SomeString;
-			public float SomeFloat;
-			public int SomeInt;
-			public bool SomeBool;
-            public string[] SomeStringArray;
+			public ResultsDataCommon common; // Set automatically (mandatory)
+            public float SomeFloat; // Just some example data. Well use this for comparison.
+			public int SomeInt; // Just some more example data (can save most types, including arrays)
 		}
 
-        // Setup the results structs every test (Dont edit)
-        public override void SetupResultsStructs()
+        // Structure for results (Do not rename class. Class contents can be anything)
+        [System.Serializable]
+        public class ComparisonData
         {
-            ResultsData newResultsData = new ResultsData();
-            newResultsData.common = Common.GetCommonResultsData();
-            newResultsData.common.SceneName = activeTestInfo.SceneName;
-            newResultsData.common.TestName = activeTestInfo.TestName;
-            activeResultData = newResultsData;
+            public float SomeFloatDiff; // Just some example data. Well use this for comparison.
         }
 
-        /// ------------------------------------------------------------------------------------
-        /// Initial setup methods
-        /// All test logic types must override these methods
-
-        //Set name
-        public override void SetName()
-        {
-            testTypeName = "Example";
-        }
-
-        //Set model
-        public override void SetModel(TestModel inputModel)
-        {
-            model = (ExampleModel)inputModel;
-        }
-
-        //Set reference to logic script for this model
-        public override void SetDisplayType()
-        {
-            displayType = typeof(ExampleDisplay);
-        }
-
-        //Set results type
-        public override void SetResultsType()
-        {
-            resultsType = typeof(ResultsData);
-        }
-
-        /// ------------------------------------------------------------------------------------
-        /// Main logic flow methods (overrides) 
-        /// 
-        /// Mandatory overrides:
-        /// - ProcessBaseline
-        /// - ProcessResult
-        /// 
-        /// Optional overrides:
-        /// - TestPreProcess
-        /// - TestPostProcess
-        /// 
-        /// These method calls are already wrapped in debugs and as such do not require debugs inside them
-        /// However, should you want to add further debugs please wrap them in:
-        /// "if (Master.Instance.debugMode == Master.DebugMode.Messages)"
-
+        // ------------------------------------------------------------------------------------
+        // Execution Overrides
+        // 
+        // Mandatory overrides:
+        // - ProcessResult
+        //
+        // Mandatory methods:
+        // - Process Comparison (TODO - Make this an override)
+        //
+        // Optional overrides:
+        // - TestPreProcess
+        // - TestPostProcess
+        // 
+        // These method calls are already wrapped in debugs and as such do not require debugs inside them
+        // However, should you want to add further debugs please use Console.Write()
 
         // First injection point for custom code. Runs before any test logic.
-        /*public override void TestPreProcess()
+        public override void TestPreProcess()
         {
             // Custom test pre-processing logic here
-            StartTest();
-        }*/
-
-        // Logic for creating baseline data
-        /*public override IEnumerator ProcessBaseline()
-        {
-            m_TempData = (ResultsData)GetResultsStruct(); //Must get results struct and cast to this logics results type
-            if (timeWaited < model.settings.waitTime) //Check if waited time specified by active test options
-            { 
-                timeWaited += Time.deltaTime; //Contune waiting
-                yield return null;
-            }
-            m_TempData = GetDummyData(m_TempData.common);
-            BuildResultsStruct(m_TempData); //Must pass results struct to be built at the end of this logic
-        }*/
+            StartTest(); // Start test (mandatory if overriding this method)
+        }
 
         // Logic for creating results data
         public override IEnumerator ProcessResult()
 		{
-			m_TempData = (ResultsData)GetResultsStruct(); //Must get results struct and cast to this logics results type
-            if (timeWaited < model.settings.waitTime) //Check if waited time specified by active test options
+			m_TempData = (ResultsData)GetResultsStruct(); // Must get results struct and cast to this logics results type (mandatory)
+            if (timeWaited < model.settings.waitTime) // Check if waited time specified by active test options (logic specific)
             { 
-				timeWaited += Time.deltaTime; //Contune waiting
-				yield return null;
+				timeWaited += Time.deltaTime; // Contune waiting (logic specific)
+                yield return null;
 			}
-            m_TempData = GetDummyData(m_TempData.common);
-            BuildResultsStruct(m_TempData); //Must pass results struct to be built at the end of this logic
+            m_TempData = GetDummyData(m_TempData.common); // Just get some dummy data for the example (logic specific)
+            if (baselineExists) // Comparison (mandatory)
+            {
+                ResultsData referenceData = (ResultsData)DeserializeResults(ResultsIO.Instance.RetrieveBaseline(activeTestEntry.suiteName, testTypeName, m_TempData.common)); // Deserialize baseline data (mandatory)
+                ComparisonData comparisonData = ProcessComparison(referenceData, m_TempData);  // Prrocess comparison (mandatory)
+                if (comparisonData.SomeFloatDiff < model.settings.passFailThreshold)  // Pass/fail decision logic (logic specific)
+                    m_TempData.common.PassFail = true;
+                else
+                    m_TempData.common.PassFail = false;
+                comparisonData = null;  // Null comparison (mandatory)
+            }
+            BuildResultsStruct(m_TempData); // Submit (mandatory)
+        }
+
+        // Logic for comparison process (mandatory)
+        // TODO - Will use last run test model, need to get this for every call from Viewers?
+        public ComparisonData ProcessComparison(ResultsData baselineData, ResultsData resultsData)
+        {
+            ComparisonData newComparison = new ComparisonData(); // Create new ComparisonData instance (mandatory)
+            newComparison.SomeFloatDiff = resultsData.SomeFloat - baselineData.SomeFloat; // Perform comparison logic (logic specific)
+            return newComparison; // Return (mandatory)
         }
 
         // Last injection point for custom code. Runs after all test logic.
-        /*public override void TestPostProcess()
+        public override void TestPostProcess()
         {
             // Custom test post-processing logic here
-            EndTest();
-        }*/
+            EndTest(); // End test (mandatory if overriding this method)
+        }
 
-        /// ------------------------------------------------------------------------------------
-        /// Custom test logic
-        /// No relation to base class or any other test type
-        /// In this example this is needed to generate dummy data to pass as results
+        // ------------------------------------------------------------------------------------
+        // Test Type Specific Methods
 
+        // Just get some dummy result data for the example
         ResultsData GetDummyData (ResultsDataCommon common)
         {
             ResultsData output = new ResultsData();
             output.common = common;
-            output.SomeString = "Test String";
             output.SomeFloat = UnityEngine.Random.value;
             output.SomeInt = Mathf.RoundToInt(output.SomeFloat);
-            output.SomeStringArray = new string[2] { "Entry1", "Entry2" };
-            if (output.SomeFloat > 0.5f)
-                output.SomeBool = true;
-            else
-                output.SomeBool = false;
             return output;
         }
 
-        /// ------------------------------------------------------------------------------------
-        /// TestViewer related methods
-        /// TODO - Revisit this when rewriting the TestViewer
-        /// TestViewer will default to a default setup with no tabs
-        /// If you wish to use tabs please refer to this override method in "FrameComparisonLogic.cs"
-        /// WARNING : This logic is subject to immediate change
+        // The following methods are (unfortunately) currently needed in every test logic script (due to strong typing)
+        // TODO - More work on abstracting these
 
-        /*public override void EnableTestViewer()
+        // ------------------------------------------------------------------------------------
+        // --------------------------- DO NOT EDIT BELOW HERE ---------------------------------
+        // ------------------------------------------------------------------------------------
+
+        ResultsData m_TempData; // Current results data (Dont remove or edit)
+
+        // Setup the results structs every test (Dont remove or edit)
+        public override void SetupResultsStructs()
         {
-            TestViewer.Instance.SetTestViewerState(1, ViewerType.Default, null);
-        }*/
+            ResultsData newResultsData = new ResultsData();
+            newResultsData.common = Common.GetCommonResultsData();
+            newResultsData.common.SceneName = activeTestEntry.sceneName;
+            newResultsData.common.TestName = activeTestEntry.testName;
+            activeResultData = newResultsData;
+        }
+
+        //Set and initialize results type (Dont remove or edit)
+        public override void SetResults()
+        {
+            resultsType = typeof(ResultsData);
+            ResultsData newData = new ResultsData();
+            newData.common = new ResultsDataCommon();
+            activeResultData = newData;
+        }
     }
 }

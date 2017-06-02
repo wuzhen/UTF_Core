@@ -1,34 +1,34 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using System.Reflection;
-using System;
 
 namespace GraphicsTestFramework
 {
-    public class FrameComparisonLogic : TestLogic<FrameComparisonModel>
+    // ------------------------------------------------------------------------------------
+    // FrameComparisonLogic
+    // - Results: Captures a screenshot from models test camera
+    // - Comparison: Gets average value of pixel differences between results screenshot and baseline
+
+    public class FrameComparisonLogic : TestLogic<FrameComparisonModel, FrameComparisonDisplay>
     {
-        /// ------------------------------------------------------------------------------------
-        /// Logic specific variables
+        // ------------------------------------------------------------------------------------
+        // Variables
 
         Camera dummyCamera;
         RenderTexture temporaryRt;
         bool doCapture;
 
-        /// ------------------------------------------------------------------------------------
-        /// Logic specififc results class
+        // ------------------------------------------------------------------------------------
+        // Results Data Structures
 
-        ResultsData m_TempData; //Dont remove or edit (write result data into this)
-
-        //Structure for results
+        // Structure for results
         [System.Serializable]
         public class ResultsData
         {
-            public ResultsDataCommon common; //Dont remove (set automatically)
+            public ResultsDataCommon common; // Set automatically (mandatory)
             public string resultFrame;
         }
 
-        //Structure for comparison
+        // Structure for comparison
         [System.Serializable]
         public class ComparisonData
         {
@@ -37,148 +37,112 @@ namespace GraphicsTestFramework
             public Texture2D resultsTex;
         }
 
-        // Setup the results structs every test (Dont edit)
-        public override void SetupResultsStructs()
-        {
-            ResultsData newResultsData = new ResultsData();
-            newResultsData.common = Common.GetCommonResultsData();
-            newResultsData.common.SceneName = activeTestInfo.SceneName;
-            newResultsData.common.TestName = activeTestInfo.TestName;
-            activeResultData = newResultsData;
-        }
+        // ------------------------------------------------------------------------------------
+        // Execution Overrides
 
-        /// ------------------------------------------------------------------------------------
-        /// Initial setup methods
-
-        // Set name
-        public override void SetName()
-        {
-            testTypeName = "FrameComparison";
-        }
-
-        //Set model
-        public override void SetModel(TestModel inputModel)
-        {
-            model = (FrameComparisonModel)inputModel;
-        }
-
-        //Set display
-        public override void SetDisplayType()
-        {
-            displayType = typeof(FrameComparisonDisplay);
-        }
-
-        //Set results type
-        public override void SetResultsType()
-        {
-            resultsType = typeof(ResultsData);
-            ResultsData newData = new ResultsData(); // Need to init this so it can be used to deserialize results from the results screen
-            newData.common = new ResultsDataCommon();
-            activeResultData = newData;
-        }
-
-        /// ------------------------------------------------------------------------------------
-        /// Main logic flow methods (overrides) 
-
-        // First injection point for custom code. Runs before any test logic. 
+        // First injection point for custom code. Runs before any test logic (optional override)
         // - Set up cameras and create RenderTexture
         public override void TestPreProcess()
         {
-            temporaryRt = new RenderTexture((int)model.settings.frameResolution.x, (int)model.settings.frameResolution.y, 24);
-            if (!SetupCameras())
-            {
-                Debug.LogWarning("Camera reference missing. Aborting");
-            }
-            StartTest();
+            temporaryRt = new RenderTexture((int)model.settings.frameResolution.x, (int)model.settings.frameResolution.y, 24); // Get a temporary RenderTexture for blit operations
+            SetupCameras(); // Setup cameras
+            StartTest(); // Start test
         }
 
-        // Logic for creating results data
+        // Logic for creating results data (mandatory override)
         public override IEnumerator ProcessResult()
         {
-            m_TempData = (ResultsData)GetResultsStruct();
-            for (int i = 0; i < model.settings.waitFrames; i++)
+            m_TempData = (ResultsData)GetResultsStruct(); // Get a results struct (mandatory)
+            for (int i = 0; i < model.settings.waitFrames; i++) // Wait for requested wait frame count (logic specific)
                 yield return new WaitForEndOfFrame();
-            model.settings.captureCamera.targetTexture = temporaryRt;
-            doCapture = true;
-            do { yield return null; } while (m_TempData.resultFrame == null);
-            CleanupCameras(); // Need to reset cameras rects here
-            //Comparison
-            if (stateType == StateType.CreateResults)
+            model.settings.captureCamera.targetTexture = temporaryRt; // Set capture cameras target texture to temporary RT (logic specific)
+            doCapture = true; // Perform OnRenderImage logic (logic specific)
+            do { yield return null; } while (m_TempData.resultFrame == null); // Wait for OnRenderImage logic to complete (logic specific)
+            CleanupCameras(); // Reset camera rects (logic specific)
+            if (baselineExists) // Comparison (mandatory)
             {
-                ResultsData referenceData = (ResultsData)DeserializeResults(ResultsIO.Instance.RetrieveBaseline(testSuiteName, testTypeName, m_TempData.common));
-                ComparisonData comparisonData = ProcessComparison(referenceData, m_TempData);
-                if (comparisonData.DiffPercentage < model.settings.passFailThreshold)
+                ResultsData referenceData = (ResultsData)DeserializeResults(ResultsIO.Instance.RetrieveBaseline(activeTestEntry.suiteName, testTypeName, m_TempData.common)); // Deserialize baseline data (mandatory)
+                ComparisonData comparisonData = ProcessComparison(referenceData, m_TempData);  // Prrocess comparison (mandatory)
+                if (comparisonData.DiffPercentage < model.settings.passFailThreshold)  // Pass/fail decision logic (logic specific)
                     m_TempData.common.PassFail = true;
                 else
                     m_TempData.common.PassFail = false;
-                comparisonData = null; // TODO - Check for leaks here
+                comparisonData = null;  // Null comparison (mandatory)
             }
-            //Finalise
-            BuildResultsStruct(m_TempData);
+            BuildResultsStruct(m_TempData); // Submit (mandatory)
         }
 
-        // TODO - Will use last run test model, need to get this for every call from Viewers? :/
+        // Logic for comparison process (mandatory)
+        // TODO - Will use last run test model, need to get this for every call from Viewers?
         public ComparisonData ProcessComparison(ResultsData baselineData, ResultsData resultsData)
         {
-            ComparisonData newComparison = new ComparisonData();
-            Debug.LogWarning(baselineData.resultFrame);
-            newComparison.baselineTex = Common.ConvertStringToTexture(baselineData.common.TestName + "_Reference", baselineData.resultFrame/*, model.settings.frameResolution, model.settings.textureFormat, model.settings.filterMode*/);
-            newComparison.resultsTex = Common.ConvertStringToTexture(resultsData.common.TestName + "_Results", resultsData.resultFrame/*, model.settings.frameResolution, model.settings.textureFormat, model.settings.filterMode*/);
-            newComparison.DiffPercentage = Common.GetTextureComparisonValue(newComparison.baselineTex, newComparison.resultsTex);
-            return newComparison;
+            ComparisonData newComparison = new ComparisonData(); // Create new ComparisonData instance (mandatory)
+            newComparison.baselineTex = Common.ConvertStringToTexture(baselineData.common.TestName + "_Reference", baselineData.resultFrame); // Convert baseline frame to Texture2D (logic specific)
+            newComparison.resultsTex = Common.ConvertStringToTexture(resultsData.common.TestName + "_Results", resultsData.resultFrame); // Convert result frame to Texture2D (logic specific)
+            newComparison.DiffPercentage = Common.GetTextureComparisonValue(newComparison.baselineTex, newComparison.resultsTex); // Calculate diff percentage (logic specific)
+            return newComparison; // Return (mandatory)
         }
 
-        /// ------------------------------------------------------------------------------------
-        /// Custom test logic methods
-        /// No relation to base class or any other test type
+        // ------------------------------------------------------------------------------------
+        // Test Type Specific Methods
 
+        // Called on render
         private void OnRenderImage(RenderTexture source, RenderTexture destination)
         {
-            Graphics.Blit(source, destination);
-            if (doCapture)
+            Graphics.Blit(source, destination); // Blit source to destination for Deferred
+            if (doCapture) // If running blit operations
             {
-                doCapture = false;
-                var rt1 = RenderTexture.GetTemporary((int)model.settings.frameResolution.x, (int)model.settings.frameResolution.y, 24, temporaryRt.format, RenderTextureReadWrite.sRGB);
-                Graphics.Blit(temporaryRt, rt1); //Blit camera to the RT
-                Texture2D resultsTex = Common.ConvertRenderTextureToTexture2D(activeTestInfo.TestName + "_Result", rt1, model.settings.frameResolution, model.settings.textureFormat, model.settings.filterMode);
-                m_TempData.resultFrame = System.Convert.ToBase64String(resultsTex.EncodeToPNG());
-                if (Master.Instance.debugMode == Master.DebugMode.Messages)
-                    Debug.Log(this.GetType().Name + " completed blit operations for test " + activeTestInfo.TestName);
-                model.settings.captureCamera.targetTexture = null;
-                RenderTexture.ReleaseTemporary(rt1); //Release the RT
-                temporaryRt.Release();
-                //Destroy(rt1);
+                doCapture = false; // Reset
+                var rt1 = RenderTexture.GetTemporary((int)model.settings.frameResolution.x, (int)model.settings.frameResolution.y, 24, temporaryRt.format, RenderTextureReadWrite.sRGB); // Get a temporary RT for blitting to
+                Graphics.Blit(temporaryRt, rt1); // Blit models camera to the RT
+                Texture2D resultsTex = Common.ConvertRenderTextureToTexture2D(activeTestEntry.testName + "_Result", rt1, model.settings.frameResolution, model.settings.textureFormat, model.settings.filterMode); // Convert the resultying render texture to a Texture2D
+                m_TempData.resultFrame = System.Convert.ToBase64String(resultsTex.EncodeToPNG()); // Convert to Base64 String and save to results data
+                Console.Instance.Write(DebugLevel.Logic, MessageLevel.Log, this.GetType().Name + " completed blit operations for test " + activeTestEntry.testName); // Write to console
+                model.settings.captureCamera.targetTexture = null; // Set target texture to null
+                RenderTexture.ReleaseTemporary(rt1); // Release the temporary RT
+                temporaryRt.Release(); // Release main RT
             }
         }
 
-        //Prepare cameras for capture
-        bool SetupCameras()
+        // Prepare cameras for capture
+        void SetupCameras()
         {
-            if (Master.Instance.debugMode == Master.DebugMode.Messages)
-                Debug.Log(this.GetType().Name + " is setting up cameras");
-            if (dummyCamera == null)
-            {
-                dummyCamera = this.gameObject.AddComponent<Camera>();
-                dummyCamera.rect = new Rect(0, 0, 1, 1);
-                //TODO - This still samples a fullscreen blit //dummyCamera.pixelRect = new Rect(0, 0, model.settings.frameResolution.x, model.settings.frameResolution.y);
-            }
-            if (model.settings.captureCamera)
-            {
-                model.settings.captureCamera.rect = new Rect(0, 0, 1, 1);
-                //TODO - This still samples a fullscreen blit //model.settings.captureCamera.pixelRect = new Rect(0, 0, model.settings.frameResolution.x, model.settings.frameResolution.y);
-                return true;
-            }
-            else
-                return false;
+            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, this.GetType().Name + " is setting up cameras"); // Write to console
+            if (dummyCamera == null) // Dummy camera isnt initialized
+                dummyCamera = this.gameObject.AddComponent<Camera>(); // Create camera component
         }
 
         // Cleanup cameras after test finishes
         void CleanupCameras()
         {
-            if (dummyCamera)
-                Destroy(dummyCamera);
-            if (model.settings.captureCamera)
-                model.settings.captureCamera.rect = new Rect(0, 0, 1, 1);
+            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, this.GetType().Name + " is cleaning up cameras"); // Write to console
+            if (dummyCamera) // If dummy camera exists
+                Destroy(dummyCamera); // Destroy it
+        }
+
+        // ------------------------------------------------------------------------------------
+        // --------------------------- DO NOT EDIT BELOW HERE ---------------------------------
+        // ------------------------------------------------------------------------------------
+
+        ResultsData m_TempData; // Current results data (Dont remove or edit)
+
+        // Setup the results structs every test (Dont remove or edit)
+        public override void SetupResultsStructs()
+        {
+            ResultsData newResultsData = new ResultsData();
+            newResultsData.common = Common.GetCommonResultsData();
+            newResultsData.common.SceneName = activeTestEntry.sceneName;
+            newResultsData.common.TestName = activeTestEntry.testName;
+            activeResultData = newResultsData;
+        }
+
+        //Set and initialize results type (Dont remove or edit)
+        public override void SetResults()
+        {
+            resultsType = typeof(ResultsData);
+            ResultsData newData = new ResultsData();
+            newData.common = new ResultsDataCommon();
+            activeResultData = newData;
         }
     }
 }

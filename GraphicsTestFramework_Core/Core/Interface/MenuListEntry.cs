@@ -49,6 +49,6 @@ namespace GraphicsTestFramework
     {
         public string entryName;
         public int selectionState;
-        public TestID id;
+        public MenuTestEntry id;
     }
 }

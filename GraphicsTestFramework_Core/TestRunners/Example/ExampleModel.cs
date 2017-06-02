@@ -10,6 +10,7 @@ namespace GraphicsTestFramework
         public struct Settings
         {
             public float waitTime;
+            public float passFailThreshold;
 
             public static Settings defaultSettings
             {
@@ -17,7 +18,8 @@ namespace GraphicsTestFramework
                 {
                     return new Settings
                     {
-                        waitTime = 0f
+                        waitTime = 0f,
+                        passFailThreshold = 0.1f
                     };
                 }
             }

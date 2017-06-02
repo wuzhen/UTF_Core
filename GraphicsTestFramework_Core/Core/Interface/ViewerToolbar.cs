@@ -77,7 +77,7 @@ namespace GraphicsTestFramework
 
 		public void OnClickPrevious()
 		{
-			TestList.Instance.activeTestLogic.Cleanup(); //Need to cleanup test logic // TODO - can do this cleaner?
+			//TestTypeManager.Instance.GetActiveTestLogic().Cleanup(); //Need to cleanup test logic // TODO - can do this cleaner?
 			TestList.Instance.EndTest(); // Need to disable test objects TODO - Consider using broadcast here
 			TestRunner.Instance.PreviousTest(); // Move to previous
 		}
@@ -86,7 +86,7 @@ namespace GraphicsTestFramework
 		{
 			if (!TestRunner.Instance.CheckEndOfRunner())
             {
-                TestList.Instance.activeTestLogic.Cleanup(); //Need to cleanup test logic // TODO - can do this cleaner?
+                //TestTypeManager.Instance.GetActiveTestLogic().Cleanup(); //Need to cleanup test logic // TODO - can do this cleaner?
                 TestList.Instance.EndTest(); // Need to disable test objects TODO - Consider using broadcast here
                 TestRunner.Instance.NextTest(); // Move to next
             }
@@ -98,7 +98,7 @@ namespace GraphicsTestFramework
 
 		public void OnClickSaveResults()
 		{
-			TestList.Instance.activeTestLogic.SendDataToResultsIO(0); //Send results data // TODO - can do this cleaner?
+            TestTypeManager.Instance.GetActiveTestLogic().SubmitResults(0); //Send results data // TODO - can do this cleaner?
 		}
 
 		public void OnClickSaveBaseline()
@@ -120,19 +120,19 @@ namespace GraphicsTestFramework
 		//Have to separate this so it can be called depending on the dialogue box
 		void SaveBaselineAction()
 		{
-			TestList.Instance.activeTestLogic.SendDataToResultsIO(1); //Send baseline data // TODO - can do this cleaner?
+            TestTypeManager.Instance.GetActiveTestLogic().SubmitResults(1); //Send baseline data // TODO - can do this cleaner?
 			//if(isBaselineResolution)
 				//OnClickNext();
 		}
 
 		public void OnClickRestartTest()
 		{
-			TestList.Instance.activeTestLogic.RestartTest(); //Restart the test // TODO - can do this cleaner?
+            TestTypeManager.Instance.GetActiveTestLogic().RestartTest(); //Restart the test // TODO - can do this cleaner?
 		}
 
 		public void OnClickReturnToMenu()
 		{
-			TestList.Instance.activeTestLogic.Cleanup(); //Need to cleanup test logic // TODO - can do this cleaner?
+            //TestTypeManager.Instance.GetActiveTestLogic().Cleanup(); //Need to cleanup test logic // TODO - can do this cleaner?
 			TestList.Instance.EndTest(); // Need to disable test objects TODO - Consider using broadcast here
 			TestViewer.Instance.SetTestViewerState(0, ViewerType.Default, null);
 			Menu.Instance.SetMenuState(1);

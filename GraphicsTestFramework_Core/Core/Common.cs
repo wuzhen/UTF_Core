@@ -19,6 +19,7 @@ namespace GraphicsTestFramework
         // Get common data about platform and version
         public static ResultsDataCommon GetCommonResultsData()
         {
+            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Getting common results data"); // Write to console
             ResultsDataCommon output = new ResultsDataCommon(); // Create new class instance
 			output.DateTime = Master.Instance.GetSystemTime ().ToString (); // Get SystemTime from Master
             SystemData systemData = Master.Instance.GetSystemData(); // Get SystemData from Master
@@ -36,6 +37,7 @@ namespace GraphicsTestFramework
         // Gets all subtypes of a Type
         public static List<Type> GetSubTypes<T>() where T : class
         {
+            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Getting subtypes of Type "+ (typeof(T).ToString())); // Write to console
             var types = new List<Type>(); // Create a new list
             foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies()) // Iterate assemblies
             {
@@ -75,6 +77,7 @@ namespace GraphicsTestFramework
         // Convert Array types ready to be serialized for saving
         public static string ConvertStringArrayToString(string[] input)
         {
+            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Converting String Array to String"); // Write to console
             StringBuilder stringBuilder = new StringBuilder(); // Create new StringBuilder
             foreach (string value in input) // Iterate input strings
             {
@@ -88,21 +91,18 @@ namespace GraphicsTestFramework
         // TODO - Remove commented code related to texture resolution, format and filtermode
         public static Texture2D ConvertStringToTexture(string textureName, /*byte[] input*/string input/*, Vector2 resolution, TextureFormat format, FilterMode filterMode*/)
         {
-			Debug.LogWarning (input);
-
-            //Texture2D output = new Texture2D((int)resolution.x, (int)resolution.y, format, false);
+            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Converting String to Texture2D"); // Write to console
             Texture2D output = new Texture2D(2, 2); // Create output Texture2D
             output.name = textureName; // Set texture name
-            //output.filterMode = filterMode;
             byte[] decodedBytes = Convert.FromBase64String(input); // Convert input string from Base64 to byte array
             output.LoadImage(decodedBytes); // Load image (PNG)
-            //output.LoadImage(input);
             return output; // Return
         }
 
         // Convert a RenderTexture to a Texture2D
         public static Texture2D ConvertRenderTextureToTexture2D(string textureName, RenderTexture input, Vector2 resolution, TextureFormat format, FilterMode filterMode)
         {
+            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Converting Render Texture to Texture2D"); // Write to console
             RenderTexture.active = input; // Set input as active RenderTexture
             Texture2D output = new Texture2D((int)resolution.x, (int)resolution.y, format, false); // Create new output Texture2D
             output.name = textureName; // Set texture name
@@ -119,6 +119,7 @@ namespace GraphicsTestFramework
         // Get a comparison value from a texture
         public static float GetTextureComparisonValue(Texture2D baselineInput, Texture2D resultsInput)
         {
+            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Getting Texture2D comparison value"); // Write to console
             float value = 0; // Create float for total pixel value
             int i = 0; // Create index for pixel count
             for (int x = 0; x < resultsInput.width; x++) // Iterate pixel columns

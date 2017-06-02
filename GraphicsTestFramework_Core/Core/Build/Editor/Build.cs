@@ -5,9 +5,10 @@ using UnityEditor;
 
 namespace GraphicsTestFramework
 {
+    // TODO - Consider removing. Not currently using custom build menu
     public class Build
     {
-        [MenuItem("Graphics Test Framework/Build/Windows64")]
+        /*[MenuItem("Graphics Test Framework/Build/Windows64")]
         public static void BuildWindows()
         {
             BuildClient(BuildTarget.StandaloneWindows64, ".exe");
@@ -69,6 +70,6 @@ namespace GraphicsTestFramework
             buildPlayerOptions.target = target;
             buildPlayerOptions.options = BuildOptions.None;
             return buildPlayerOptions;
-        }
+        }*/
     }
 }

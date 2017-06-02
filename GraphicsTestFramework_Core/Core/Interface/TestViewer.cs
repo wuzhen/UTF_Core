@@ -47,18 +47,15 @@ namespace GraphicsTestFramework
         {
             switch(TestRunner.Instance.runnerType)
             {
-                case RunnerType.Default: // TODO - This mode should never be passed to the Viewer. Remove when sure.
-                    Debug.LogWarning("Default runner type was passed to the TestViewer. This shouldnt happen!");
-                    break;
-                case RunnerType.Run: // TODO - This mode should never be passed to the Viewer. Remove when sure.
+                case RunnerType.Automation: // TODO - This mode should never be passed to the Viewer. Remove when sure.
                     Debug.LogWarning("Run runner type was passed to the TestViewer. This shouldnt happen!");
                     break;
-                case RunnerType.View:
+                case RunnerType.Manual:
                     viewerToolbar.SetDefaultMode();
                     viewerNavigationBar.UpdateNavigationBar(type, contextObject);
                     // TODO - Set up full test viewer context here
                     break;
-                case RunnerType.ResolveBaseline:
+                case RunnerType.Resolve:
                     viewerToolbar.SetBaselineResolutionMode();
                     viewerNavigationBar.UpdateNavigationBar(type, contextObject);
                     break;

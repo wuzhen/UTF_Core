@@ -30,7 +30,7 @@ namespace GraphicsTestFramework
         public GameObject menuListEntryPrefab;
         public GameObject listEntryPrefab;
 
-        public TestID selectedId;
+        public MenuTestEntry selectedId;
         MenuListEntry selectedTest;
         float entryHeight;
 
@@ -50,7 +50,7 @@ namespace GraphicsTestFramework
         {
             do { yield return null; } while (!TestStructure.Instance.IsGenerated);
             // Check if need to force baseline resolution?
-            if(TestStructure.Instance.UpdateStructure() == RunnerType.Default) // Baselines exist
+            if(TestStructure.Instance.CheckForBaselines()) // Baselines exist
             {
                 SetupHomeButton();
                 GenerateList();
@@ -67,7 +67,7 @@ namespace GraphicsTestFramework
 
         void UpdateMenu()
         {
-            if (TestStructure.Instance.UpdateStructure() == RunnerType.ResolveBaseline)
+            if (!TestStructure.Instance.CheckForBaselines())
             {
                 GenerateResolveList();
             }
@@ -89,7 +89,7 @@ namespace GraphicsTestFramework
         
         void GenerateResolveList()
         {
-            GenerateTestRunner(RunnerType.ResolveBaseline);
+            GenerateTestRunner(RunnerType.Resolve);
             ProgressScreen.Instance.SetState(false, ProgressType.LocalLoad, "");
             EnableResolveMenu();
         }
@@ -101,7 +101,7 @@ namespace GraphicsTestFramework
             float entryHeight = 0;
             for(int i = 0; i < TestRunner.Instance.runner.tests.Count; i++)
             {
-                TestRunner.TestEntry currentTest = TestRunner.Instance.runner.tests[i];
+                TestEntry currentTest = TestRunner.Instance.runner.tests[i];
                 GameObject go = Instantiate(listEntryPrefab, resolveWindow.contentRect, false);
                 RectTransform goRect = go.GetComponent<RectTransform>();
                 goRect.anchoredPosition = new Vector2(0, entryHeight);
@@ -237,7 +237,7 @@ namespace GraphicsTestFramework
             {
                 ClearList();
                 GenerateBreadcrumb(clicked.entryData);
-                TestID id = CloneMenuID(clicked.entryData.id);
+                MenuTestEntry id = CloneMenuID(clicked.entryData.id);
                 id.currentLevel++;
                 selectedId = id;
                 GenerateList();
@@ -245,7 +245,7 @@ namespace GraphicsTestFramework
             }
             else // Selecting a single test (no children)
             {
-                TestID id = CloneMenuID(clicked.entryData.id);
+                MenuTestEntry id = CloneMenuID(clicked.entryData.id);
                 id.currentLevel++;
                 selectedId = id;
                 if (selectedTest != null)
@@ -311,7 +311,7 @@ namespace GraphicsTestFramework
         {
             if (Master.Instance.debugMode == Master.DebugMode.Messages)
                 Debug.Log("Clicked run button");
-            GenerateTestRunner(RunnerType.Run);
+            GenerateTestRunner(RunnerType.Automation);
         }
 
         // Called when view button is clicked
@@ -319,7 +319,7 @@ namespace GraphicsTestFramework
         {
             if (Master.Instance.debugMode == Master.DebugMode.Messages)
                 Debug.Log("Clicked view button");
-            GenerateTestRunner(RunnerType.View);
+            GenerateTestRunner(RunnerType.Manual);
         }
 
         /// ------------------------------------------------------------------------------------
@@ -342,9 +342,9 @@ namespace GraphicsTestFramework
         /// ------------------------------------------------------------------------------------
         /// Data Helpers
 
-        public TestID CloneMenuID(TestID input)
+        public MenuTestEntry CloneMenuID(MenuTestEntry input)
         {
-            TestID output = new TestID();
+            MenuTestEntry output = new MenuTestEntry();
             output.suiteId = input.suiteId;
             output.typeId = input.typeId;
             output.sceneId = input.sceneId;
@@ -384,7 +384,7 @@ namespace GraphicsTestFramework
         }
 
         // Get the selected test. Used to start test runner at specific point when viewing tests
-        public TestID GetSelectedEntry()
+        public MenuTestEntry GetSelectedEntry()
         {
             return selectedTest.entryData.id;
         }
@@ -430,7 +430,7 @@ namespace GraphicsTestFramework
     /// Public Data Structures
 
     [Serializable]
-    public class TestID
+    public class MenuTestEntry
     {
         public int suiteId = -1;
         public int typeId = -1;

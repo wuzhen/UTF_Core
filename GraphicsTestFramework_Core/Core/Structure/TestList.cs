@@ -27,141 +27,106 @@ namespace GraphicsTestFramework
             }
         }
 
-        // Global Data
+        // Data
         public List<TestType> testTypes = new List<TestType>();
-        [HideInInspector] public TestLogicBase activeTestLogic;
-        [HideInInspector] public TestDisplayBase activeTestDisplay;
+        Test activeTest;
 
-        // Local Data
-        List<Type> modelList = new List<Type>();
-        string suiteName;
-        public RunnerType currentRunnerType;
-        public int currentTypeIndex;
-        public int currentTestIndex;
-
-        /// ------------------------------------------------------------------------------------
-        /// Setup
-
-        // Setup the test list (called by TestRunner when scene is loaded)
-        public void Setup(string suite)
-        {
-            suiteName = suite;
-            modelList = Common.GetSubTypes<TestModel>();
-            if (Master.Instance.debugMode == Master.DebugMode.Messages)
-                Debug.Log(this.GetType().Name + " finished setup");
-        }
+        // ------------------------------------------------------------------------------------
+        // Broadcast
 
         //Subscribe to event delegates
         void OnEnable()
         {
-            //ResultsIO.endResultsSave += EndTest;
             TestLogicBase.endTestAction += EndTest;
         }
 
         //Desubscribe from event delegates
         void OnDisable()
         {
-            //ResultsIO.endResultsSave -= EndTest;
             TestLogicBase.endTestAction -= EndTest;
         }
 
-        /// ------------------------------------------------------------------------------------
-        /// Test execution
+        // ------------------------------------------------------------------------------------
+        // Test Execution
 
         // Start an individual test (called by TestRunner)
-        public void RunTest(TestInstance inputTest, RunnerType runnerType)
+        public void StartTest(TestEntry inputTest, RunnerType runnerType)
         {
-            currentRunnerType = runnerType;
-            currentTypeIndex = GetTypeIndexInArray(inputTest.typeValue);
-            currentTestIndex = inputTest.testIndex;
-            Test activeTest = testTypes[currentTypeIndex].tests[currentTestIndex];
-            activeTest.testObject.SetActive(true);
-            if (Master.Instance.debugMode == Master.DebugMode.Messages)
-                Debug.Log(this.GetType().Name + " is starting test " + testTypes[currentTypeIndex].tests[currentTestIndex].testName);
-            SetupTestInstances(activeTest);
-            activeTestLogic.SetupTest(testTypes[currentTypeIndex].tests[currentTestIndex].testInformation, inputTest.typeValue, suiteName, runnerType);
+            Console.Instance.Write(DebugLevel.Logic, MessageLevel.Log, "Starting test " + inputTest.testName); // Write to console
+            activeTest = testTypes[GetTypeIndexInArray(inputTest.typeValue)].tests[inputTest.testIndex]; // Get the active test
+            activeTest.testObject.SetActive(true); // Enable the active test object
+            TestLogicBase activeTestLogic = GetLogicInstance(activeTest, inputTest); // Get active test logic instance
+            activeTestLogic.SetupTest(inputTest, runnerType); // Setup test
         }
 
-        // TODO - Cleanup
-        void SetupTestInstances(Test activeTest)
+        // Get a logic instance and set model instance on it
+        TestLogicBase GetLogicInstance(Test activeTest, TestEntry activeEntry)
         {
-            TestModel activeModelInstance = (TestModel)activeTest.testObject.GetComponent(modelList[testTypes[currentTypeIndex].testType]);
-            activeModelInstance.SetLogic();
-
-            if (Master.Instance.transform.Find("TestRunners"))
-            {
-                Transform runnerParent = Master.Instance.transform.Find("TestRunners");
-                string childName = activeModelInstance.logic.ToString().Replace("GraphicsTestFramework.", "").Replace("Logic", "");
-                GameObject activeChild = runnerParent.Find(childName).gameObject;
-                activeTestLogic = (TestLogicBase)activeChild.GetComponent(activeModelInstance.logic);
-                activeTestDisplay = (TestDisplayBase)activeChild.GetComponent(activeTestLogic.displayType);
-            }
-            else
-                Debug.LogError("Test Runner parent not found! Aborting");
-
-            activeTestLogic.SetModel(activeModelInstance);
+            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Getting logic instance"); // Write to console
+            TestLogicBase output; // Create logic instance
+            List<Type> modelList = Common.GetSubTypes<TestModel>(); // Get the model list
+            TestModel activeModelInstance = (TestModel)activeTest.testObject.GetComponent(modelList[testTypes[activeEntry.typeIndex].testType]); // Get the active test model
+            activeModelInstance.SetLogic(); // Set the logic reference on the model
+            output = TestTypeManager.Instance.GetLogicInstanceFromName(activeModelInstance.logic.ToString().Replace("GraphicsTestFramework.", "").Replace("Logic", "")); // Get test  logic instance
+            output.SetModel(activeModelInstance); // Set the active test model in the logic
+            TestTypeManager.Instance.SetActiveLogic(output); // Set as active test logic
+            return output; // Return
         }
-        
+
+        // End the current Test (called by TestLogic.EndTestAction)
+        public void EndTest()
+        {
+            Console.Instance.Write(DebugLevel.Logic, MessageLevel.Log, "Ended test " + activeTest.testInformation.TestName); // Write to console
+            activeTest.testObject.SetActive(false); // Disable the active test object
+            ProgressScreen.Instance.SetState(false, ProgressType.LocalLoad, ""); // Disable ProgressScreen
+            TestRunner.Instance.FinalizeTest(); // Finalize test on TestRunner
+        }
+
+        // ------------------------------------------------------------------------------------
+        // Helper Methods
+
         // Get the array index for a given type by that types index in enum
         int GetTypeIndexInArray(int typeIndex)
         {
-            int output = 0;
-            for(int i = 0; i < testTypes.Count; i++)
+            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Getting type index from type list"); // Write to console
+            int output = 0; // Create return integer
+            for (int i = 0; i < testTypes.Count; i++) // Iterate test types
             {
-                if (testTypes[i].testType == typeIndex)
-                    output = i;
+                if (testTypes[i].testType == typeIndex) // If type index matches requested
+                    output = i; // Get the index for that test type in the test list
             }
-            return output;
+            return output; // Return
         }
 
-        public void EndTest()
-        {
-            //int typeIndex = GetTypeIndexInArray(currentTest.typeIndex);
-            testTypes[currentTypeIndex].tests[currentTestIndex].testObject.SetActive(false);
-            if (Master.Instance.debugMode == Master.DebugMode.Messages)
-                Debug.Log(this.GetType().Name + " ended test " + testTypes[currentTypeIndex].tests[currentTestIndex].testName);
-            ProgressScreen.Instance.SetState(false, ProgressType.LocalLoad, "");
-            TestRunner.Instance.FinaliseTest();
-        }
-
-        /// ------------------------------------------------------------------------------------
-        /// Data helpers
-
-        TestInstance CloneTestInstance(TestInstance input)
-        {
-            if(input == null)
-                Debug.LogWarning("Attempting to clone null test instance");
-            TestInstance output = new TestInstance(input.typeValue, input.testIndex);
-            return output;
-        }
-
-        /// ------------------------------------------------------------------------------------
-        /// Editor functions
+        // ------------------------------------------------------------------------------------
+        // Editor Methods
 
 #if UNITY_EDITOR
+
         //Every GUI edit
         [ExecuteInEditMode]
         void OnValidate()
         {
-            GetModels();
-            UpdateTestInfo();
+            GetModels(); // Get model instances for test objects
+            UpdateTestInfo(); // Update info
         }
 
         //Get models of all test types and add components to test objects
         void GetModels()
         {
-            List<Type> modelList = Common.GetSubTypes<TestModel>();
-            for (int t = 0; t < testTypes.Count; t++)
+            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Getting models"); // Write to console
+            List<Type> modelList = Common.GetSubTypes<TestModel>(); // Get all model types
+            for (int t = 0; t < testTypes.Count; t++) // Iterate test types
             {
-                int model = testTypes[t].testType;
-                for (int r = 0; r < testTypes[t].tests.Count; r++)
+                int model = testTypes[t].testType; // Get index of test type
+                for (int r = 0; r < testTypes[t].tests.Count; r++) // Iterate tests of that model
                 {
-                    if (testTypes[t].tests[r].testObject != null)
+                    if (testTypes[t].tests[r].testObject != null) // If test object exists
                     {
-                        if (modelList.Count > model)
+                        if (modelList.Count > model) // If found in model list
                         {
-                            if (!testTypes[t].tests[r].testObject.GetComponent(modelList[model]))
-                                testTypes[t].tests[r].testObject.AddComponent(modelList[model]);
+                            if (!testTypes[t].tests[r].testObject.GetComponent(modelList[model])) // If component doesnt already exist
+                                testTypes[t].tests[r].testObject.AddComponent(modelList[model]); // Add it
                         }
                     }
                 }
@@ -171,19 +136,17 @@ namespace GraphicsTestFramework
         //Update the test info class silently
         void UpdateTestInfo()
         {
-            for (int t = 0; t < testTypes.Count; t++)
+            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Updating test info"); // Write to console
+            for (int t = 0; t < testTypes.Count; t++) // Iterate test types
             {
-                for (int r = 0; r < testTypes[t].tests.Count; r++)
-                {
-                    testTypes[t].tests[r].testName = testTypes[t].tests[r].testObject.name;
-                    testTypes[t].tests[r].testInformation = new TestInfo(testTypes[t].tests[r].testName, gameObject.scene.name);
-                }
+                for (int r = 0; r < testTypes[t].tests.Count; r++) // Iterate tests
+                    testTypes[t].tests[r].testInformation = new TestInfo(testTypes[t].tests[r].testObject.name, gameObject.scene.name); // Set test information
             }
         }
 #endif
 
-        /// ------------------------------------------------------------------------------------
-        /// Member Data Structures
+        // ------------------------------------------------------------------------------------
+        // Local Data Structures
 
         [Serializable]
         public class TestType
@@ -195,9 +158,7 @@ namespace GraphicsTestFramework
         [Serializable]
         public class Test
         {
-            public string testName;
-            [HideInInspector]
-            public TestInfo testInformation;
+            [HideInInspector] public TestInfo testInformation;
             public GameObject testObject;
         }
 

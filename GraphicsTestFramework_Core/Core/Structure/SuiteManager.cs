@@ -35,6 +35,7 @@ namespace GraphicsTestFramework
         // Get a string array of all suite names
         public string[] GetSuiteNames()
         {
+            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Getting suite names"); // Write to console
             string[] suiteNames = new string[suites.Count]; // Create string array of correct length
             for (int i = 0; i < suiteNames.Length; i++) // Iterate suites
                 suiteNames[i] = suites[i].suiteName; // Add to array
@@ -42,7 +43,7 @@ namespace GraphicsTestFramework
         }
 
         // ------------------------------------------------------------------------------------
-        // Editor methods
+        // Editor Methods
 
 #if UNITY_EDITOR
 
@@ -57,6 +58,7 @@ namespace GraphicsTestFramework
         [ExecuteInEditMode]
         public void CreateSuiteAndSceneStructure()
         {
+            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Creating Suite and Scene structure"); // Write to console
             suites.Clear(); // Clear current suite list
             GraphicsTestFramework.Suite[] allSuites = Resources.LoadAll<GraphicsTestFramework.Suite>(""); // Load all Suite scriptable objects into array
             List<UnityEditor.EditorBuildSettingsScene> buildSettingsScenes = new List<UnityEditor.EditorBuildSettingsScene>(); // Create new build settings scene list
@@ -99,6 +101,7 @@ namespace GraphicsTestFramework
         // Find duplicate suite by name
         bool FindDuplicateSuite(string name)
         {
+            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Checking for duplicate suite"); // Write to console
             foreach (Suite suite in suites) // Iterate local suites
             {
                 if (suite.suiteName == name) // If equal to input suite
@@ -110,6 +113,7 @@ namespace GraphicsTestFramework
         // Find duplicate scene in build settings by asset path
         bool FindDuplicateScene(List<UnityEditor.EditorBuildSettingsScene> buildSettingsScenes, string path)
         {
+            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Checking for duplicate scene"); // Write to console
             foreach (UnityEditor.EditorBuildSettingsScene edScene in buildSettingsScenes) // Iterate build settings scenes
             {
                 if (edScene.path == path) // If equal to asset path

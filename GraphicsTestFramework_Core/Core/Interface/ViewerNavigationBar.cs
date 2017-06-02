@@ -70,7 +70,7 @@ namespace GraphicsTestFramework
 		public void UpdateNavigationBar(ViewerType type, object contextObject)
         {
             CleanupNavigationBar();
-            TestRunner.TestEntry currentTest = TestRunner.Instance.GetCurrentTestEntry();
+            TestEntry currentTest = TestRunner.Instance.GetCurrentTestEntry();
             breadcrumbLabel.text = currentTest.suiteName+" - "+currentTest.sceneName+" - "+currentTest.typeName+" - "+currentTest.testName;
 			switch(type)
 			{

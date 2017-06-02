@@ -6,16 +6,18 @@ using UnityEngine.SceneManagement;
 
 namespace GraphicsTestFramework
 {
+    // ------------------------------------------------------------------------------------
+    // TestStructure
+    // - Gets data from SuiteManager and all TestLists
+    // - Generates a structure of all available tests
+    // - Handles baseline checks and selection changes on the structure
+
     public class TestStructure : MonoBehaviour
     {
-        public Structure testStructure;
+        // ------------------------------------------------------------------------------------
+        // Variables
 
-        private bool levelWasLoaded = false;
-        private void OnLevelWasLoaded(int iLevel)
-        {
-            levelWasLoaded = true;
-        }
-
+        // Singleton
         private static TestStructure _Instance = null;
         public static TestStructure Instance
         {
@@ -27,18 +29,27 @@ namespace GraphicsTestFramework
             }
         }
 
+        // Data
+        public Structure testStructure;
+
+        // Level load (TODO - Update API)
+        private bool levelWasLoaded = false;
+        private void OnLevelWasLoaded(int iLevel)
+        {
+            levelWasLoaded = true;
+        }
+
+        // Generation check
         private bool m_IsGenerated = false;
         public bool IsGenerated
         {
             get { return m_IsGenerated; }
         }
 
-        void StartGeneration()
-        {
-            ProgressScreen.Instance.SetState(true, ProgressType.LocalLoad, "Generating Test Structure");
-            StartCoroutine(GenerateStructure());
-        }
+        // ------------------------------------------------------------------------------------
+        // Broadcast
 
+        //Subscribe to event delegates
         void OnEnable()
         {
             ResultsIO.baselinesParsed += StartGeneration;
@@ -50,112 +61,81 @@ namespace GraphicsTestFramework
             ResultsIO.baselinesParsed -= StartGeneration;
         }
 
-        public RunnerType UpdateStructure()
+        // ------------------------------------------------------------------------------------
+        // Initialization
+
+        // Start generation process
+        void StartGeneration()
         {
-            bool hasBaslines = CheckForBaselines();
-            if(hasBaslines)
-            {
-                return RunnerType.Default;
-            }
-            else
-            {
-                return RunnerType.ResolveBaseline;
-            }
+            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Initializing TestStructure"); // Write to console
+            ProgressScreen.Instance.SetState(true, ProgressType.LocalLoad, "Generating Test Structure"); // Enable ProgressScreen
+            StartCoroutine(GenerateStructure()); // Start generating structure
         }
 
-        /// ------------------------------------------------------------------------------------
-        /// Generate test structure from SuiteManagers
-        /// ------------------------------------------------------------------------------------
-        /// - Loads all scenes and gets data from test lists
-        /// - Reorganises for menu layout
-
-        // TODO - Scenes with duplicate types between scenes do not merge at type level
-
+        // Generate test structure
+        // - Loads all scenes and gets data from test lists
+        // - Reorganises for menu layout
         IEnumerator GenerateStructure()
         {
-            testStructure = new Structure();
-            List<Type> modelList = Common.GetSubTypes<TestModel>();
-            for (int a = 0; a < SuiteManager.Instance.suites.Count; a++)
+            testStructure = new Structure(); // Create new test structure instance
+            List<Type> modelList = Common.GetSubTypes<TestModel>(); // Get model list
+            for (int su = 0; su < SuiteManager.Instance.suites.Count; su++) // Iterate suites on SuiteManager
             {
-                Suite newSuite = new Suite();
-                string suiteName = SuiteManager.Instance.suites[a].suiteName;
-                newSuite.suiteName = suiteName;
-                for (int b = 0; b < SuiteManager.Instance.suites[a].scenes.Count; b++)
+                Suite newSuite = new Suite(); // Create new suite instance
+                newSuite.suiteName = SuiteManager.Instance.suites[su].suiteName; // Set suite name from SuiteManager
+                for (int sc = 0; sc < SuiteManager.Instance.suites[su].scenes.Count; sc++) // Iterate scenes
                 {
-                    SceneManager.LoadSceneAsync(SuiteManager.Instance.suites[a].scenes[b].path);
-                    while (!levelWasLoaded)
+                    SceneManager.LoadSceneAsync(SuiteManager.Instance.suites[su].scenes[sc].path); // Load scene
+                    while (!levelWasLoaded) // Wait for scene load complete
                         yield return null;
-                    levelWasLoaded = false;
-                    UnityEngine.SceneManagement.Scene scene = SceneManager.GetSceneAt(0);
-                    string sceneName = scene.name;
-                    TestList testList = FindObjectOfType<TestList>();
-                    for (int c = 0; c < testList.testTypes.Count; c++)
+                    levelWasLoaded = false; // Reset
+                    UnityEngine.SceneManagement.Scene scene = SceneManager.GetSceneAt(0); // Get a scene reference
+                    TestList testList = FindObjectOfType<TestList>(); // Get TestList from current scene
+                    for (int ty = 0; ty < testList.testTypes.Count; ty++) // Iterate test types
                     {
-                        TestModel model = (TestModel)testList.testTypes[c].tests[0].testObject.GetComponent(modelList[testList.testTypes[c].testType]);
-                        TestLogicBase logic = model.GetLogic();
-                        model.SetLogic();
-                        logic.SetName(); // TODO - Need this for type name to exist when checking for baseline
-                        string typeName = logic.testTypeName;
-                        TestType newType = FindDuplicateTypeInSuite(newSuite, typeName);
-                        if(newType == null)
+                        TestModel model = (TestModel)testList.testTypes[ty].tests[0].testObject.GetComponent(modelList[testList.testTypes[ty].testType]); // Get a model reference from the test list
+                        TestLogicBase logic = model.GetLogic(); // Get a logic reference from the model
+                        model.SetLogic(); // TODO - Need this?
+                        logic.SetName(); // Set name on the logic so it exists when checking for baseline
+                        TestType newType = FindDuplicateTypeInSuite(newSuite, logic.testTypeName); // Check for duplicate types and return if found
+                        if(newType == null) // If no duplicate type was found
                         {
-                            newType = new TestType();
-                            newType.typeName = typeName;
-                            newType.typeIndex = testList.testTypes[c].testType;
-                            newSuite.types.Add(newType);
-                            GenerateTestRunnerEntry(model);
+                            newType = new TestType(); // Create a new type instance
+                            newType.typeName = logic.testTypeName; // Set type name
+                            newType.typeIndex = testList.testTypes[ty].testType;  // Set type index
+                            newSuite.types.Add(newType); // Add type to suite
+                            TestTypeManager.Instance.GenerateTestTypeInstances(model); // Generate an instance object for test logic/display
                         }
-                        Scene newScene = FindDuplicateSceneInType(newSuite, newType, sceneName);
-                        if (newScene == null)
+                        Scene newScene = FindDuplicateSceneInType(newSuite, newType, scene.name);  // Check for duplicate scenes and return if found
+                        if (newScene == null) // If no duplicate scene was found
                         {
-                            newScene = new Scene();
-                            newScene.sceneName = sceneName;
-                            newScene.scenePath = scene.path;
-                            for (int d = 0; d < testList.testTypes[c].tests.Count; d++)
+                            newScene = new Scene(); // Create a new scene instance
+                            newScene.sceneName = scene.name; // Set scene name
+                            newScene.scenePath = scene.path; // Set scene path
+                            for (int te = 0; te < testList.testTypes[ty].tests.Count; te++) // Iterate tests
                             {
-                                Test newTest = new Test();
-                                newTest.testName = testList.testTypes[c].tests[d].testName;
-                                newScene.tests.Add(newTest);
+                                Test newTest = new Test(); // Create new test instance
+                                newTest.testName = testList.testTypes[ty].tests[te].testInformation.TestName; // Set test name
+                                newScene.tests.Add(newTest); // Add test to scene
                             }
-                            newType.scenes.Add(newScene);
+                            newType.scenes.Add(newScene); // Add scene to type
                         }
                     }
                 }
-                testStructure.suites.Add(newSuite);
+                testStructure.suites.Add(newSuite); // Add suite to structure
             }
-            m_IsGenerated = true;
-            if (Master.Instance.debugMode == Master.DebugMode.Messages)
-                Debug.Log("Test Structure finished generating");
-            ProgressScreen.Instance.SetState(false, ProgressType.LocalLoad, "");
+            m_IsGenerated = true; // Set generated
+            Console.Instance.Write(DebugLevel.Logic, MessageLevel.Log, "TestStructure finished generating"); // Write to console
+            ProgressScreen.Instance.SetState(false, ProgressType.LocalLoad, ""); // Disable ProgressScreen
         }
 
-        void GenerateTestRunnerEntry(TestModel model)
+        // ------------------------------------------------------------------------------------
+        // Helper Methods
+
+        // Check ResultsIO for baselines then write data through the test structure
+        public bool CheckForBaselines()
         {
-            if (Master.Instance.transform.Find("TestRunners"))
-            {
-                Transform runnerParent = Master.Instance.transform.Find("TestRunners");
-                string childName = model.logic.ToString().Replace("GraphicsTestFramework.", "").Replace("Logic", "");
-                if (!runnerParent.Find(childName))
-                {
-                    GameObject newChild = new GameObject();
-                    newChild.transform.SetParent(runnerParent);
-                    newChild.name = childName;
-                    TestLogicBase logic = (TestLogicBase)newChild.AddComponent(model.logic);
-                    logic.SetName(); // Need this to set type name on instance of logic script
-                    logic.SetDisplayType();
-                    logic.SetResultsType();
-                    TestDisplayBase display = (TestDisplayBase)newChild.AddComponent(logic.displayType);
-                    display.SetLogic(logic);
-                    display.GetResultsContextObject();
-                    TestTypeManager.Instance.AddType(logic);
-                }
-            }
-            else
-                Debug.LogError("Test Runner parent not found! Aborting");
-        }
-        
-        bool CheckForBaselines()
-        {
+            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Checking for baselines"); // Write to console
             bool output = true;
             for(int su = 0; su < testStructure.suites.Count; su++)
             {
@@ -187,6 +167,7 @@ namespace GraphicsTestFramework
         // TODO - Dont use this anymore. Need this?. See GenerateStructure()
         TestType GetTypeIndex(string suiteName, string typeName)
         {
+            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Getting type index for type "+typeName+" in suite "+suiteName); // Write to console
             for (int a = 0; a < testStructure.suites.Count; a++)
             {
                 if (testStructure.suites[a].suiteName == suiteName)
@@ -205,6 +186,7 @@ namespace GraphicsTestFramework
 
         TestType FindDuplicateTypeInSuite(Suite suite, string name)
         {
+            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Finding duplicates of type "+name+" in suite "+suite.suiteName); // Write to console
             for (int b = 0; b < suite.types.Count; b++)
             {
                 if (suite.types[b].typeName == name)
@@ -215,6 +197,7 @@ namespace GraphicsTestFramework
 
         Scene FindDuplicateSceneInType(Suite suite, TestType type, string sceneName)
         {
+            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Finding duplicates of scene " + sceneName + " in suite " + suite.suiteName+" and type "+type.typeName); // Write to console
             for (int b = 0; b < suite.types.Count; b++)
             {
                 if (suite.types[b].typeName == type.typeName)
@@ -229,22 +212,33 @@ namespace GraphicsTestFramework
             return null;
         }
 
-        /// ------------------------------------------------------------------------------------
-        /// Get data from Test Structure
-        /// ------------------------------------------------------------------------------------
-        /// - Used by menus to get data from the test structure
-        
-        // Get the entire list
+        // Checks whether any tests are selected (true if >0 tests are selected)
+        public bool CheckSelectionNotNull()
+        {
+            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Checking for null selection"); // Write to console
+            for (int su = 0; su < testStructure.suites.Count; su++)
+            {
+                if (testStructure.suites[su].selectionState != 0)
+                    return true;
+            }
+            return false;
+        }
+
+        // ------------------------------------------------------------------------------------
+        // Get Data
+        // TODO - Clean and comment this
+
+        // Get the entire structure
         public Structure GetStructure()
         {
-            return testStructure;
+            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Getting test structure"); // Write to console
+            return testStructure; // Return the TestStructure
         }
 
         // Get a list of entries at a specific level
-        public MenuEntryData[] GetEntries(TestID input) // TODO - Can we shorten this?
+        public MenuEntryData[] GetEntries(MenuTestEntry input) // TODO - Can we shorten this?
         {
             MenuEntryData[] output = null;
-
             if (input.currentLevel == 0)
                 output = new MenuEntryData[testStructure.suites.Count];
             for (int su = 0; su < testStructure.suites.Count; su++)
@@ -252,7 +246,7 @@ namespace GraphicsTestFramework
                 if (input.currentLevel == 0)
                 {
                     MenuEntryData entry = new MenuEntryData();
-                    TestID id = Menu.Instance.CloneMenuID(input);
+                    MenuTestEntry id = Menu.Instance.CloneMenuID(input);
                     id.suiteId = su;                                // Replace relevent data 
                     entry.entryName = testStructure.suites[su].suiteName;
                     entry.selectionState = testStructure.suites[su].selectionState;
@@ -270,7 +264,7 @@ namespace GraphicsTestFramework
                             if (input.currentLevel == 1 && su == input.suiteId)
                             {
                                 MenuEntryData entry = new MenuEntryData();
-                                TestID id = Menu.Instance.CloneMenuID(input);
+                                MenuTestEntry id = Menu.Instance.CloneMenuID(input);
                                 id.currentLevel = 1;                            // Replace relevent data 
                                 id.suiteId = su;                                // Replace relevent data 
                                 id.typeId = ty;                                 // Replace relevent data 
@@ -290,7 +284,7 @@ namespace GraphicsTestFramework
                                         if (input.currentLevel == 2 && ty == input.typeId)
                                         {
                                             MenuEntryData entry = new MenuEntryData();
-                                            TestID id = Menu.Instance.CloneMenuID(input);
+                                            MenuTestEntry id = Menu.Instance.CloneMenuID(input);
                                             id.currentLevel = 2;                            // Replace relevent data 
                                             id.suiteId = su;                                // Replace relevent data 
                                             id.typeId = ty;                                 // Replace relevent data 
@@ -311,7 +305,7 @@ namespace GraphicsTestFramework
                                                     if (input.currentLevel == 3 && sc == input.sceneId)
                                                     {
                                                         MenuEntryData entry = new MenuEntryData();
-                                                        TestID id = Menu.Instance.CloneMenuID(input);
+                                                        MenuTestEntry id = Menu.Instance.CloneMenuID(input);
                                                         id.currentLevel = 3;                            // Replace relevent data 
                                                         id.suiteId = su;                                // Replace relevent data 
                                                         id.typeId = ty;                                 // Replace relevent data 
@@ -332,8 +326,7 @@ namespace GraphicsTestFramework
                     }
                 }
             }
-            if (Master.Instance.debugMode == Master.DebugMode.Messages)
-                Debug.Log("Test Structure returned entry list for level " + input.currentLevel);
+            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Returned entry list for level " + input.currentLevel); // Write to console
             return output;
         }
 
@@ -356,28 +349,13 @@ namespace GraphicsTestFramework
                     output = testStructure.suites[suiteIndex].types[typeIndex].scenes[sceneIndex].tests[testIndex].testName;
                     break;
             }
-            if (Master.Instance.debugMode == Master.DebugMode.Messages)
-                Debug.Log("Test Structure returned name of entry " + output);
+            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Returned name of entry " + output); // Write to console
             return output;
         }
 
-        // Checks whether any tests are selected (true if >0 tests are selected)
-        public bool CheckSelectionNotNull()
-        {
-            if (Master.Instance.debugMode == Master.DebugMode.Messages)
-                Debug.Log("Test Structure is checking for null selection");
-            for (int su = 0; su < testStructure.suites.Count; su++)
-            {
-                if (testStructure.suites[su].selectionState != 0)
-                    return true;
-            }
-            return false;
-        }
-
-        /// ------------------------------------------------------------------------------------
-        /// Change selection states on Test Structure
-        /// ------------------------------------------------------------------------------------
-        /// - Used by menus to set selections
+        // ------------------------------------------------------------------------------------
+        // Set Selection
+        // - TODO - Clean and comment this
         
         public void SetSelectionState(MenuEntryData entryData)
         {
@@ -398,8 +376,7 @@ namespace GraphicsTestFramework
             }
             SetSelectionStateOnChildren(entryData);
             SetSelectionStateOnParents(entryData);
-            if (Master.Instance.debugMode == Master.DebugMode.Messages)
-                Debug.Log("Test Structure changed selection state for entry " + entryData.entryName);
+            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Changed selection state for entry " + entryData.entryName); // Write to console
         }
 
         // Master class for setting selection state recursively down the hierarchy. Calls sub-function per level for every necessary level
@@ -417,8 +394,7 @@ namespace GraphicsTestFramework
                     SetSelectionOfLevelDownward(entryData, 2);
                     break;
             }
-            if (Master.Instance.debugMode == Master.DebugMode.Messages)
-                Debug.Log("Test Structure changed selection state for all children of entry " + entryData.entryName);
+            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Changed selection state for all children of entry " + entryData.entryName); // Write to console
         }
 
         // Set a selection state of a specific level based on its immediate children 
@@ -477,8 +453,7 @@ namespace GraphicsTestFramework
                     SetSelectionOfLevelUpward(entryData, 0);
                     break;
             }
-            if (Master.Instance.debugMode == Master.DebugMode.Messages)
-                Debug.Log("Test Structure changed selection state for all parents of entry " + entryData.entryName);
+            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Changed selection state for all parents of entry " + entryData.entryName); // Write to console
         }
 
         // Set a selection state of a specific level based on its immediate children 
@@ -541,8 +516,8 @@ namespace GraphicsTestFramework
             }
         }
 
-        /// ------------------------------------------------------------------------------------
-        /// Data Structures
+        // ------------------------------------------------------------------------------------
+        // Local Data Structures
 
         [Serializable]
         public class Structure

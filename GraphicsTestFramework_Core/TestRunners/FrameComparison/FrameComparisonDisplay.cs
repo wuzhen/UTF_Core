@@ -57,14 +57,14 @@ namespace GraphicsTestFramework
             object contextObject = new object();
 
             FrameComparisonLogic.ResultsData inputResults = (FrameComparisonLogic.ResultsData)resultsObject;
-            GetComparisonData(inputResults.common);
+            GetComparisonData(inputResults);
 
-            switch (logic.stateType)
+            switch (logic.baselineExists)
             {
-			case TestLogicBase.StateType.CreateBaseline:
-				ViewerBarTabData[] tabs = new ViewerBarTabData[2];
-				for (int i = 0; i < tabs.Length; i++)
-					tabs [i] = new ViewerBarTabData ();
+			    case false:
+				    ViewerBarTabData[] tabs = new ViewerBarTabData[2];
+				    for (int i = 0; i < tabs.Length; i++)
+					    tabs [i] = new ViewerBarTabData ();
 					tabs [0].tabName = "Live Camera";
 					tabs [0].tabType = ViewerBarTabType.Camera;
 					tabs [0].tabObject = logic.model.settings.captureCamera;
@@ -75,7 +75,7 @@ namespace GraphicsTestFramework
                     tabs[1].textureResolution = logic.model.settings.frameResolution;
                     contextObject = tabs;
                     break;
-                case TestLogicBase.StateType.CreateResults:
+                case true:
                     ViewerBarTabData[] tabs2 = new ViewerBarTabData[4];
                     for (int i = 0; i < tabs2.Length; i++)
                         tabs2[i] = new ViewerBarTabData();
@@ -102,14 +102,14 @@ namespace GraphicsTestFramework
             TestViewer.Instance.SetTestViewerState(1, ViewerType.DefaultTabs, contextObject);
         }
 
-        void GetComparisonData(ResultsDataCommon inputCommon)
+        void GetComparisonData(FrameComparisonLogic.ResultsData resultsData)
         {
-            Debug.LogWarning("GetComparisonData: "+inputCommon.DateTime + " - " + inputCommon.SceneName + " - " + inputCommon.TestName);
-            ResultsIOData baselineFetch = ResultsIO.Instance.RetrieveBaseline(logic.testSuiteName, logic.testTypeName, inputCommon);
+            Debug.LogWarning("GetComparisonData: "+ resultsData.common.DateTime + " - " + resultsData.common.SceneName + " - " + resultsData.common.TestName);
+            ResultsIOData baselineFetch = ResultsIO.Instance.RetrieveBaseline(logic.activeTestEntry.suiteName, logic.testTypeName, resultsData.common);
             comparisonData = new FrameComparisonLogic.ComparisonData();
             if (baselineFetch != null)
             {
-                FrameComparisonLogic.ResultsData resultsData = (FrameComparisonLogic.ResultsData)logic.DeserializeResults(ResultsIO.Instance.RetrieveResult(logic.testSuiteName, logic.testTypeName, inputCommon));
+                //FrameComparisonLogic.ResultsData resultsData = (FrameComparisonLogic.ResultsData)logic.DeserializeResults(ResultsIO.Instance.RetrieveResult(logic.testSuiteName, logic.testTypeName, inputCommon));
                 FrameComparisonLogic.ResultsData baselineData = (FrameComparisonLogic.ResultsData)logic.DeserializeResults(baselineFetch);
                 comparisonData = logic.ProcessComparison(baselineData, resultsData);
             }
@@ -126,7 +126,7 @@ namespace GraphicsTestFramework
         {
             FrameComparisonLogic.ResultsData inputResults = (FrameComparisonLogic.ResultsData)logic.DeserializeResults(inputEntry.resultsData);
 
-            GetComparisonData(inputResults.common);
+            GetComparisonData(inputResults);
             Debug.LogWarning("SetupResultsContext: " + inputResults.common.DateTime + " - " + inputResults.common.SceneName + " - " + inputResults.common.TestName);
 
             ResultsContext context = contextObject.GetComponent<ResultsContext>();

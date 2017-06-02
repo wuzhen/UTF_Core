@@ -7,7 +7,6 @@ namespace GraphicsTestFramework
     // Master
     // - System data structures and returns
     // - Maintains persistence of other logic objects
-    // - Debug controls
 
     public class Master : MonoBehaviour
     {
@@ -26,14 +25,14 @@ namespace GraphicsTestFramework
             }
         }
 
-        // Debug
+        // TODO - Remove
         public enum DebugMode { None, Messages, DummyData, OnlyMessages };
         public DebugMode debugMode;
 
         //Data
-        public float applicationVersion; // TODO - Store this elsewhere
-        public string buildDirectory; // TODO - Store this elsewhere?
-        public string buildName; // TODO - Store this elsewhere?
+        public float applicationVersion;
+        //public string buildDirectory; // TODO - Consider removing. Not currently using custom build menu
+        //public string buildName; // TODO - Consider removing. Not currently using custom build menu
 
         // ------------------------------------------------------------------------------------
         // Setup
@@ -50,7 +49,8 @@ namespace GraphicsTestFramework
         // Get SystemData to use for building ResultsCommon
         public SystemData GetSystemData()
 		{
-			SystemData output = new SystemData(); // Create new class instance
+            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Getting system data"); // Write to console
+            SystemData output = new SystemData(); // Create new class instance
 			output.UnityVersion = Application.unityVersion; // Get Unity version
 			output.AppVersion = applicationVersion.ToString(); // Get application version
 			output.Platform = Application.platform.ToString(); // Get platform
@@ -61,7 +61,8 @@ namespace GraphicsTestFramework
         // Get the current system time
 		public DateTime GetSystemTime()
         {
-			return DateTime.UtcNow; // Return current DateTime
+            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Getting system time"); // Write to console
+            return DateTime.UtcNow; // Return current DateTime
 		}
     }
 
