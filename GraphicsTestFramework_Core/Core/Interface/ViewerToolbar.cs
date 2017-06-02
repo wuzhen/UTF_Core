@@ -28,7 +28,7 @@ namespace GraphicsTestFramework
         /// Broadcast delegate subscriptions
 
         //Subscribe to event delegates
-        void OnEnable()
+        /*void OnEnable()
         {
             ResultsIO.endResultsSave += OnClickNext;
         }
@@ -37,7 +37,7 @@ namespace GraphicsTestFramework
         void OnDisable()
         {
             ResultsIO.endResultsSave -= OnClickNext;
-        }
+        }*/
 
         public void OnClickShowHide()
 		{

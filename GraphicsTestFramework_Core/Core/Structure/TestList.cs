@@ -114,7 +114,6 @@ namespace GraphicsTestFramework
         //Get models of all test types and add components to test objects
         void GetModels()
         {
-            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Getting models"); // Write to console
             List<Type> modelList = Common.GetSubTypes<TestModel>(); // Get all model types
             for (int t = 0; t < testTypes.Count; t++) // Iterate test types
             {
@@ -136,7 +135,6 @@ namespace GraphicsTestFramework
         //Update the test info class silently
         void UpdateTestInfo()
         {
-            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Updating test info"); // Write to console
             for (int t = 0; t < testTypes.Count; t++) // Iterate test types
             {
                 for (int r = 0; r < testTypes[t].tests.Count; r++) // Iterate tests

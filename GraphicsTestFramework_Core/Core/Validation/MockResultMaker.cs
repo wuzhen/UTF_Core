@@ -83,14 +83,14 @@ namespace GraphicsTestFramework
 			resultsData.common.SceneName = SceneManager.GetActiveScene ().name;
 			resultsData.common.TestName = "TestData" + testName;
 
-			resultsData.SomeString = "T|e|s|t| |S|t|r|i|n|g";
+			//resultsData.SomeString = "T|e|s|t| |S|t|r|i|n|g";
 			resultsData.SomeFloat = UnityEngine.Random.value;
 			resultsData.SomeInt = Mathf.RoundToInt (resultsData.SomeFloat);
-            resultsData.SomeStringArray = new string[2] { "Entry1", "Entry2" };
-			if (resultsData.SomeFloat > 0.5f)
+            //resultsData.SomeStringArray = new string[2] { "Entry1", "Entry2" };
+			/*if (resultsData.SomeFloat > 0.5f)
 				resultsData.SomeBool = true;
 			else
-				resultsData.SomeBool = false;
+				resultsData.SomeBool = false;*/
 
 			return resultsData;
 		}

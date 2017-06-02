@@ -160,11 +160,15 @@ namespace GraphicsTestFramework
         // Called from ConfirmResultsSave delegate when ResultsIO is done saving files
         void ConfirmResultsSaved()
         {
-            if (activeRunType == RunnerType.Automation) // Only run if automation
+            Console.Instance.Write(DebugLevel.Logic, MessageLevel.Log, this.GetType().Name + " confirmed results save for test " + activeTestEntry.testName); // Write to console
+            if (activeRunType == RunnerType.Automation) // If Automation broadcast end of test
             {
-                Console.Instance.Write(DebugLevel.Logic, MessageLevel.Log, this.GetType().Name + " confirmed results save for test " + activeTestEntry.testName); // Write to console
                 ProgressScreen.Instance.SetState(false, ProgressType.LocalSave, ""); // Disable ProgressScreen
                 BroadcastEndTestAction(); // Broadcast to TestList that rest is completed
+            }
+            else if(activeRunType == RunnerType.Resolve) // If Resolve update viewer
+            {
+                TestViewer.Instance.viewerToolbar.OnClickNext(); // Emulate OnClickNext on ViewerToolbar
             }
         }
 
