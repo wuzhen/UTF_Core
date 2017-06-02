@@ -36,7 +36,7 @@ namespace GraphicsTestFramework
             string directory = UnityEngine.Application.dataPath.Replace("/Assets", "");
             if (!System.IO.Directory.Exists(directory + "/" + Master.Instance.buildDirectory))
                 System.IO.Directory.CreateDirectory(directory + "/" + Master.Instance.buildDirectory);
-            SuiteManager.Instance.BuildSuiteAndSceneLists();
+            SuiteManager.Instance.CreateSuiteAndSceneStructure();
             if (Master.Instance.debugMode == Master.DebugMode.Messages)
                 UnityEngine.Debug.Log("Building Player, Directory: " + directory + "/"+Master.Instance.buildDirectory+"/" + Master.Instance.buildName + extension);
             try
