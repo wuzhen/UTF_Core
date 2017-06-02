@@ -1,19 +1,20 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace GraphicsTestFramework
 {
+    // ------------------------------------------------------------------------------------
+    // Master
+    // - System data structures and returns
+    // - Maintains persistence of other logic objects
+    // - Debug controls
+
     public class Master : MonoBehaviour
     {
-        public enum DebugMode { None, Messages, DummyData, OnlyMessages };
-        public DebugMode debugMode;
-        public float applicationVersion; //Store this elsewhere
-        public string buildDirectory; //Store this elsewhere?
-        public string buildName; //Store this elsewhere?
-        //public SystemData systemData;
+        // ------------------------------------------------------------------------------------
+        // Variables
 
+        // Singleton
         private static Master _Instance = null;
         public static Master Instance
         {
@@ -25,34 +26,55 @@ namespace GraphicsTestFramework
             }
         }
 
-		public SystemData GetSystemData()
-		{
-			SystemData output = new SystemData();
-			output.UnityVersion = Application.unityVersion;
-			output.AppVersion = applicationVersion.ToString();
-			output.Platform = Application.platform.ToString();
-			output.API = SystemInfo.graphicsDeviceType.ToString();
-			return output;
-		}
+        // Debug
+        public enum DebugMode { None, Messages, DummyData, OnlyMessages };
+        public DebugMode debugMode;
 
-		public DateTime GetSystemTime(){
-			return System.DateTime.UtcNow;
-		}
+        //Data
+        public float applicationVersion; // TODO - Store this elsewhere
+        public string buildDirectory; // TODO - Store this elsewhere?
+        public string buildName; // TODO - Store this elsewhere?
 
+        // ------------------------------------------------------------------------------------
+        // Setup
+
+        // On Awake
         private void Awake()
         {
-            DontDestroyOnLoad(gameObject);
-           // systemData = GetSystemData();
+            DontDestroyOnLoad(gameObject); // Set this object to DontDestroy
         }
 
+        // ------------------------------------------------------------------------------------
+        // Get System Data
+
+        // Get SystemData to use for building ResultsCommon
+        public SystemData GetSystemData()
+		{
+			SystemData output = new SystemData(); // Create new class instance
+			output.UnityVersion = Application.unityVersion; // Get Unity version
+			output.AppVersion = applicationVersion.ToString(); // Get application version
+			output.Platform = Application.platform.ToString(); // Get platform
+			output.API = SystemInfo.graphicsDeviceType.ToString(); // Get graphics device type
+			return output; // Return
+		}
+
+        // Get the current system time
+		public DateTime GetSystemTime()
+        {
+			return DateTime.UtcNow; // Return current DateTime
+		}
     }
 
-	[System.Serializable]
+    // ------------------------------------------------------------------------------------
+    // Global Data Structures
+
+    // System data class
+    [System.Serializable]
 	public class SystemData
 	{
-		public string UnityVersion; //Dont remove
-		public string AppVersion; //Dont remove
-		public string Platform; //Dont remove
-		public string API; //Dont remove 
+		public string UnityVersion;
+		public string AppVersion;
+		public string Platform;
+		public string API;
 	}
 }

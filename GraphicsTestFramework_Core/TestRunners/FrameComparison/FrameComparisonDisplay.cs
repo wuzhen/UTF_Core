@@ -71,7 +71,7 @@ namespace GraphicsTestFramework
 					tabs [1].tabName = "Results Texture";
 					tabs [1].tabType = ViewerBarTabType.Texture;
 					FrameComparisonLogic.ResultsData localResultData = (FrameComparisonLogic.ResultsData)logic.activeResultData;
-					tabs[1].tabObject = Common.BuildTextureFromByteArray("Tab_ResultsFrame", localResultData.resultFrame);
+					tabs[1].tabObject = Common.ConvertStringToTexture("Tab_ResultsFrame", localResultData.resultFrame);
                     tabs[1].textureResolution = logic.model.settings.frameResolution;
                     contextObject = tabs;
                     break;
