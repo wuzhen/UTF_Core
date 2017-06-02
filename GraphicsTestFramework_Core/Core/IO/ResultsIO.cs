@@ -10,6 +10,7 @@ namespace GraphicsTestFramework
 	{
 		private static ResultsIO _Instance = null;
 		private List<string> suiteBaselinesPullList = new List<string>();
+		private SystemData sysData;
 		public bool isWaiting = false;
 		public bool companionMode = false;
 		public bool writeLocal = true;
@@ -28,14 +29,16 @@ namespace GraphicsTestFramework
 
 		private void Start ()
 		{
+			sysData = Master.Instance.GetSystemData ();
+
 			//setup local IO
 			if (LocalIO.Instance == null)
 				gameObject.AddComponent<LocalIO> ();
-			LocalIO.Instance.Init ();
+			LocalIO.Instance.Init (sysData);
 			//setup cloud IO
 			if (CloudIO.Instance == null)
 				gameObject.AddComponent<CloudIO> ();
-			CloudIO.Instance.Init ();
+			CloudIO.Instance.Init (sysData);
 
 			if (!companionMode)
 				StartCoroutine (Init ());
@@ -104,7 +107,7 @@ namespace GraphicsTestFramework
 			foreach(SuiteBaselineData SBD in _suiteBaselineData){
 				if(SBD.suiteName == suiteName){
 					//suite exists
-					if(SBD.api == Master.Instance.GetSystemData ().API){
+					if(SBD.api == sysData.API){
 						//API matches
 						if(SBD.pipeline == pipeline){
 							//pipeline exists
@@ -257,7 +260,7 @@ namespace GraphicsTestFramework
 							jsonString = "{" + jsonString + "}";
 					}
 					Dictionary<string, string> jsonDic = JSONHelper.JSON_Dictionary (jsonString);//REORG
-					if(jsonDic["api"] == Master.Instance.GetSystemData ().API){
+					if(jsonDic["api"] == sysData.API){
 						CompareBaselineTimestamps (jsonDic["suiteName"], jsonDic["suiteTimestamp"]);
 					}
 				}
@@ -277,13 +280,13 @@ namespace GraphicsTestFramework
 			int suiteBaselineDataIndex = -1;
 			int suiteIndex = 0;
 			foreach(SuiteBaselineData SBD in _suiteBaselineData){
-				if(SBD.platform == Application.platform.ToString () && SBD.suiteName == suite && SBD.api == Master.Instance.GetSystemData ().API && SBD.pipeline == renderPipe){
+				if(SBD.platform == Application.platform.ToString () && SBD.suiteName == suite && SBD.api == sysData.API && SBD.pipeline == renderPipe){
 					suiteBaselineDataIndex = suiteIndex;
 				}suiteIndex++;
 			}
 			if(suiteBaselineDataIndex == -1){
 				SuiteBaselineData newSBD = new SuiteBaselineData();
-				newSBD.api = Master.Instance.GetSystemData ().API;
+				newSBD.api = sysData.API;
 				newSBD.pipeline = renderPipe;
 				newSBD.platform = Application.platform.ToString ();
 				newSBD.suiteName = suite;

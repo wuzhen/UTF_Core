@@ -113,6 +113,8 @@ namespace GraphicsTestFramework
 			if (inputData != null) {
 				string[] splitData = JSONToStringArray (inputData);
 				ResultsIOData data = new ResultsIOData ();//new ResultsIOData
+				ResultsIORow row = new ResultsIORow ();
+				row.commonResultsIOData = ArrayToResultsDataCommon (splitData);
 				data.resultsRow.Add (new ResultsIORow ());
 
 				for (int i = 0; i < splitData.Length; i++) {
@@ -142,43 +144,19 @@ namespace GraphicsTestFramework
 
 				for (int a = 0; a < inputData.Length; a++) {
 					string[] splitData = JSONToStringArray (inputData [a]);
-					ResultsDataCommon RDC = new ResultsDataCommon ();
+					ResultsDataCommon RDC = ArrayToResultsDataCommon (splitData);
 					for (int i = 0; i < splitData.Length; i++) {
 						data.resultsRow.Add(new ResultsIORow());
 						int cur = i;
-						data.resultsRow [a].resultsColumn.Add (splitData [cur]);
+						string entry = splitData [cur];
+						data.resultsRow [a].resultsColumn.Add (entry);
+
 						//if entry has been replaced by file ID then fetch it
 						if(splitData[cur].Contains ("REPLACEMENT_")){
-							CloudIO.Instance.FetchLargeEntry (splitData [cur]);
-						}
-
-						switch (i) {
-						case 1:
-							RDC.DateTime = splitData [cur];
-							break;
-						case 3:
-							RDC.UnityVersion = splitData [cur];
-							break;
-						case 5:
-							RDC.AppVersion = splitData [cur];
-							break;
-						case 7:
-							RDC.Platform = splitData [cur];
-							break;
-						case 9:
-							RDC.API = splitData [cur];
-							break;
-						case 11:
-							RDC.RenderPipe = splitData [cur];
-							break;
-						case 13:
-							RDC.SceneName = splitData [cur];
-							break;
-						case 15:
-							RDC.TestName = splitData [cur];
-							break;
-						default:
-							break;
+							entry = LocalIO.Instance.LargeFileRead (entry);
+							if (entry == null) {
+								CloudIO.Instance.FetchLargeEntry (splitData [cur]);
+							}
 						}
 					}
 					data.resultsRow [a].commonResultsIOData = RDC;
@@ -194,6 +172,42 @@ namespace GraphicsTestFramework
 			JSON = JSON.Replace (System.Environment.NewLine, "");
 			string[] splitData = JSON.Substring (2, JSON.Length - 4).Split (separators, System.StringSplitOptions.None);//remove curly brackets
 			return splitData;
+		}
+
+		static ResultsDataCommon ArrayToResultsDataCommon(string[] splitData){
+			ResultsDataCommon RDC = new ResultsDataCommon();
+
+			for (int i = 0; i < splitData.Length; i++) {
+				switch (i) {
+				case 1:
+					RDC.DateTime = splitData [i];
+					break;
+				case 3:
+					RDC.UnityVersion = splitData [i];
+					break;
+				case 5:
+					RDC.AppVersion = splitData [i];
+					break;
+				case 7:
+					RDC.Platform = splitData [i];
+					break;
+				case 9:
+					RDC.API = splitData [i];
+					break;
+				case 11:
+					RDC.RenderPipe = splitData [i];
+					break;
+				case 13:
+					RDC.SceneName = splitData [i];
+					break;
+				case 15:
+					RDC.TestName = splitData [i];
+					break;
+				default:
+					break;
+				}
+			}
+			return RDC;
 		}
 
 	}

@@ -16,6 +16,7 @@ namespace GraphicsTestFramework
 			}
 		}
 
+		private SystemData sysData;
 		//Whether in editor or not for cloud connector
 		private bool cloudMode;
 
@@ -37,13 +38,15 @@ namespace GraphicsTestFramework
 
 		}
 
-		public void Init ()
+		public void Init (SystemData systemData)
 		{
 			#if UNITY_EDITOR
 			cloudMode = true;
 			#else
 			cloudMode = false;
 			#endif
+
+			sysData = systemData;
 		}
 
 		/// ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -93,7 +96,7 @@ namespace GraphicsTestFramework
 				Debug.Log ("Upload of " + (jsonData.Length - 1) + " items in " + (Time.realtimeSinceStartup - uploadStartTime) + "ms");
 			}
 
-			while (CloudConnectorCore.isWaiting || CloudImagesConnector.isWaiting)
+			while (CloudConnectorCore.isWaiting || CloudImagesConnector.responseCount != 0)
 				yield return new WaitForEndOfFrame ();
 			ProgressScreen.Instance.SetState(false, ProgressType.CloudSave, "");
 			ResultsIO.Instance.BroadcastEndResultsSave ();

@@ -17,6 +17,8 @@ namespace GraphicsTestFramework
 			}
 		}
 
+		//SystemData
+		private SystemData sysData;
 		//Data path for local files
 		private string dataPath;
 		//prefix for local baseline files
@@ -28,13 +30,15 @@ namespace GraphicsTestFramework
 		public long spaceUsed;
 
 
-		public void Init ()
+		public void Init (SystemData systemData)
 		{
 			#if UNITY_EDITOR
 			dataPath = (Application.dataPath).Substring (0, Application.dataPath.Length - 6) + "EditorResults";
 			#else
 			dataPath = Application.persistentDataPath;
 			#endif
+
+			sysData = systemData;
 
 			if (!Directory.Exists (dataPath)) //directory check
 				Directory.CreateDirectory (dataPath);
@@ -102,6 +106,10 @@ namespace GraphicsTestFramework
 				jsonRows.Clear ();
 			}
 			List<SuiteBaselineData> LocalBaselines = ReadLocalBaselines();
+
+			while (CloudConnectorCore.isWaiting || CloudImagesConnector.responseCount != 0)
+				yield return new WaitForEndOfFrame ();
+
 			ResultsIO.Instance.CloudBaselineDataRecieved (LocalBaselines);
 		}
 
@@ -199,7 +207,6 @@ namespace GraphicsTestFramework
 			string fileName = key + ".txt";
 			if (!Directory.Exists (filePath))
 				Directory.CreateDirectory (filePath);
-			Debug.LogWarning (fileName);
 			File.WriteAllText (filePath + "/" + fileName, value);
 		}
 
@@ -241,9 +248,8 @@ namespace GraphicsTestFramework
 						string fileName = "SuiteData_" + Path.GetFileName (s) + "_" + Path.GetFileName (api) + "_" + Path.GetFileName (pipe) + ".txt";
 						if (File.Exists (api + "/" + fileName)) {
 							SuiteBaselineData SBD = new SuiteBaselineData ();
-							SystemData SD = Master.Instance.GetSystemData ();
 							SBD.suiteName = Path.GetFileName (s);
-							SBD.platform = SD.Platform;
+							SBD.platform = sysData.Platform;
 							SBD.api = Path.GetFileName (api);
 							SBD.pipeline = Path.GetFileName (pipe);
 							string[] fileLines = File.ReadAllLines (api + "/" + fileName);

@@ -18,6 +18,7 @@ public class CloudImagesConnector : MonoBehaviour
 	// --
 
 	public static bool isWaiting = false;
+	public static int responseCount = 0;
 	private string currentStatus = "";
 
 	private static CloudImagesConnector _Instance;
@@ -55,6 +56,7 @@ public class CloudImagesConnector : MonoBehaviour
 	public static void RequestImage(string imgId)
 	{
 		isWaiting = true;
+		responseCount++;
 		WWWForm form = new WWWForm();
 		form.AddField("rtype", "imgRequest");
 		form.AddField("imgid", imgId);
@@ -65,6 +67,7 @@ public class CloudImagesConnector : MonoBehaviour
 	public static void RequestTxt(string name)
 	{
 		isWaiting = true;
+		responseCount++;
 		WWWForm form = new WWWForm();
 		form.AddField("rtype", "txtRequest");
 		form.AddField("name", name + ".png");
@@ -75,6 +78,7 @@ public class CloudImagesConnector : MonoBehaviour
 	public static void PersistImage(Texture2D texture, string name)
 	{
 		isWaiting = true;
+		responseCount++;
 		WWWForm form = new WWWForm();
 		form.AddField("rtype", "imgPersist");
 
@@ -88,6 +92,7 @@ public class CloudImagesConnector : MonoBehaviour
 	public static void PersistText(string data, string name)
 	{
 		isWaiting = true;
+		responseCount++;
 		WWWForm form = new WWWForm();
 		form.AddField("rtype", "txtPersist");
 
@@ -186,6 +191,8 @@ public class CloudImagesConnector : MonoBehaviour
 		}
 		
 		responseCallback.Invoke(responseType, response);
+		responseCount--;
+		Debug.Log (responseCount);
 		isWaiting = false;
 	}
 	
