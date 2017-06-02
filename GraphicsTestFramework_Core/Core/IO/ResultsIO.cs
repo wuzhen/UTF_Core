@@ -132,7 +132,7 @@ namespace GraphicsTestFramework
 			}else
 			{
 				foreach(SuiteBaselineData SBD in _suiteBaselineData){
-					if (SBD.suiteName == suiteName) {
+					if (SBD.suiteName == suiteName && SBD.api == sysData.API) {
 						System.DateTime localTimestamp = System.DateTime.Parse (SBD.suiteTimestamp);
 
 						int timeDiff = cloudTimestamp.CompareTo (localTimestamp);

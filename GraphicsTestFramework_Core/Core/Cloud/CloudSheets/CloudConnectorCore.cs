@@ -45,6 +45,7 @@ public static class CloudConnectorCore
 	public const string TYPE_STRT = "TYPE_";
 	public const string MSG_BAD_PASS = "PASS_ERROR";
 	public const string MSG_TBL_DEL = "TBLS_DEL_DONE";
+	public const string MSG_BASELINE_NONE = "NO_MATCHING_BASELINES";
 	
 	static string currentStatus = "";
 
@@ -503,6 +504,11 @@ public static class CloudConnectorCore
 			response = MSG_TBLS_DATA;
 			unpacked = true;
 		}
+
+		if(response.StartsWith (MSG_BASELINE_NONE)){
+			response = MSG_BASELINE_NONE;
+			unpacked = true;
+		}
 		
 		if (response.StartsWith(MSG_BAD_PASS))
 		{
@@ -583,8 +589,8 @@ public static class CloudConnectorCore
 			
 		case MSG_BAD_PASS:
 			logOutput = "Error: password incorrect.";
-			break;
-			
+			break;			
+
 		default:
 			logOutput = "Undefined server response: \n" + response;
 			break;
