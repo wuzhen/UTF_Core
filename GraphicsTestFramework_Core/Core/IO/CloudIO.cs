@@ -19,17 +19,22 @@ namespace GraphicsTestFramework
 		//Whether in editor or not for cloud connector
 		private bool cloudMode;
 
+		public string cloudResponse = null;
+
 		//Setup cloud listners
 		void OnEnable()
 		{
 			// Suscribe for catching cloud responses.
 			CloudConnectorCore.processedResponseCallback.AddListener(ParseCloudData);
+			CloudImagesConnector.Instance.responseCallback.AddListener(ParseData);
 		}
 
 		void OnDisable()
 		{
 			// Remove listeners.
 			CloudConnectorCore.processedResponseCallback.RemoveListener(ParseCloudData);
+			CloudImagesConnector.Instance.responseCallback.RemoveListener(ParseData);
+
 		}
 
 		public void Init ()
@@ -87,7 +92,11 @@ namespace GraphicsTestFramework
 			if(Master.Instance.debugMode == Master.DebugMode.Messages){
 				Debug.Log ("Upload of " + (jsonData.Length - 1) + " items in " + (Time.realtimeSinceStartup - uploadStartTime) + "ms");
 			}
-			ProgressScreen.Instance.SetState(false, ProgressType.LocalSave, "");
+
+			while (CloudConnectorCore.isWaiting || CloudImagesConnector.isWaiting)
+				yield return new WaitForEndOfFrame ();
+			ProgressScreen.Instance.SetState(false, ProgressType.CloudSave, "");
+			ResultsIO.Instance.BroadcastEndResultsSave ();
 		}
 
 		/// <summary>
@@ -123,6 +132,18 @@ namespace GraphicsTestFramework
 			CloudConnectorCore.UpdateUniqueRow ("SuiteBaselineTimestamps", new int[]{1, 2, 3},  JSONHelper.ToJSON (entry), cloudMode);//REORG
 		}
 
+		/// <summary>
+		/// Sends a large entry to the EXTERNAL_DATA cloud storage.
+		/// </summary>
+		/// <returns>The large entry.</returns>
+		/// <param name="value">Value.</param>
+		/// <param name="key">Key.</param>
+		public string ConvertLargeEntry(string value, string key){
+			string UID = "REPLACEMENT_" + key.GetHashCode ();
+			CloudImagesConnector.PersistText (value, UID);
+			return UID;
+		}
+
 		/// ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		/// Requesting data - TODO wip
 		/// ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -149,11 +170,28 @@ namespace GraphicsTestFramework
 		}
 
 		/// <summary>
-		/// Pull relevant baseline data from cloud.
+		/// Pull Entire sheet.
 		/// </summary>
 		public void FetchCloudResults(string suiteName, string testType){
 			string tableName = suiteName + "_" + testType + "_Results";
 			CloudConnectorCore.GetTable (tableName, cloudMode);
+		}
+
+		/// <summary>
+		/// Pull relevant baseline data from cloud.
+		/// </summary>
+		public void FetchCloudResults(string suiteName, string testType, ResultsDataCommon commonData){
+			string tableName = suiteName + "_" + testType + "_Results";
+
+		}
+
+		/// <summary>
+		/// Fetchs the large entry.
+		/// </summary>
+		/// <returns>the originnal string.</returns>
+		/// <param name="UID">The key for the file.</param>
+		public void FetchLargeEntry(string UID){
+			CloudImagesConnector.RequestTxt (UID);
 		}
 
 		/// ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -163,9 +201,6 @@ namespace GraphicsTestFramework
 		/// <summary>
 		/// Parses the cloud data.
 		/// </summary>
-		/// <param name="query">Query type</param>
-		/// <param name="objTypeNames">Object type names.</param>
-		/// <param name="jsonData">Json data.</param>
 		public void ParseCloudData(CloudConnectorCore.QueryType query, List<string> objTypeNames, List<string> jsonData){
 
 			if (query == CloudConnectorCore.QueryType.tableExists) {
@@ -185,6 +220,21 @@ namespace GraphicsTestFramework
 				}
 			}
 
+		}
+
+		/// <summary>
+		/// Parses the data from Cloud image connector.
+		/// </summary>
+		void ParseData(string responseType, string response)
+		{
+			if(responseType == "DATA_")
+			{
+				//process cloud data coming down
+				string value = response.Split(new string[]{"_FILE_NAME_"}, System.StringSplitOptions.None)[1];
+				string name = response.Remove(response.IndexOf("_FILE_NAME_")).TrimEnd ((".png").ToCharArray ());
+				//Debug.LogWarning (value);
+				LocalIO.Instance.LargeFileWrite (value, name);
+			}
 		}
 
 		/// ------------------------------------------------------------------------------------------------------------------------------------------------------------------------

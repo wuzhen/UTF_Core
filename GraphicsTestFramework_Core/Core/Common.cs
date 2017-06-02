@@ -88,6 +88,8 @@ namespace GraphicsTestFramework
         // TODO - Remove commented code related to texture resolution, format and filtermode
         public static Texture2D ConvertStringToTexture(string textureName, /*byte[] input*/string input/*, Vector2 resolution, TextureFormat format, FilterMode filterMode*/)
         {
+			Debug.LogWarning (input);
+
             //Texture2D output = new Texture2D((int)resolution.x, (int)resolution.y, format, false);
             Texture2D output = new Texture2D(2, 2); // Create output Texture2D
             output.name = textureName; // Set texture name

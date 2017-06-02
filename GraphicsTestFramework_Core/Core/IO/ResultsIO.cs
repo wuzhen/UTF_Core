@@ -12,6 +12,8 @@ namespace GraphicsTestFramework
 		private List<string> suiteBaselinesPullList = new List<string>();
 		public bool isWaiting = false;
 		public bool companionMode = false;
+		public bool writeLocal = true;
+		public bool writeCloud = true;
 
 		//List of suiteBaselineData for suites
 		public List<SuiteBaselineData> _suiteBaselineData = new List<SuiteBaselineData>(); //TODO make private once working
@@ -158,6 +160,8 @@ namespace GraphicsTestFramework
 		/// <param name="baseline">Baseline data?</param>
 		public void ProcessResults (string suiteName, string testType, ResultsIOData inputData, int baseline)
 		{
+			ProgressScreen.Instance.SetState(true, ProgressType.CloudSave, "Saving local and cloud data");
+
 			string[] data = JSONHelper.ToJSON (inputData);//REORG
 
 			fileType ft;

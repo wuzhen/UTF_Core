@@ -22,6 +22,7 @@ namespace GraphicsTestFramework
 			if(Input.GetKeyUp (KeyCode.Delete)){
 				CloudConnectorCore.DeleteTable ("PostProcessing_Frame Comparison_Results", true);
 			}
+				
 		}
 	}
 }

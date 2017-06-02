@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Text;
 
 namespace GraphicsTestFramework
 {
@@ -31,9 +32,14 @@ namespace GraphicsTestFramework
 				for (int rows = 0; rows < inputData.resultsRow.Count; rows++) {
 					output [rows] = "{";
 					for (int columns = 0; columns < inputData.resultsRow [rows].resultsColumn.Count; columns++) {
-						/*if (columns == 9)//rip out the commonResults class - TODO remove if works
-							continue;*/
-						string s = "\"" + inputData.resultsRow [0].resultsColumn [columns] + "\":\"" + inputData.resultsRow [rows].resultsColumn [columns] + "\"";
+						string value = inputData.resultsRow [rows].resultsColumn [columns];
+						//strip out large strings
+						if(value.Length > 100){
+							string UID = CloudIO.Instance.ConvertLargeEntry (value, inputData.resultsRow [rows].resultsColumn [0]);
+							LocalIO.Instance.LargeFileWrite (value, UID);
+							value = UID;
+						}
+						string s = "\"" + inputData.resultsRow [0].resultsColumn [columns] + "\":\"" + value + "\"";
 						if (columns < inputData.resultsRow [0].resultsColumn.Count - 1)
 							s += ",";
 						output [rows] += s;
@@ -41,7 +47,7 @@ namespace GraphicsTestFramework
 					output [rows] += "}";
 				}
 				if (Master.Instance.debugMode == Master.DebugMode.Messages)
-					Debug.Log ("Serialized ResultsIOData");
+					Debug.Log ("Converted to JSON");
 				return output;
 			}
 		}
@@ -56,7 +62,14 @@ namespace GraphicsTestFramework
 			string output = "{";
 			int i = 0;
 			foreach (string key in inputData.Keys) {
-				string s = "\"" + key + "\":\"" + inputData[key] + "\"";
+				string value = inputData[key];
+				//strip out large strings
+				if(value.Length > 100){
+					string UID = CloudIO.Instance.ConvertLargeEntry (value, inputData["DateTime"]);
+					LocalIO.Instance.LargeFileWrite (value, UID);
+					value = UID;
+				}
+				string s = "\"" + key + "\":\"" + value + "\"";
 				if (i < inputData.Count - 1)
 					s += ",";
 				output += s;
@@ -77,11 +90,14 @@ namespace GraphicsTestFramework
 		/// <returns>A dictionary of kay value pairs.</returns>
 		/// <param name="inputData">Input unformatted JSON string.</param>
 		public static Dictionary<string, string> JSON_Dictionary(string inputData){
-			string[] separators = new string[]{ "\",\"", "\":\"" };//split by the two JSON separators
-			string[] splitData = inputData.Substring (2, inputData.Length - 4).Split (separators, System.StringSplitOptions.None);//remove curly brackets
+			string[] splitData = JSONToStringArray (inputData);
 			Dictionary<string, string> convertedJSON = new Dictionary<string, string> ();
 
 			for (int i = 0; i < splitData.Length/2; i ++) {
+				//if entry has been replaced by file ID then fetch it
+				if(splitData[i].Contains ("REPLACEMENT_")){
+					CloudIO.Instance.FetchLargeEntry (splitData [i]);
+				}
 				convertedJSON.Add (splitData [i * 2], splitData [(i * 2) + 1]);
 			}
 			return convertedJSON;
@@ -95,14 +111,19 @@ namespace GraphicsTestFramework
 		public static ResultsIOData FromJSON (string inputData)
 		{
 			if (inputData != null) {
-				string[] separators = new string[]{ "\",\"", "\":\"" };//split by the two JSON separators
-				string[] splitData = inputData.Substring (2, inputData.Length - 5).Split (separators, System.StringSplitOptions.None);//remove curly brackets
+				string[] splitData = JSONToStringArray (inputData);
 				ResultsIOData data = new ResultsIOData ();//new ResultsIOData
 				data.resultsRow.Add (new ResultsIORow ());
 
 				for (int i = 0; i < splitData.Length; i++) {
 					int cur = i;
-					data.resultsRow [0].resultsColumn.Add (splitData [cur]);
+					string entry = splitData [cur];
+					//if entry has been replaced by file ID then fetch it
+					if(splitData[cur].Contains ("REPLACEMENT_")){
+						//CloudIO.Instance.FetchLargeEntry (splitData [cur]); // TODO - might need to do cloud sometimes?
+						entry = LocalIO.Instance.LargeFileRead (entry);
+					}
+					data.resultsRow [0].resultsColumn.Add (entry);
 				}
 				return data;
 			} else
@@ -117,16 +138,19 @@ namespace GraphicsTestFramework
 		public static ResultsIOData FromJSON (string[] inputData)
 		{
 			if (inputData.Length != 0) {
-				string[] separators = new string[]{ "\",\"", "\":\"" };//split by the two JSON separators
 				ResultsIOData data = new ResultsIOData ();//new ResultsIOData
 
 				for (int a = 0; a < inputData.Length; a++) {
-					string[] splitData = inputData[a].Substring (2, inputData[a].Length - 5).Split (separators, System.StringSplitOptions.None);//remove curly brackets
+					string[] splitData = JSONToStringArray (inputData [a]);
 					ResultsDataCommon RDC = new ResultsDataCommon ();
 					for (int i = 0; i < splitData.Length; i++) {
 						data.resultsRow.Add(new ResultsIORow());
 						int cur = i;
 						data.resultsRow [a].resultsColumn.Add (splitData [cur]);
+						//if entry has been replaced by file ID then fetch it
+						if(splitData[cur].Contains ("REPLACEMENT_")){
+							CloudIO.Instance.FetchLargeEntry (splitData [cur]);
+						}
 
 						switch (i) {
 						case 1:
@@ -163,5 +187,14 @@ namespace GraphicsTestFramework
 			} else
 				return null;
 		}
+
+
+		static string[] JSONToStringArray(string JSON){
+			string[] separators = new string[]{ "\",\"", "\":\"" };//split by the two JSON separators
+			JSON = JSON.Replace (System.Environment.NewLine, "");
+			string[] splitData = JSON.Substring (2, JSON.Length - 4).Split (separators, System.StringSplitOptions.None);//remove curly brackets
+			return splitData;
+		}
+
 	}
 }
