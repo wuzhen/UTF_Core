@@ -7,14 +7,14 @@ namespace GraphicsTestFramework
     // ExampleLogic
     // - Serves only as example of logic custom setup
 
-    public class ExampleLogic : TestLogic<ExampleModel, ExampleDisplay, ExampleResults> // Set types here for matching: < ModelType , DisplayType >
+    public class ExampleLogic : TestLogic<ExampleModel, ExampleDisplay, ExampleResults> // Set types here for matching: < ModelType , DisplayType, ResultsType >
 	{
         // ------------------------------------------------------------------------------------
         // Variables
 
         float timeWaited; // Used for example
 
-        // Structure for results (Do not rename class. Class contents can be anything)
+        // Structure for comparison results (Do not rename class. Class contents can be anything)
         [System.Serializable]
         public class ComparisonData
         {
@@ -57,7 +57,7 @@ namespace GraphicsTestFramework
             if (baselineExists) // Comparison (mandatory)
             {
                 ExampleResults referenceData = (ExampleResults)DeserializeResults(ResultsIO.Instance.RetrieveBaseline(suiteName, testTypeName, m_TempData.common)); // Deserialize baseline data (mandatory)
-                ComparisonData comparisonData = ProcessComparison(referenceData, m_TempData);  // Prrocess comparison (mandatory)
+                ComparisonData comparisonData = (ComparisonData)ProcessComparison(referenceData, m_TempData);  // Prrocess comparison (mandatory)
                 if (comparisonData.SomeFloatDiff < model.settings.passFailThreshold)  // Pass/fail decision logic (logic specific)
                     m_TempData.common.PassFail = true;
                 else
@@ -69,10 +69,12 @@ namespace GraphicsTestFramework
 
         // Logic for comparison process (mandatory)
         // TODO - Will use last run test model, need to get this for every call from Viewers?
-        public ComparisonData ProcessComparison(ExampleResults baselineData, ExampleResults resultsData)
+        public override object ProcessComparison(ResultsBase baselineData, ResultsBase resultsData)
         {
             ComparisonData newComparison = new ComparisonData(); // Create new ComparisonData instance (mandatory)
-            newComparison.SomeFloatDiff = resultsData.SomeFloat - baselineData.SomeFloat; // Perform comparison logic (logic specific)
+            ExampleResults baselineDataTyped = (ExampleResults)baselineData;
+            ExampleResults resultsDataTyped = (ExampleResults)resultsData;
+            newComparison.SomeFloatDiff = resultsDataTyped.SomeFloat - baselineDataTyped.SomeFloat; // Perform comparison logic (logic specific)
             return newComparison; // Return (mandatory)
         }
 

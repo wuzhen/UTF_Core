@@ -23,117 +23,84 @@ namespace GraphicsTestFramework
             }
         }
 
-        // TODO - Remove these UI references
+        // ResultsViewer
         public RawImage resultsContextImage;
-        public Button button0;
-        public Button button1;
-        public Button button2;
+        public Button[] buttons;
 
         // ------------------------------------------------------------------------------------
         // TestViewer
 
-        // Enable and setup the test viewer
-        // TODO - Total rewrite
-        public override void EnableTestViewer(object resultsObject)
+        // Setup viewer tabs
+        public override TestViewerTabData[] GetViewerTabs(ResultsBase resultsObject)
         {
-            if (Master.Instance.debugMode == Master.DebugMode.Messages)
-                Debug.Log(this.GetType().Name + " enabling Test Viewer");
-            object contextObject = new object();
-
-            FrameComparisonResults inputResults = (FrameComparisonResults)resultsObject;
-            FrameComparisonLogic.ComparisonData comparisonData = GetComparisonData(inputResults);
-
-            switch (logic.baselineExists)
+            TestViewerTabData[] output = new TestViewerTabData[1]; // Create empty output (mandatory)
+            switch (logic.baselineExists)  // Switch on baseline exists
             {
-			    case false:
-				    ViewerBarTabData[] tabs = new ViewerBarTabData[2];
-				    for (int i = 0; i < tabs.Length; i++)
-					    tabs [i] = new ViewerBarTabData ();
-					tabs [0].tabName = "Live Camera";
-					tabs [0].tabType = ViewerBarTabType.Camera;
-					tabs [0].tabObject = logic.model.settings.captureCamera;
-					tabs [1].tabName = "Results Texture";
-					tabs [1].tabType = ViewerBarTabType.Texture;
-                    FrameComparisonResults localResultData = (FrameComparisonResults)logic.activeResultData;
-					tabs[1].tabObject = Common.ConvertStringToTexture("Tab_ResultsFrame", localResultData.resultFrame);
-                    tabs[1].textureResolution = logic.model.settings.frameResolution;
-                    contextObject = tabs;
+                case false:
+                    var localResultData = (FrameComparisonResults)resultsObject; // Convert the input results object to this types class (mandatory)
+                    output = new TestViewerTabData[2] // Want two tabs
+                    {
+                        new TestViewerTabData("Live Camera", TestViewerTabType.Camera, logic.model.settings.captureCamera, null), // Live camera showing capture camera
+                        new TestViewerTabData("Results Texture", TestViewerTabType.Texture, Common.ConvertStringToTexture("Tab_ResultsFrame", localResultData.resultFrame), null) // And the results texture
+                    };
                     break;
                 case true:
-                    ViewerBarTabData[] tabs2 = new ViewerBarTabData[4];
-                    for (int i = 0; i < tabs2.Length; i++)
-                        tabs2[i] = new ViewerBarTabData();
-                    tabs2[0].tabName = "Live Camera";
-                    tabs2[0].tabType = ViewerBarTabType.Camera;
-                    tabs2[0].tabObject = logic.model.settings.captureCamera;
-                    tabs2[1].tabName = "Results Texture";
-                    tabs2[1].tabType = ViewerBarTabType.Texture;
-                    tabs2[1].tabObject = comparisonData.resultsTex;
-                    tabs2[1].textureResolution = logic.model.settings.frameResolution;
-                    tabs2[2].tabName = "Comparison Texture";
-                    tabs2[2].tabType = ViewerBarTabType.Material;
-                    SetupMaterial(comparisonData.baselineTex, comparisonData.resultsTex);
-                    tabs2[2].tabObject = material;
-                    tabs2[2].textureResolution = logic.model.settings.frameResolution;
-                    tabs2[3].tabName = "Baseline Texture";
-                    tabs2[3].tabType = ViewerBarTabType.Texture;
-                    tabs2[3].tabObject = comparisonData.baselineTex;
-                    tabs2[3].textureResolution = logic.model.settings.frameResolution;
-                    contextObject = tabs2;
+                    var comparisonData = (FrameComparisonLogic.ComparisonData)logic.GetComparisonData(resultsObject); // Get the comparison data for this test in this types class (mandatory)
+                    SetupMaterial(comparisonData.baselineTex, comparisonData.resultsTex); // Setup the material
+                    output = new TestViewerTabData[4] // Want four tabs
+                    {
+                        new TestViewerTabData("Live Camera", TestViewerTabType.Camera, logic.model.settings.captureCamera, null), // Live camera showing capture camera
+                        new TestViewerTabData("Results Texture", TestViewerTabType.Texture, comparisonData.resultsTex, null), // And the results texture
+                        new TestViewerTabData("Comparison Texture", TestViewerTabType.Material, material, new TestViewerTabData.TestViewerTabStatistic[] // And the material for the comparison display
+                        {
+                            new TestViewerTabData.TestViewerTabStatistic("Diff", comparisonData.DiffPercentage.ToString()) // Enable the statistics window and display the diff
+                        }),
+                        new TestViewerTabData("Baseline Texture", TestViewerTabType.Texture, comparisonData.baselineTex, null) // And the baseline texture
+                    };
                     break;
             }
-            ProgressScreen.Instance.SetState(false, ProgressType.LocalSave, ""); // TODO - Move this so its abstracted
-            TestViewer.Instance.SetTestViewerState(1, ViewerType.DefaultTabs, contextObject);
+            return output; // Return
         }
 
         // ------------------------------------------------------------------------------------
         // ResultsViewer
 
         // Setup the results context object
-        // TODO - Total rewrite
-        public override void SetupResultsContext(GameObject contextObject, ResultsEntry inputEntry)
+        public override void SetupResultsContext(ResultsContext context, ResultsEntry inputEntry)
         {
-            FrameComparisonResults inputResults = (FrameComparisonResults)logic.DeserializeResults(inputEntry.resultsData);
-
-            FrameComparisonLogic.ComparisonData comparisonData = GetComparisonData(inputResults);
-            Debug.LogWarning("SetupResultsContext: " + inputResults.common.DateTime + " - " + inputResults.common.SceneName + " - " + inputResults.common.TestName);
-
-            ResultsContext context = contextObject.GetComponent<ResultsContext>();
-            button0 = context.objects[0].GetComponent<Button>();
-            button0.onClick.AddListener(delegate { SetTextureContext(comparisonData, 0); });
-            button1 = context.objects[1].GetComponent<Button>();
-            button1.onClick.AddListener(delegate { SetTextureContext(comparisonData, 1); });
-            button2 = context.objects[2].GetComponent<Button>();
-            button2.onClick.AddListener(delegate { SetTextureContext(comparisonData, 2); });
-            context.objects[3].GetComponent<Text>().text = "Results";
-            context.objects[4].GetComponent<Text>().text = "Comparison";
-            context.objects[5].GetComponent<Text>().text = "Baseline";
-            resultsContextImage = context.objects[6].GetComponent<RawImage>();
-            context.objects[7].GetComponent<Text>().text = comparisonData.DiffPercentage.ToString();
-            SetTextureContext(comparisonData, 0);
+            FrameComparisonResults inputResults = (FrameComparisonResults)logic.DeserializeResults(inputEntry.resultsData); // Deserialize input and cast to typed results
+            FrameComparisonLogic.ComparisonData comparisonData = (FrameComparisonLogic.ComparisonData)logic.GetComparisonData(inputResults); // Get comparison data
+            
+            buttons = new Button[3]; // Create button array
+            for(int i = 0; i < buttons.Length; i++) // Iterate
+            { 
+                buttons[i] = context.objects[i].GetComponent<Button>(); // Get the button
+                buttons[i].onClick.AddListener(delegate { SetTextureContext(comparisonData, i); }); // Add listener
+            }
+            resultsContextImage = context.objects[3].GetComponent<RawImage>(); // Get image
+            context.objects[4].GetComponent<Text>().text = comparisonData.DiffPercentage.ToString(); // Set diff to field
+            SetTextureContext(comparisonData, 0); // Set default
         }
 
+        // Set context for textures
         public void SetTextureContext(FrameComparisonLogic.ComparisonData comparisonData, int context)
         {
-            button0.interactable = true;
-            button1.interactable = true;
-            button2.interactable = true;
+            foreach (Button b in buttons) // Iterate buttons
+                b.interactable = false; // Disable
+            buttons[context].interactable = true; // Enable requested
             switch (context)
             {
-                case 0:
-                    button0.interactable = false;
-                    resultsContextImage.material = null;
-                    resultsContextImage.texture = comparisonData.resultsTex;
+                case 0:    // Results
+                    resultsContextImage.material = null; // Null material
+                    resultsContextImage.texture = comparisonData.resultsTex; // Set texture
                     break;
-                case 1:
-                    button1.interactable = false;
-                    SetupMaterial(comparisonData.baselineTex, comparisonData.resultsTex);
-                    resultsContextImage.material = material;
+                case 1:     // Comparison
+                    SetupMaterial(comparisonData.baselineTex, comparisonData.resultsTex); // Setup material
+                    resultsContextImage.material = material; // Set material
                     break;
-                case 2:
-                    button2.interactable = false;
-                    resultsContextImage.material = null;
-                    resultsContextImage.texture = comparisonData.baselineTex;
+                case 2:     // Baseline
+                    resultsContextImage.material = null; // Null material
+                    resultsContextImage.texture = comparisonData.baselineTex; // Set texture
                     break;
             }
         }
@@ -144,24 +111,8 @@ namespace GraphicsTestFramework
         // Setup comparison material
         void SetupMaterial(Texture2D baselineTex, Texture2D resultsTex)
         {
-            material.SetTexture("_ReferenceTex", baselineTex);
-            material.SetTexture("_MainTex", resultsTex);
-        }
-
-        FrameComparisonLogic.ComparisonData GetComparisonData(FrameComparisonResults resultsData)
-        {
-            Debug.LogWarning("GetComparisonData: " + resultsData.common.DateTime + " - " + resultsData.common.SceneName + " - " + resultsData.common.TestName);
-            ResultsIOData baselineFetch = ResultsIO.Instance.RetrieveBaseline(logic.suiteName, logic.testTypeName, resultsData.common);
-            if (baselineFetch != null)
-            {
-                FrameComparisonResults baselineData = (FrameComparisonResults)logic.DeserializeResults(baselineFetch);
-                Debug.LogWarning("IN");
-                return logic.ProcessComparison(baselineData, resultsData);
-            }
-            else
-            {
-                return null;
-            }
+            material.SetTexture("_ReferenceTex", baselineTex); // Set baseline texture
+            material.SetTexture("_MainTex", resultsTex); // Set results texture
         }
     }
 }

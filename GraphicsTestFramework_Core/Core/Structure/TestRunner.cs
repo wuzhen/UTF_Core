@@ -114,7 +114,7 @@ namespace GraphicsTestFramework
         public void StartTests()
         {
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Starting runner execution"); // Write to console
-            Menu.Instance.SetMenuState(0); // Disable menu
+            Menu.Instance.SetMenuState(false); // Disable menu
             switch (runnerType) // Switch execution logic based on RunnerType
             {
                 case RunnerType.Automation: // Automation ("Run" in menu)
@@ -143,7 +143,7 @@ namespace GraphicsTestFramework
             }
             do { yield return null; } while (runnerIsWaiting == true); // Wait for previous test to finish before enabling menus
             Console.Instance.Write(DebugLevel.Logic, MessageLevel.Log, "Ended automation run"); // Write to console
-            Menu.Instance.SetMenuState(1); // Enable menu
+            Menu.Instance.SetMenuState(true); // Enable menu
         }
 
         // Load Test of currentTestIndex

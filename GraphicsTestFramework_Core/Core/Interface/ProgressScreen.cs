@@ -6,11 +6,22 @@ using System;
 
 namespace GraphicsTestFramework
 {
-	public enum ProgressType { LocalLoad, LocalSave, CloudLoad, CloudSave }
+    // ------------------------------------------------------------------------------------
+    // Global Enums
 
-	public class ProgressScreen : MonoBehaviour 
+    public enum ProgressType { LocalLoad, LocalSave, CloudLoad, CloudSave }
+
+    // ------------------------------------------------------------------------------------
+    // ProgressScreen
+    // - Overlay for loading messages during menus
+
+    public class ProgressScreen : MonoBehaviour 
 	{
-		private static ProgressScreen _Instance = null;
+        // ------------------------------------------------------------------------------------
+        // Variables
+
+        // Singleton
+        private static ProgressScreen _Instance = null;
         public static ProgressScreen Instance
         {
             get
@@ -21,25 +32,28 @@ namespace GraphicsTestFramework
             }
         }
 
+        // References
 		public Discs discs;
 		public Text messageText;
 		public GameObject progressObject;
-		public ProgressType progressType;
 
-		public void SetState(bool active, ProgressType type, string message)
+        // ------------------------------------------------------------------------------------
+        // State & Context
+
+        // Set state
+        public void SetState(bool active, ProgressType type, string message)
 		{
-			progressObject.SetActive(active);
-			if(active == true)
+            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Setting progress screen state to "+active); // Write to console
+            progressObject.SetActive(active); // Set active
+			if(active == true) // If active
 			{
-				discs.localLoad.SetActive(false);
+				discs.localLoad.SetActive(false); // Disable all loading discs
 				discs.localSave.SetActive(false);
 				discs.cloudLoad.SetActive(false);
 				discs.cloudSave.SetActive(false);
+				messageText.text = message; // Set message
 
-				progressType = type;
-				messageText.text = message;
-
-				switch(progressType)
+				switch(type) // Switch on type
 				{
 					case ProgressType.LocalLoad:
 						discs.localLoad.SetActive(true);
@@ -57,7 +71,10 @@ namespace GraphicsTestFramework
 			}
 		}
 
-		[Serializable]
+        // ------------------------------------------------------------------------------------
+        // Local Reference Structures
+
+        [Serializable]
 		public class Discs
 		{
 			public GameObject localLoad;

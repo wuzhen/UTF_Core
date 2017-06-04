@@ -11,8 +11,11 @@ namespace GraphicsTestFramework
 
     public abstract class TestModelBase : MonoBehaviour
     {
-        //public Type logic;
+        public int id { get; set; } // Unique ID
+        
         public Type logic { get; set; } // Reference to the models logic type
+
+        public abstract void SetID();
 
         public abstract void SetLogic();
     }
@@ -24,6 +27,8 @@ namespace GraphicsTestFramework
 
     public abstract class TestModel<L> : TestModelBase where L : TestLogicBase
     {
+        public abstract override void SetID();
+
         // Set test logic type
         public override void SetLogic()
         {

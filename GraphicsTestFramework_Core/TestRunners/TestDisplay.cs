@@ -23,12 +23,19 @@ namespace GraphicsTestFramework
         // ------------------------------------------------------------------------------------
         // TestViewer
 
+        // Return default camera tab only
+        public virtual TestViewerTabData[] GetViewerTabs(ResultsBase resultsObject)
+        {
+            return new TestViewerTabData[1] { new TestViewerTabData("Default", TestViewerTabType.DefaultCamera, null, null) };
+        }
+
         // Enable test viewer
-        public virtual void EnableTestViewer(object resultsObject)
+        public void EnableTestViewer(ResultsBase resultsObject)
         {
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, this.GetType().Name + " enabling test viewer"); // Write to console
             ProgressScreen.Instance.SetState(false, ProgressType.LocalSave, ""); // Disable ProgressScreen
-            TestViewer.Instance.SetTestViewerState(1, ViewerType.Default, null); // Set test viewer state
+            TestViewer.Instance.SetState(true); // Set test viewer state
+            TestViewer.Instance.UpdateBars(GetViewerTabs(resultsObject)); // Set test viewer state
         }
 
         // ------------------------------------------------------------------------------------
@@ -44,7 +51,7 @@ namespace GraphicsTestFramework
         }
 
         // Setup the results context entry
-        public abstract void SetupResultsContext(GameObject contextObject, ResultsEntry inputEntry);
+        public abstract void SetupResultsContext(ResultsContext contextObject, ResultsEntry inputEntry);
     }
 
     // ------------------------------------------------------------------------------------

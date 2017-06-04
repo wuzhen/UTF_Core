@@ -18,10 +18,9 @@ namespace GraphicsTestFramework
             }
         }
 
+        public GameObject resultsViewerParent;
         public GameObject tabPrefab;
         public GameObject resultsEntryPrefab;
-
-        public GameObject resultsParent;
         public RectTransform suiteTabContentRect;
         public RectTransform typeTabContentRect;
         public RectTransform listContentRect;
@@ -37,14 +36,14 @@ namespace GraphicsTestFramework
 
         public void Enable()
         {
-            resultsParent.SetActive(true);
+            resultsViewerParent.SetActive(true);
             GenerateSuiteTabs();
         }
 
         public void BackToMenu()
         {
             Cleanup();
-            resultsParent.SetActive(false);
+            resultsViewerParent.SetActive(false);
         }
 
         void Cleanup()
@@ -167,7 +166,7 @@ namespace GraphicsTestFramework
             contextObjectRect.anchoredPosition = new Vector2(0, (entryIndex+1) * -listEntries[0].GetComponent<RectTransform>().sizeDelta.y);
             listContentRect.sizeDelta = new Vector2(listContentRect.sizeDelta.x, listContentRect.sizeDelta.y + contextObjectRect.sizeDelta.y);
             NudgeListEntries(entryIndex, -contextObjectRect.sizeDelta.y);
-            display.SetupResultsContext(activeContextObject, inputEntry);
+            display.SetupResultsContext(activeContextObject.GetComponent<ResultsContext>(), inputEntry);
         }
 
         void HideContextObject(ResultsEntry inputEntry)

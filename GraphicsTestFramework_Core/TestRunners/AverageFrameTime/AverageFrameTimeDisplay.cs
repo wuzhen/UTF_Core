@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+﻿using UnityEngine.UI;
 
 namespace GraphicsTestFramework
 {
@@ -11,21 +11,47 @@ namespace GraphicsTestFramework
         // ------------------------------------------------------------------------------------
         // TestViewer
 
-        // Enable and setup the test viewer
-        // TODO - Total rewrite
-        //public override void EnableTestViewer()
-        //{
-        //    // TODO
-        //}
+        // Setup viewer tabs
+        public override TestViewerTabData[] GetViewerTabs(ResultsBase resultsObject)
+        {
+            TestViewerTabData[] output = new TestViewerTabData[1]; // Create empty output (mandatory)
+            var localResultData = (AverageFrameTimeResults)resultsObject; // Convert the input results object to this types class (mandatory)
+            switch (logic.baselineExists) // Switch on baseline exists
+            {
+                case false:
+                    output = new TestViewerTabData[1] // Only want one tab
+                    {
+                        new TestViewerTabData ("Live Camera", TestViewerTabType.DefaultCamera, null, new TestViewerTabData.TestViewerTabStatistic[1] // Set the tab to use the default camera
+                            {
+                                new TestViewerTabData.TestViewerTabStatistic("Average Frame Time", localResultData.avgFrameTime.ToString()) // Enable the statistics window and display the avg frame time
+                            })
+                    };
+                    break;
+                case true:
+                    var comparisonData = (AverageFrameTimeLogic.ComparisonData)logic.GetComparisonData(resultsObject); // Get the comparison data for this test in this types class (mandatory)
+                    output = new TestViewerTabData[1] // Only want one tab
+                    {
+                        new TestViewerTabData ("Live Camera", TestViewerTabType.DefaultCamera, null, new TestViewerTabData.TestViewerTabStatistic[2] // Set the tab to use the default camera
+                            {
+                                new TestViewerTabData.TestViewerTabStatistic("Average Frame Time", localResultData.avgFrameTime.ToString()), // Enable the statistics window and display the avg frame time
+                                new TestViewerTabData.TestViewerTabStatistic("Delta", comparisonData.delta.ToString()) // Also display the delta from the comparison
+                            })
+                    };
+                    break;
+            }
+            return output; // Return the tabs
+        }
 
         // ------------------------------------------------------------------------------------
         // ResultsViewer
 
         // Setup the results context object
-        // TODO - Total rewrite
-        public override void SetupResultsContext(GameObject contextObject, ResultsEntry inputEntry)
+        public override void SetupResultsContext(ResultsContext context, ResultsEntry inputEntry)
         {
-            
+            AverageFrameTimeResults inputResults = (AverageFrameTimeResults)logic.DeserializeResults(inputEntry.resultsData); // Deserialize input and cast to typed results
+            AverageFrameTimeLogic.ComparisonData comparisonData = (AverageFrameTimeLogic.ComparisonData)logic.GetComparisonData(inputResults); // Get comparison data
+            context.objects[0].GetComponent<Text>().text = inputResults.avgFrameTime.ToString(); // Set average frame time
+            context.objects[1].GetComponent<Text>().text = comparisonData.delta.ToString(); // Set delta
         }
     }
 }

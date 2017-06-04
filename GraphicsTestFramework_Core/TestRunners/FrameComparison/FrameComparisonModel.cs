@@ -20,6 +20,14 @@ namespace GraphicsTestFramework
     public class FrameComparisonModel : TestModel<FrameComparisonLogic>
     {
         // ------------------------------------------------------------------------------------
+        // ID
+
+        public override void SetID()
+        {
+            id = 001;
+        }
+
+        // ------------------------------------------------------------------------------------
         // Settings
 
         [Serializable]

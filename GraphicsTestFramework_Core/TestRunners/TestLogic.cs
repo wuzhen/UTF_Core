@@ -28,7 +28,7 @@ namespace GraphicsTestFramework
 
         // Results
         public object baseline; //Baseline to compare to (cast to logic's result class)
-        public object activeResultData; //Results data to write to (cast to logic's result class)
+        public ResultsBase activeResultData; //Results data to write to (cast to logic's result class)
         public Type results; // Type specific results class to cast to=
 
         // ------------------------------------------------------------------------------------
@@ -112,7 +112,7 @@ namespace GraphicsTestFramework
         }
 
         // Build results after main test logic is completed
-        public void BuildResultsStruct(object input)
+        public void BuildResultsStruct(ResultsBase input)
         {
             if(input != null) // Null check
             {
@@ -164,23 +164,44 @@ namespace GraphicsTestFramework
         // Called from ConfirmResultsSave delegate when ResultsIO is done saving files
         void ConfirmResultsSaved()
         {
-            Console.Instance.Write(DebugLevel.Logic, MessageLevel.Log, this.GetType().Name + " confirmed results save for test " + activeTestEntry.testName); // Write to console
-            if (activeRunType == RunnerType.Automation) // If Automation broadcast end of test
+            if (TestTypeManager.Instance.GetActiveTestLogic() == this) // Check this is the active test logic
             {
-                ProgressScreen.Instance.SetState(false, ProgressType.LocalSave, ""); // Disable ProgressScreen
-                BroadcastEndTestAction(); // Broadcast to TestList that rest is completed
-            }
-            else if(activeRunType == RunnerType.Resolve) // If Resolve update viewer
-            {
-                TestViewer.Instance.viewerToolbar.OnClickNext(); // Emulate OnClickNext on ViewerToolbar
+                Console.Instance.Write(DebugLevel.Logic, MessageLevel.Log, this.GetType().Name + " confirmed results save for test"); // Write to console
+                if (activeRunType == RunnerType.Automation) // If Automation broadcast end of test
+                {
+                    ProgressScreen.Instance.SetState(false, ProgressType.LocalSave, ""); // Disable ProgressScreen
+                    BroadcastEndTestAction(); // Broadcast to TestList that rest is completed
+                }
+                else if (activeRunType == RunnerType.Resolve) // If Resolve update viewer
+                {
+                    TestViewerToolbar.Instance.OnClickNext(); // Emulate OnClickNext on ViewerToolbar
+                }
             }
         }
 
         // ------------------------------------------------------------------------------------
+        // Comparison Methods
+
+        // Get comparison data
+        public object GetComparisonData(ResultsBase resultsData)
+        {
+            ResultsIOData baselineFetch = ResultsIO.Instance.RetrieveBaseline(suiteName, testTypeName, resultsData.common); // Get baseline data
+            if (baselineFetch != null) // If successful
+            {
+                ResultsBase baselineData = (ResultsBase)DeserializeResults(baselineFetch); // Convert to results class
+                return ProcessComparison(baselineData, resultsData); // Process comparison
+            }
+            else
+                return null; // Return fail
+        }
+
+        public abstract object ProcessComparison(ResultsBase baselineData, ResultsBase resultsData);
+
+        // ------------------------------------------------------------------------------------
         // Display Methods
 
-        // Called by the TestViewer when restarting the current test
-        // TODO - Revisit this when rewriting the TestViewer
+            // Called by the TestViewer when restarting the current test
+            // TODO - Revisit this when rewriting the TestViewer
         public void RestartTest()
         {
             StartTest(); // Restart
@@ -308,16 +329,12 @@ namespace GraphicsTestFramework
                         string value = commonDataRaw[(cf * 2) + 1];
                         FieldInfo fieldInfo = common.GetType().GetField(commonFields[cf].Name);
                         fieldInfo.SetValue(common, Convert.ChangeType(value, fieldInfo.FieldType));
-                        Debug.Log(fieldInfo);
                     }
                 }
                 else
                 {
-                    Debug.LogWarning("looking for index " + ((f * 2) - 1) + " in results of length " + resultsDataRaw.Count);
-                    Debug.LogWarning(resultsDataRaw[(f * 2) - 1]);
                     var value = resultsDataRaw[(f * 2) - 1];
                     FieldInfo fieldInfo = resultData.GetType().GetField(customFields[0].Name); // TODO - Why did this become 0?
-                    Debug.LogWarning("field type is " + fieldInfo.FieldType + " at index "+f+" in "+ customFields.Length);
                     if (fieldInfo.FieldType.IsArray) // This handles arrays
                     {
                         Type type = resultData.GetType().GetField(customFields[f].Name).FieldType.GetElementType();

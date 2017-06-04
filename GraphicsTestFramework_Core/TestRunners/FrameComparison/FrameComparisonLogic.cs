@@ -52,7 +52,7 @@ namespace GraphicsTestFramework
             if (baselineExists) // Comparison (mandatory)
             {
                 FrameComparisonResults referenceData = (FrameComparisonResults)DeserializeResults(ResultsIO.Instance.RetrieveBaseline(suiteName, testTypeName, m_TempData.common)); // Deserialize baseline data (mandatory)
-                ComparisonData comparisonData = ProcessComparison(referenceData, m_TempData);  // Prrocess comparison (mandatory)
+                ComparisonData comparisonData = (ComparisonData)ProcessComparison(referenceData, m_TempData);  // Prrocess comparison (mandatory)
                 if (comparisonData.DiffPercentage < model.settings.passFailThreshold)  // Pass/fail decision logic (logic specific)
                     m_TempData.common.PassFail = true;
                 else
@@ -65,11 +65,13 @@ namespace GraphicsTestFramework
 
         // Logic for comparison process (mandatory)
         // TODO - Will use last run test model, need to get this for every call from Viewers?
-        public ComparisonData ProcessComparison(FrameComparisonResults baselineData, FrameComparisonResults resultsData)
+        public override object ProcessComparison(ResultsBase baselineData, ResultsBase resultsData)
         {
             ComparisonData newComparison = new ComparisonData(); // Create new ComparisonData instance (mandatory)
-            newComparison.baselineTex = Common.ConvertStringToTexture(baselineData.common.TestName + "_Reference", baselineData.resultFrame); // Convert baseline frame to Texture2D (logic specific)
-            newComparison.resultsTex = Common.ConvertStringToTexture(resultsData.common.TestName + "_Results", resultsData.resultFrame); // Convert result frame to Texture2D (logic specific)
+            FrameComparisonResults baselineDataTyped = (FrameComparisonResults)baselineData;
+            FrameComparisonResults resultsDataTyped = (FrameComparisonResults)resultsData;
+            newComparison.baselineTex = Common.ConvertStringToTexture(baselineData.common.TestName + "_Reference", baselineDataTyped.resultFrame); // Convert baseline frame to Texture2D (logic specific)
+            newComparison.resultsTex = Common.ConvertStringToTexture(resultsData.common.TestName + "_Results", resultsDataTyped.resultFrame); // Convert result frame to Texture2D (logic specific)
             newComparison.DiffPercentage = Common.GetTextureComparisonValue(newComparison.baselineTex, newComparison.resultsTex); // Calculate diff percentage (logic specific)
             return newComparison; // Return (mandatory)
         }

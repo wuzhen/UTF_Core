@@ -39,7 +39,7 @@ namespace GraphicsTestFramework
             if (baselineExists) // Comparison (mandatory)
             {
                 AverageFrameTimeResults referenceData = (AverageFrameTimeResults)DeserializeResults(ResultsIO.Instance.RetrieveBaseline(suiteName, testTypeName, m_TempData.common)); // Deserialize baseline data (mandatory)
-                ComparisonData comparisonData = ProcessComparison(referenceData, m_TempData);  // Prrocess comparison (mandatory)
+                ComparisonData comparisonData = (ComparisonData)ProcessComparison(referenceData, m_TempData);  // Prrocess comparison (mandatory)
                 if (comparisonData.delta < model.settings.passFailThreshold)  // Pass/fail decision logic (logic specific)
                     m_TempData.common.PassFail = true;
                 else
@@ -51,10 +51,12 @@ namespace GraphicsTestFramework
 
         // Logic for comparison process (mandatory)
         // TODO - Will use last run test model, need to get this for every call from Viewers?
-        public ComparisonData ProcessComparison(AverageFrameTimeResults baselineData, AverageFrameTimeResults resultsData)
+        public override object ProcessComparison(ResultsBase baselineData, ResultsBase resultsData)
         {
             ComparisonData newComparison = new ComparisonData(); // Create new ComparisonData instance (mandatory)
-            newComparison.delta = resultsData.avgFrameTime - baselineData.avgFrameTime; // Perform comparison logic (logic specific)
+            AverageFrameTimeResults baselineDataTyped = (AverageFrameTimeResults)baselineData;
+            AverageFrameTimeResults resultsDataTyped = (AverageFrameTimeResults)resultsData;
+            newComparison.delta = resultsDataTyped.avgFrameTime - baselineDataTyped.avgFrameTime; // Perform comparison logic (logic specific)
             return newComparison; // Return (mandatory)
         }
 

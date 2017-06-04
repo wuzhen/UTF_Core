@@ -37,7 +37,6 @@ namespace GraphicsTestFramework
         // Gets all subtypes of a Type
         public static List<Type> GetSubTypes<T>() where T : class
         {
-            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Getting subtypes of Type "+ (typeof(T).ToString())); // Write to console
             var types = new List<Type>(); // Create a new list
             foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies()) // Iterate assemblies
             {

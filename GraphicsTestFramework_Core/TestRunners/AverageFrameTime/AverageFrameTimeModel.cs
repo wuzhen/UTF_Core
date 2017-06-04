@@ -25,6 +25,14 @@ namespace GraphicsTestFramework
         public enum TimingType { Seconds, Milliseconds, Ticks, Custom }
 
         // ------------------------------------------------------------------------------------
+        // ID
+
+        public override void SetID()
+        {
+            id = 002;
+        }
+
+        // ------------------------------------------------------------------------------------
         // Settings
 
         [Serializable]

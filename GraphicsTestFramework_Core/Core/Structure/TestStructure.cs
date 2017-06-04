@@ -245,7 +245,7 @@ namespace GraphicsTestFramework
                 if (input.currentLevel == 0)
                 {
                     MenuEntryData entry = new MenuEntryData();
-                    MenuTestEntry id = Menu.Instance.CloneMenuID(input);
+                    MenuTestEntry id = Menu.Instance.CloneMenuTestEntry(input);
                     id.suiteId = su;                                // Replace relevent data 
                     entry.entryName = testStructure.suites[su].suiteName;
                     entry.selectionState = testStructure.suites[su].selectionState;
@@ -263,7 +263,7 @@ namespace GraphicsTestFramework
                             if (input.currentLevel == 1 && su == input.suiteId)
                             {
                                 MenuEntryData entry = new MenuEntryData();
-                                MenuTestEntry id = Menu.Instance.CloneMenuID(input);
+                                MenuTestEntry id = Menu.Instance.CloneMenuTestEntry(input);
                                 id.currentLevel = 1;                            // Replace relevent data 
                                 id.suiteId = su;                                // Replace relevent data 
                                 id.typeId = ty;                                 // Replace relevent data 
@@ -283,7 +283,7 @@ namespace GraphicsTestFramework
                                         if (input.currentLevel == 2 && ty == input.typeId)
                                         {
                                             MenuEntryData entry = new MenuEntryData();
-                                            MenuTestEntry id = Menu.Instance.CloneMenuID(input);
+                                            MenuTestEntry id = Menu.Instance.CloneMenuTestEntry(input);
                                             id.currentLevel = 2;                            // Replace relevent data 
                                             id.suiteId = su;                                // Replace relevent data 
                                             id.typeId = ty;                                 // Replace relevent data 
@@ -304,7 +304,7 @@ namespace GraphicsTestFramework
                                                     if (input.currentLevel == 3 && sc == input.sceneId)
                                                     {
                                                         MenuEntryData entry = new MenuEntryData();
-                                                        MenuTestEntry id = Menu.Instance.CloneMenuID(input);
+                                                        MenuTestEntry id = Menu.Instance.CloneMenuTestEntry(input);
                                                         id.currentLevel = 3;                            // Replace relevent data 
                                                         id.suiteId = su;                                // Replace relevent data 
                                                         id.typeId = ty;                                 // Replace relevent data 
