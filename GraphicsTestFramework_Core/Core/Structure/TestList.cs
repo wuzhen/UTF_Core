@@ -64,8 +64,8 @@ namespace GraphicsTestFramework
         {
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Getting logic instance"); // Write to console
             TestLogicBase output; // Create logic instance
-            List<Type> modelList = Common.GetSubTypes<TestModel>(); // Get the model list
-            TestModel activeModelInstance = (TestModel)activeTest.testObject.GetComponent(modelList[testTypes[activeEntry.typeIndex].testType]); // Get the active test model
+            List<Type> modelList = Common.GetSubTypes<TestModelBase>(); // Get the model list
+            TestModelBase activeModelInstance = (TestModelBase)activeTest.testObject.GetComponent(modelList[testTypes[activeEntry.typeIndex].testType]); // Get the active test model
             activeModelInstance.SetLogic(); // Set the logic reference on the model
             output = TestTypeManager.Instance.GetLogicInstanceFromName(activeModelInstance.logic.ToString().Replace("GraphicsTestFramework.", "").Replace("Logic", "")); // Get test  logic instance
             output.SetModel(activeModelInstance); // Set the active test model in the logic
@@ -114,7 +114,7 @@ namespace GraphicsTestFramework
         //Get models of all test types and add components to test objects
         void GetModels()
         {
-            List<Type> modelList = Common.GetSubTypes<TestModel>(); // Get all model types
+            List<Type> modelList = Common.GetSubTypes<TestModelBase>(); // Get all model types
             for (int t = 0; t < testTypes.Count; t++) // Iterate test types
             {
                 int model = testTypes[t].testType; // Get index of test type

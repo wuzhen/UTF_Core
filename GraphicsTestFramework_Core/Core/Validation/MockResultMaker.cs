@@ -10,7 +10,7 @@ namespace GraphicsTestFramework
 {
 	public class MockResultMaker : MonoBehaviour
 	{
-
+        /*
 		public ResultsDataCommon commonData;
 		public string testType;
 		public string testSuiteName;
@@ -54,18 +54,18 @@ namespace GraphicsTestFramework
 
 			if(Input.GetKeyUp(KeyCode.F)){
 				loadedBaselines.Add (GenerateBaselineData(ResultsIO.Instance.RetrieveBaseline(testSuiteName, testType, commonData)));
-				/*foreach(ExampleLogic.ResultsData rd in baseline){
-					GenerateBaselineData(ResultsIO.Instance.RetrieveResult(testSuiteName, testType, rd.common));
-				}*/
+				//foreach(ExampleLogic.ResultsData rd in baseline){
+				//	GenerateBaselineData(ResultsIO.Instance.RetrieveResult(testSuiteName, testType, rd.common));
+				//}
 			}
 
 			if(Input.GetKeyUp (KeyCode.T)){
 				ResultsIO.Instance.BaselineExists (testSuiteName, testBaselineFetch.RenderPipe, testType, testBaselineFetch.SceneName, testBaselineFetch.TestName);
 			}
 
-			/*if(Input.GetKeyUp (KeyCode.C)){
-				ResultsIO.Instance.CheckWorksheet (testSuiteName);
-			}*/
+			//if(Input.GetKeyUp (KeyCode.C)){
+			//	ResultsIO.Instance.CheckWorksheet (testSuiteName);
+			//}
 		}
 
 		ExampleLogic.ResultsData GenerateDummyData (string testName)
@@ -87,10 +87,10 @@ namespace GraphicsTestFramework
 			resultsData.SomeFloat = UnityEngine.Random.value;
 			resultsData.SomeInt = Mathf.RoundToInt (resultsData.SomeFloat);
             //resultsData.SomeStringArray = new string[2] { "Entry1", "Entry2" };
-			/*if (resultsData.SomeFloat > 0.5f)
-				resultsData.SomeBool = true;
-			else
-				resultsData.SomeBool = false;*/
+			//if (resultsData.SomeFloat > 0.5f)
+			//	resultsData.SomeBool = true;
+			//else
+			//	resultsData.SomeBool = false;
 
 			return resultsData;
 		}
@@ -205,6 +205,6 @@ namespace GraphicsTestFramework
                     fieldInfo.SetValue(resultData, stringArray);
                     break;
             }
-        }
+        }*/
     }
 }

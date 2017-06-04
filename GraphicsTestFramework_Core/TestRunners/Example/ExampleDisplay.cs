@@ -1,36 +1,28 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace GraphicsTestFramework
 {
+    // ------------------------------------------------------------------------------------
+    // ExampleDisplay
+    // - Controls context logic for TestViewer and ResultsViewer
+
     public class ExampleDisplay : TestDisplay<ExampleLogic>
     {
-        /// ------------------------------------------------------------------------------------
-        /// Initial setup methods
-
-        //Set logic
-        public override void SetLogic(TestLogicBase inputLogic)
-        {
-            logic = (ExampleLogic)inputLogic;
-        }
-
-        /// ------------------------------------------------------------------------------------
-        /// TestViewer related methods
-        /// TODO - Revisit this when rewriting the TestViewer
+        // ------------------------------------------------------------------------------------
+        // TestViewer
 
         // Enable and setup the test viewer
-        // TODO - Revisit this when rewriting the TestViewer
-        /*public override void EnableTestViewer()
-        {
-            // TODO
-        }*/
+        // TODO - Total rewrite
+        //public override void EnableTestViewer()
+        //{
+        //    // TODO
+        //}
 
-        /// ------------------------------------------------------------------------------------
-        /// ResultsViewer related methods
-        /// TODO - Revisit this when rewriting the ResultsViewer
-        /// 
+        // ------------------------------------------------------------------------------------
+        // ResultsViewer
 
+        // Setup the results context object
+        // TODO - Total rewrite
         public override void SetupResultsContext(GameObject contextObject, ResultsEntry inputEntry)
         {
 

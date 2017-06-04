@@ -1,43 +1,71 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace GraphicsTestFramework
 {
+    // ------------------------------------------------------------------------------------
+    // TestDisplayBase
+    // - Lowest level TestDisplay class that all displays derive from
+    // - Hides most logic away from end user
+
     public abstract class TestDisplayBase : MonoBehaviour
     {
-        public GameObject resultsContextPrefab;
+        // ------------------------------------------------------------------------------------
+        // Variables
 
-        /// ------------------------------------------------------------------------------------
-        /// Initial setup methods
+        public GameObject resultsContextPrefab; // Reference to prefab for results screen context dropdown
 
+        // ------------------------------------------------------------------------------------
+        // Initialization
+
+        // Set test logic instance
         public abstract void SetLogic(TestLogicBase inputLogic);
 
-        public virtual void GetResultsContextObject()
-        {
-            string name = this.GetType().ToString();
-            name = name.Replace("GraphicsTestFramework.", "").Replace("Display", "");
-            name = "ResultsContext_" + name;
-            resultsContextPrefab = (GameObject)Resources.Load(name);
-        }
+        // ------------------------------------------------------------------------------------
+        // TestViewer
 
-        public abstract void SetupResultsContext(GameObject contextObject, ResultsEntry inputEntry);
-
-        // Enable test viewer (if in View mode)
-        // TODO - Revisit this when rewriting the TestViewer
+        // Enable test viewer
         public virtual void EnableTestViewer(object resultsObject)
         {
-            if (Master.Instance.debugMode == Master.DebugMode.Messages)
-                Debug.Log(this.GetType().Name + " enabling Test Viewer");
-            ProgressScreen.Instance.SetState(false, ProgressType.LocalSave, "");
-            TestViewer.Instance.SetTestViewerState(1, ViewerType.Default, null);
+            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, this.GetType().Name + " enabling test viewer"); // Write to console
+            ProgressScreen.Instance.SetState(false, ProgressType.LocalSave, ""); // Disable ProgressScreen
+            TestViewer.Instance.SetTestViewerState(1, ViewerType.Default, null); // Set test viewer state
         }
+
+        // ------------------------------------------------------------------------------------
+        // ResultsViewer
+
+        // Get reference to results context prefab
+        public void GetResultsContextObject()
+        {
+            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, this.GetType().Name + " getting results context object prefab"); // Write to console
+            string typeName = this.GetType().ToString().Replace("GraphicsTestFramework.", "").Replace("Display", ""); // Get type name
+            typeName = "ResultsContext_" + typeName; // Append prefix
+            resultsContextPrefab = (GameObject)Resources.Load(typeName); // Load prefab from resources
+        }
+
+        // Setup the results context entry
+        public abstract void SetupResultsContext(GameObject contextObject, ResultsEntry inputEntry);
     }
 
-    public abstract class TestDisplay<T> : TestDisplayBase where T : TestLogicBase
-    {
-        public T logic { get; set; }
+    // ------------------------------------------------------------------------------------
+    // TestDisplay
+    // - Next level TestDisplay class that all user facing displays derive from
+    // - Adds an abstraction layer for defining logic type
 
-        public abstract override void SetLogic(TestLogicBase inputLogic);
+    public abstract class TestDisplay<L> : TestDisplayBase where L : TestLogicBase
+    {
+        // ------------------------------------------------------------------------------------
+        // Variables
+
+        public L logic { get; set; } // Reference to the tests logic
+
+        // ------------------------------------------------------------------------------------
+        // Set Methods
+
+        // Set test logic instance
+        public override void SetLogic(TestLogicBase inputLogic)
+        {
+            logic = (L)inputLogic; // Cast to type and set
+        }
     }
 }

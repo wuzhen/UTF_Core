@@ -1,24 +1,42 @@
 ﻿using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace GraphicsTestFramework
 {
-	public class AverageFrameTimeModel : TestModel 
+    // ------------------------------------------------------------------------------------
+    // Results Data Structures
+
+    // Structure for results
+    [System.Serializable]
+    public class AverageFrameTimeResults : ResultsBase
+    {
+        public float avgFrameTime;
+    }
+
+    // ------------------------------------------------------------------------------------
+    // AverageFrameTimeModel
+    // - Contains settings for AverageFrameTime
+
+    public class AverageFrameTimeModel : TestModel<AverageFrameTimeLogic> 
 	{
-		public enum TimingType { Seconds, Milliseconds, Ticks, Custom }
-		//Struct for test options. One instance per test.
+        // ------------------------------------------------------------------------------------
+        // Local Enums
+
+        public enum TimingType { Seconds, Milliseconds, Ticks, Custom }
+
+        // ------------------------------------------------------------------------------------
+        // Settings
+
         [Serializable]
         public struct Settings
         {
-			public TimingType timingType;
-			public float customTimingMultiplier;
-            public int sampleFrames;
-			public int waitFrames;	
-			public float passFailThreshold;
+			public TimingType timingType; // Timing multiplier
+			public float customTimingMultiplier; // Custom timing multiplier
+            public int sampleFrames; // Amount of frames to sample
+			public int waitFrames; // Amount of frames to wait
+			public float passFailThreshold; // Threshold for comparison pass/fail
 
-            public static Settings defaultSettings
+            public static Settings defaultSettings // Default settings
             {
                 get
                 {
@@ -34,29 +52,12 @@ namespace GraphicsTestFramework
             }
         }
 
-        //Set reference to logic script for this model
-        public override void SetLogic()
-        {
-            logic = typeof(AverageFrameTimeLogic);
-        }
-
-        //Get reference to logic script for this model
-        public override TestLogicBase GetLogic()
-        {
-            return new AverageFrameTimeLogic();
-        }
-
         [SerializeField]
         Settings m_Settings = Settings.defaultSettings;
         public Settings settings
         {
             get { return m_Settings; }
             set { m_Settings = value; }
-        }
-
-        public void Reset()
-        {
-            m_Settings = Settings.defaultSettings;
         }
 	}
 }

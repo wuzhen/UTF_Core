@@ -8,24 +8,13 @@ namespace GraphicsTestFramework
     // - Results: Samples a number of frames and returns an average
     // - Comparison: Compares average frame time to baseline
 
-    public class AverageFrameTimeLogic : TestLogic<AverageFrameTimeModel, AverageFrameTimeDisplay>
+    public class AverageFrameTimeLogic : TestLogic<AverageFrameTimeModel, AverageFrameTimeDisplay, AverageFrameTimeResults>
 	{
         // ------------------------------------------------------------------------------------
         // Variables
 
         float time;
 		int samples;
-
-        // ------------------------------------------------------------------------------------
-        // Results Data Structures
-        
-        // Structure for results
-        [System.Serializable]
-        public class ResultsData
-        {
-            public ResultsDataCommon common; // Set automatically (mandatory)
-            public float avgFrameTime;
-        }
 
         // Structure for comparison
         [System.Serializable]
@@ -40,7 +29,7 @@ namespace GraphicsTestFramework
         // Logic for creating results data (mandatory override)
         public override IEnumerator ProcessResult()
         {
-            m_TempData = (ResultsData)GetResultsStruct(); // Get a results struct (mandatory)
+            var m_TempData = (AverageFrameTimeResults)GetResultsStruct(); // Get a results struct (mandatory)
 			for (int i = 0; i < model.settings.waitFrames; i++) // Wait for requested wait frame count (logic specific)
                 yield return new WaitForEndOfFrame();
             Timestamp(false); // Perform a timestamp (logic specific)
@@ -49,7 +38,7 @@ namespace GraphicsTestFramework
 			m_TempData.avgFrameTime = Timestamp(true); // Perform a timestamp (logic specific)
             if (baselineExists) // Comparison (mandatory)
             {
-                ResultsData referenceData = (ResultsData)DeserializeResults(ResultsIO.Instance.RetrieveBaseline(activeTestEntry.suiteName, testTypeName, m_TempData.common)); // Deserialize baseline data (mandatory)
+                AverageFrameTimeResults referenceData = (AverageFrameTimeResults)DeserializeResults(ResultsIO.Instance.RetrieveBaseline(suiteName, testTypeName, m_TempData.common)); // Deserialize baseline data (mandatory)
                 ComparisonData comparisonData = ProcessComparison(referenceData, m_TempData);  // Prrocess comparison (mandatory)
                 if (comparisonData.delta < model.settings.passFailThreshold)  // Pass/fail decision logic (logic specific)
                     m_TempData.common.PassFail = true;
@@ -62,7 +51,7 @@ namespace GraphicsTestFramework
 
         // Logic for comparison process (mandatory)
         // TODO - Will use last run test model, need to get this for every call from Viewers?
-        public ComparisonData ProcessComparison(ResultsData baselineData, ResultsData resultsData)
+        public ComparisonData ProcessComparison(AverageFrameTimeResults baselineData, AverageFrameTimeResults resultsData)
         {
             ComparisonData newComparison = new ComparisonData(); // Create new ComparisonData instance (mandatory)
             newComparison.delta = resultsData.avgFrameTime - baselineData.avgFrameTime; // Perform comparison logic (logic specific)
@@ -100,30 +89,5 @@ namespace GraphicsTestFramework
             Console.Instance.Write(DebugLevel.Logic, MessageLevel.Log, this.GetType().Name + " completed test with " + elapsedSamples + " samples with average frametime of " + elapsedTime / (float)elapsedSamples); // Write to console
 			return elapsedTime / (float)elapsedSamples; // Return
 		}
-
-        // ------------------------------------------------------------------------------------
-        // --------------------------- DO NOT EDIT BELOW HERE ---------------------------------
-        // ------------------------------------------------------------------------------------
-
-        ResultsData m_TempData; // Current results data (Dont remove or edit)
-
-        // Setup the results structs every test (Dont remove or edit)
-        public override void SetupResultsStructs()
-        {
-            ResultsData newResultsData = new ResultsData();
-            newResultsData.common = Common.GetCommonResultsData();
-            newResultsData.common.SceneName = activeTestEntry.sceneName;
-            newResultsData.common.TestName = activeTestEntry.testName;
-            activeResultData = newResultsData;
-        }
-
-        //Set and initialize results type (Dont remove or edit)
-        public override void SetResults()
-        {
-            resultsType = typeof(ResultsData);
-            ResultsData newData = new ResultsData();
-            newData.common = new ResultsDataCommon();
-            activeResultData = newData;
-        }
     }
 }

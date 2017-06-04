@@ -78,7 +78,7 @@ namespace GraphicsTestFramework
         IEnumerator GenerateStructure()
         {
             testStructure = new Structure(); // Create new test structure instance
-            List<Type> modelList = Common.GetSubTypes<TestModel>(); // Get model list
+            List<Type> modelList = Common.GetSubTypes<TestModelBase>(); // Get model list
             for (int su = 0; su < SuiteManager.Instance.suites.Count; su++) // Iterate suites on SuiteManager
             {
                 Suite newSuite = new Suite(); // Create new suite instance
@@ -93,18 +93,17 @@ namespace GraphicsTestFramework
                     TestList testList = FindObjectOfType<TestList>(); // Get TestList from current scene
                     for (int ty = 0; ty < testList.testTypes.Count; ty++) // Iterate test types
                     {
-                        TestModel model = (TestModel)testList.testTypes[ty].tests[0].testObject.GetComponent(modelList[testList.testTypes[ty].testType]); // Get a model reference from the test list
-                        TestLogicBase logic = model.GetLogic(); // Get a logic reference from the model
-                        model.SetLogic(); // TODO - Need this?
-                        logic.SetName(); // Set name on the logic so it exists when checking for baseline
-                        TestType newType = FindDuplicateTypeInSuite(newSuite, logic.testTypeName); // Check for duplicate types and return if found
+                        TestModelBase model = (TestModelBase)testList.testTypes[ty].tests[0].testObject.GetComponent(modelList[testList.testTypes[ty].testType]); // Get a model reference from the test list
+                        model.SetLogic(); // Need to set logic before generating type instances
+                        string testTypeName = TestTypeManager.Instance.GetTestTypeNameFromIndex(testList.testTypes[ty].testType); // Get test type name
+                        TestType newType = FindDuplicateTypeInSuite(newSuite, testTypeName); // Check for duplicate types and return if found
                         if(newType == null) // If no duplicate type was found
                         {
                             newType = new TestType(); // Create a new type instance
-                            newType.typeName = logic.testTypeName; // Set type name
+                            newType.typeName = testTypeName; // Set type name
                             newType.typeIndex = testList.testTypes[ty].testType;  // Set type index
                             newSuite.types.Add(newType); // Add type to suite
-                            TestTypeManager.Instance.GenerateTestTypeInstances(model); // Generate an instance object for test logic/display
+                            TestTypeManager.Instance.GenerateTestTypeInstances(newSuite.suiteName, model); // Generate an instance object for test logic/display
                         }
                         Scene newScene = FindDuplicateSceneInType(newSuite, newType, scene.name);  // Check for duplicate scenes and return if found
                         if (newScene == null) // If no duplicate scene was found

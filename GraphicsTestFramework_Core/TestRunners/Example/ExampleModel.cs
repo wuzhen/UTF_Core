@@ -3,16 +3,33 @@ using UnityEngine;
 
 namespace GraphicsTestFramework
 {
-    public class ExampleModel : TestModel
+    // ------------------------------------------------------------------------------------
+    // Results Data Structures
+
+    // Structure for results (Do not rename class. Class contents can be anything)
+    [System.Serializable]
+    public class ExampleResults : ResultsBase
     {
-        //Struct for test options. One instance per test.
+        public float SomeFloat; // Just some example data. Well use this for comparison.
+        public int SomeInt; // Just some more example data (can save most types, including arrays)
+    }
+
+    // ------------------------------------------------------------------------------------
+    // ExampleModel
+    // - Contains settings for Example
+
+    public class ExampleModel : TestModel<ExampleLogic>
+    {
+        // ------------------------------------------------------------------------------------
+        // Settings
+
         [Serializable]
         public struct Settings
         {
-            public float waitTime;
-            public float passFailThreshold;
+            public float waitTime; // Time to wait
+            public float passFailThreshold; // Threshold for comparison pass/fail
 
-            public static Settings defaultSettings
+            public static Settings defaultSettings // Default settings
             {
                 get
                 {
@@ -25,29 +42,12 @@ namespace GraphicsTestFramework
             }
         }
 
-        //Reference to logic script for this model
-        public override void SetLogic()
-        {
-            logic = typeof(ExampleLogic);
-        }
-
-        //Get reference to logic script for this model
-        public override TestLogicBase GetLogic()
-        {
-            return new ExampleLogic();
-        }
-
         [SerializeField]
         Settings m_Settings = Settings.defaultSettings;
         public Settings settings
         {
             get { return m_Settings; }
             set { m_Settings = value; }
-        }
-
-        public void Reset()
-        {
-            m_Settings = Settings.defaultSettings;
         }
     }
 }

@@ -3,9 +3,25 @@ using UnityEngine;
 
 namespace GraphicsTestFramework
 {
-    public class FrameComparisonModel : TestModel
+    // ------------------------------------------------------------------------------------
+    // Results Data Structures
+
+    // Structure for results
+    [System.Serializable]
+    public class FrameComparisonResults : ResultsBase
     {
-        //Struct for test options. One instance per test.
+        public string resultFrame;
+    }
+
+    // ------------------------------------------------------------------------------------
+    // FrameComparisonModel
+    // - Contains settings for FrameComparison
+
+    public class FrameComparisonModel : TestModel<FrameComparisonLogic>
+    {
+        // ------------------------------------------------------------------------------------
+        // Settings
+
         [Serializable]
         public struct Settings
         {
@@ -14,9 +30,9 @@ namespace GraphicsTestFramework
             public TextureFormat textureFormat; //Format of the frame capture
             public FilterMode filterMode; //Filter mode of the frame capture
             public int waitFrames; //Count of frames to wait before capture
-            public float passFailThreshold;
+            public float passFailThreshold; // Threshold for comparison pass/fail
 
-            public static Settings defaultSettings
+            public static Settings defaultSettings // Default settings
             {
                 get
                 {
@@ -33,29 +49,12 @@ namespace GraphicsTestFramework
             }
         }
 
-        //Set reference to logic script for this model
-        public override void SetLogic()
-        {
-            logic = typeof(FrameComparisonLogic);
-        }
-
-        //Get reference to logic script for this model
-        public override TestLogicBase GetLogic()
-        {
-            return new FrameComparisonLogic();
-        }
-
         [SerializeField]
         Settings m_Settings = Settings.defaultSettings;
         public Settings settings
         {
             get { return m_Settings; }
             set { m_Settings = value; }
-        }
-
-        public void Reset()
-        {
-            m_Settings = Settings.defaultSettings;
         }
     }
 }

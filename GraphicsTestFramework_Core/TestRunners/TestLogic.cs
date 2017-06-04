@@ -20,15 +20,16 @@ namespace GraphicsTestFramework
         [HideInInspector] public TestEntry activeTestEntry;
         [HideInInspector] public bool baselineExists;
         public RunnerType activeRunType;
+        public string suiteName;
 
         // Type Specific
-        [HideInInspector] public string testTypeName; // TODO - Find a way to remove this
+        [HideInInspector] public string testTypeName; // Test type name
         public Type display { get; set; } // Reference to the logics display type
 
         // Results
         public object baseline; //Baseline to compare to (cast to logic's result class)
         public object activeResultData; //Results data to write to (cast to logic's result class)
-        public Type resultsType; // Type specific results class to cast to
+        public Type results; // Type specific results class to cast to=
 
         // ------------------------------------------------------------------------------------
         // Broadcast
@@ -61,13 +62,16 @@ namespace GraphicsTestFramework
             testTypeName = this.GetType().ToString().Replace("GraphicsTestFramework.", "").Replace("Logic", "");
         }
 
-        public abstract void SetModel(TestModel inputModel);
+        public void SetSuiteName(string input)
+        {
+            suiteName = input;
+        }
+
+        public abstract void SetModel(TestModelBase inputModel);
 
         public abstract void SetDisplay();
 
         public abstract void SetResults();
-
-        //public abstract void SetDisplay();
 
         // ------------------------------------------------------------------------------------
         // Test Execution
@@ -190,7 +194,7 @@ namespace GraphicsTestFramework
         public void CheckForBaseline()
         {
             ProgressScreen.Instance.SetState(true, ProgressType.LocalLoad, "Retrieving baseline data"); // Enable ProgressScreen
-            baselineExists = ResultsIO.Instance.BaselineExists(activeTestEntry.suiteName, "Standard Legacy", activeTestEntry.typeName/*testTypeName*/, activeTestEntry.sceneName, activeTestEntry.testName); // TODO - Move to TestEntry
+            baselineExists = ResultsIO.Instance.BaselineExists(activeTestEntry.suiteName, "Standard Legacy", activeTestEntry.typeName/*testTypeName*/, activeTestEntry.sceneName, activeTestEntry.testName); // Check for baseline
         }
 
         //Convert an array on unknown type to a typed array
@@ -233,11 +237,11 @@ namespace GraphicsTestFramework
                 output.resultsRow.Add(new ResultsIORow());
             BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
             FieldInfo[] commonFields = typeof(ResultsDataCommon).GetFields(bindingFlags);
-            FieldInfo[] customFields = resultsType.GetFields(bindingFlags);
+            FieldInfo[] customFields = results.GetFields(bindingFlags);
 
             for (int f = 0; f < commonFields.Length; f++)
                 output.resultsRow[0].resultsColumn.Add(commonFields[f].Name);
-            for (int f = 1; f < customFields.Length; f++)
+            for (int f = 0; f < customFields.Length-1; f++)
                 output.resultsRow[0].resultsColumn.Add(customFields[f].Name);
             
             FieldInfo commonField = activeResultData.GetType().GetField("common");
@@ -247,13 +251,13 @@ namespace GraphicsTestFramework
             ResultsDataCommon resultsCommonTemplate = new ResultsDataCommon();
             for (int f = 0; f < commonFields.Length; f++)
             {
-                var typedResult = Convert.ChangeType(activeResultData, resultsType); // TODO - Why does this work...
+                var typedResult = Convert.ChangeType(activeResultData, results); // TODO - Why does this work...
                 FieldInfo typedCommonField = typedResult.GetType().GetField("common"); // TODO - Why does this work...
                 var typedCommonValue = Convert.ChangeType(typedCommonField.GetValue(typedResult), resultsCommonTemplate.GetType()); // TODO - Why does this work...
                 var commonResult = typedCommonValue.GetType().GetField(commonFields[f].Name).GetValue(typedCommonValue);
                 output.resultsRow[1].resultsColumn.Add(commonResult.ToString());
             }
-            for (int f = 1; f < customFields.Length; f++)
+            for (int f = 0; f < customFields.Length-1; f++)
             {
                 var customResult = activeResultData.GetType().GetField(customFields[f].Name).GetValue(activeResultData);
                 if (activeResultData.GetType().GetField(customFields[f].Name).FieldType.IsArray) //If its an array (tough to handle)
@@ -283,13 +287,13 @@ namespace GraphicsTestFramework
         // Deserialize ResultsIOData(string arrays) to ResultsData(class)
         public object DeserializeResults(ResultsIOData resultsIOData)
         {
-            Debug.LogWarning(resultsType);
-            var resultData = Convert.ChangeType(activeResultData, resultsType); //blank results data
+            Debug.LogWarning(results);
+            var resultData = Convert.ChangeType(activeResultData, results); //blank results data
             var common = new ResultsDataCommon(); //blank common data
 
             BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
             FieldInfo[] commonFields = typeof(ResultsDataCommon).GetFields(bindingFlags);
-            FieldInfo[] customFields = resultsType.GetFields(bindingFlags);
+            FieldInfo[] customFields = results.GetFields(bindingFlags);
 
             List<string> commonDataRaw = resultsIOData.resultsRow[0].resultsColumn.GetRange(0, commonFields.Length * 2);
             List<string> resultsDataRaw = resultsIOData.resultsRow[0].resultsColumn.GetRange(commonFields.Length * 2, resultsIOData.resultsRow[0].resultsColumn.Count - (commonFields.Length * 2));
@@ -304,12 +308,16 @@ namespace GraphicsTestFramework
                         string value = commonDataRaw[(cf * 2) + 1];
                         FieldInfo fieldInfo = common.GetType().GetField(commonFields[cf].Name);
                         fieldInfo.SetValue(common, Convert.ChangeType(value, fieldInfo.FieldType));
+                        Debug.Log(fieldInfo);
                     }
                 }
                 else
                 {
+                    Debug.LogWarning("looking for index " + ((f * 2) - 1) + " in results of length " + resultsDataRaw.Count);
+                    Debug.LogWarning(resultsDataRaw[(f * 2) - 1]);
                     var value = resultsDataRaw[(f * 2) - 1];
-                    FieldInfo fieldInfo = resultData.GetType().GetField(customFields[f].Name);
+                    FieldInfo fieldInfo = resultData.GetType().GetField(customFields[0].Name); // TODO - Why did this become 0?
+                    Debug.LogWarning("field type is " + fieldInfo.FieldType + " at index "+f+" in "+ customFields.Length);
                     if (fieldInfo.FieldType.IsArray) // This handles arrays
                     {
                         Type type = resultData.GetType().GetField(customFields[f].Name).FieldType.GetElementType();
@@ -330,7 +338,7 @@ namespace GraphicsTestFramework
     // - Next level TestLogic class that all user facing logics derive from
     // - Adds an abstraction layer for defining model type
 
-    public abstract class TestLogic<M, D> : TestLogicBase where M : TestModel where D : TestDisplayBase
+    public abstract class TestLogic<M, D, R> : TestLogicBase where M : TestModelBase where D : TestDisplayBase where R : ResultsBase
     {
         // ------------------------------------------------------------------------------------
         // Variables
@@ -341,7 +349,7 @@ namespace GraphicsTestFramework
         // Set Methods
 
         // Set test model instance
-        public override void SetModel(TestModel inputModel)
+        public override void SetModel(TestModelBase inputModel)
         {
             model = (M)inputModel; // Cast to type and set
         }
@@ -351,5 +359,34 @@ namespace GraphicsTestFramework
         {
             display = typeof(D); // Set type
         }
+
+        // Initialize results structure
+        public override void SetResults()
+        {
+            results = typeof(R); // Set type
+            ResultsBase newData = (R)Activator.CreateInstance(results); // Create instance
+            newData.common = new ResultsDataCommon(); // Initialize common
+            activeResultData = newData; // Set as active
+        }
+
+        // Setup the results structs every test
+        public override void SetupResultsStructs()
+        {
+            ResultsBase newResultsData = (R)Activator.CreateInstance(results); // Create instance
+            newResultsData.common = Common.GetCommonResultsData(); // Initialize common
+            newResultsData.common.SceneName = activeTestEntry.sceneName; // Set scene name
+            newResultsData.common.TestName = activeTestEntry.testName; // Set test name
+            activeResultData = newResultsData; // Set as active
+        }
+    }
+
+    // ------------------------------------------------------------------------------------
+    // Public Data Structures
+
+    // Structure for results
+    [System.Serializable]
+    public class ResultsBase
+    {
+        public ResultsDataCommon common; // Set automatically (mandatory)
     }
 }

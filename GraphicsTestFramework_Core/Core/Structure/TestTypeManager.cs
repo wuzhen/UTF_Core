@@ -35,7 +35,7 @@ namespace GraphicsTestFramework
         // Instance Management
 
         // Generate script instances for a type (Called by TestStructure)
-        public void GenerateTestTypeInstances(TestModel model)
+        public void GenerateTestTypeInstances(string suiteName, TestModelBase model)
         {
             string typeName = model.logic.ToString().Replace("GraphicsTestFramework.", "").Replace("Logic", ""); // Get type name from logic name
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Generating test type instances for " + typeName); // Write to console
@@ -49,6 +49,7 @@ namespace GraphicsTestFramework
                     newChild.name = typeName; // Set gameobject name
                     TestLogicBase logic = (TestLogicBase)newChild.AddComponent(model.logic); // Add logic component
                     logic.SetName(); // Set name on logic
+                    logic.SetSuiteName(suiteName); // Set suite name on logic
                     logic.SetDisplay(); // Set display on logic
                     logic.SetResults(); // Set results type on logic
                     TestDisplayBase display = (TestDisplayBase)newChild.AddComponent(logic.display); // Add display component
@@ -104,7 +105,7 @@ namespace GraphicsTestFramework
         // TODO - Move these methods to a unique ID
         public string GetTestTypeNameFromIndex(int index)
         {
-            List<Type> types = Common.GetSubTypes<TestModel>(); // Get a type list
+            List<Type> types = Common.GetSubTypes<TestModelBase>(); // Get a type list
             return types[index].ToString().Replace("GraphicsTestFramework.", "").Replace("Model", ""); // Return the type name of the requested index
         }
 
