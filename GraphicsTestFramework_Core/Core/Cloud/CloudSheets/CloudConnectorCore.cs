@@ -19,6 +19,7 @@ public static class CloudConnectorCore
 		getAllTables,		// Returns all worksheets on the spreadsheet.
 		tableExists,		// Returns 1 if table exists else 0.
 		getBaselineData,	// Returns all baseline data for current suites/platform/api.
+		baselineNone,		// Returns when no baselines match the platform/api when pulling
 		// Update
 		updateObjects,		// Updates a field in one or more object(s) specified by field.
 		updateUniqueRow,	// Updates a specific row based on set fields, make sure is unique or will fail
@@ -507,7 +508,8 @@ public static class CloudConnectorCore
 
 		if(response.StartsWith (MSG_BASELINE_NONE)){
 			response = MSG_BASELINE_NONE;
-			unpacked = true;
+			processedResponseCallback.Invoke(QueryType.baselineNone, new List<string>(), new List<string>());
+			unpacked = false;
 		}
 		
 		if (response.StartsWith(MSG_BAD_PASS))
@@ -589,7 +591,11 @@ public static class CloudConnectorCore
 			
 		case MSG_BAD_PASS:
 			logOutput = "Error: password incorrect.";
-			break;			
+			break;
+
+		case MSG_BASELINE_NONE:
+			logOutput = "No matching baselines online";
+			break;
 
 		default:
 			logOutput = "Undefined server response: \n" + response;

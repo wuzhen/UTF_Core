@@ -13,7 +13,7 @@ public class CloudImagesConnector : MonoBehaviour
 	// -- Complete the following fields. --
 	private string webServiceUrl = "https://script.google.com/macros/s/AKfycbyUY0KjqbXLI0saSp3ZLPQh9wxwmP2bPujStiGTEXQg5VIBOEc/exec";
 	private float timeOutLimit = 60f;
-	private bool debugMode = true;
+	private bool debugMode = false;
 	public int jpgQuality = 90; // JPG quality to encode with, 1..100.
 	// --
 
@@ -192,7 +192,7 @@ public class CloudImagesConnector : MonoBehaviour
 		
 		responseCallback.Invoke(responseType, response);
 		responseCount--;
-		Debug.Log (responseCount);
+		//Debug.Log (responseCount);
 		isWaiting = false;
 	}
 	

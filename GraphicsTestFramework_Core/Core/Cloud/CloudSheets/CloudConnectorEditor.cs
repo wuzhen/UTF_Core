@@ -70,7 +70,7 @@ public class CloudConnectorEditor
 			CloudConnectorCore.ProcessResponse(CloudConnectorCore.MSG_CONN_ERR + "Connection error after " + elapsedTime.ToString() + " seconds: " + www.error, (float)elapsedTime);
 			return;
 		}
-		Debug.Log ("Cloud connector is receiving " + www.downloadHandler.text);
+		//Debug.Log ("Cloud connector is receiving " + www.downloadHandler.text);
 		CloudConnectorCore.ProcessResponse(www.downloadHandler.text, (float)elapsedTime);
 		
 		EditorApplication.update -= EditorUpdate;
