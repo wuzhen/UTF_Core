@@ -75,7 +75,8 @@ namespace GraphicsTestFramework
             for(int i = 0; i < buttons.Length; i++) // Iterate
             { 
                 buttons[i] = context.objects[i].GetComponent<Button>(); // Get the button
-                buttons[i].onClick.AddListener(delegate { SetTextureContext(comparisonData, i); }); // Add listener
+                int index = i; // Set this so delegate doesnt get reference that iterates
+                buttons[i].onClick.AddListener(delegate { SetTextureContext(comparisonData, index); }); // Add listener
             }
             resultsContextImage = context.objects[3].GetComponent<RawImage>(); // Get image
             context.objects[4].GetComponent<Text>().text = comparisonData.DiffPercentage.ToString(); // Set diff to field
@@ -86,8 +87,8 @@ namespace GraphicsTestFramework
         public void SetTextureContext(FrameComparisonLogic.ComparisonData comparisonData, int context)
         {
             foreach (Button b in buttons) // Iterate buttons
-                b.interactable = false; // Disable
-            buttons[context].interactable = true; // Enable requested
+                b.interactable = true; // Enable
+            buttons[context].interactable = false; // Disable requested
             switch (context)
             {
                 case 0:    // Results
