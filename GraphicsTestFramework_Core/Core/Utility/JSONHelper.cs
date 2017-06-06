@@ -115,7 +115,7 @@ namespace GraphicsTestFramework
 				ResultsIOData data = new ResultsIOData ();//new ResultsIOData
 				ResultsIORow row = new ResultsIORow ();
 				row.commonResultsIOData = ArrayToResultsDataCommon (splitData);
-				data.resultsRow.Add (new ResultsIORow ());
+				data.resultsRow.Add (row);
 
 				for (int i = 0; i < splitData.Length; i++) {
 					int cur = i;

@@ -350,5 +350,10 @@ namespace GraphicsTestFramework
 			return bytes;
 		}
 
+		public void ClearLocalData(){
+			File.Delete (dataPath);
+			Directory.CreateDirectory (dataPath);
+		}
+
 	}
 }

@@ -330,7 +330,6 @@ namespace GraphicsTestFramework
 
 
 		public static event Broadcast.EndResultsSave endResultsSave;
-
 		public void BroadcastEndResultsSave ()
 		{
 			if (endResultsSave != null)
@@ -338,13 +337,10 @@ namespace GraphicsTestFramework
 		}
 
 		public static event Broadcast.LocalBaselineParsed baselinesParsed;
-
 		public void BroadcastBaselineParsed ()
 		{
 			if (baselinesParsed != null)
-			{
 				baselinesParsed ();
-			}
 		}
 
 	}
