@@ -68,6 +68,7 @@ namespace GraphicsTestFramework
                     break;
                 case TestViewerTabType.Material:
                     textureImage.material = (Material)tabData.tabObject; // Set image material
+                    textureImage.texture = textureImage.material.GetTexture("_MainTex"); // Set image texture
                     textureImage.gameObject.SetActive(true); // Enable image
                     break;
             }

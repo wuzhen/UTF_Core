@@ -306,47 +306,9 @@ namespace GraphicsTestFramework
         }
 
         // Deserialize ResultsIOData(string arrays) to ResultsData(class)
-        public object DeserializeResults(ResultsIOData resultsIOData)
+        public virtual object DeserializeResults(ResultsIOData resultsIOData)
         {
-            Debug.LogWarning(results);
-            var resultData = Convert.ChangeType(activeResultData, results); //blank results data
-            var common = new ResultsDataCommon(); //blank common data
-
-            BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
-            FieldInfo[] commonFields = typeof(ResultsDataCommon).GetFields(bindingFlags);
-            FieldInfo[] customFields = results.GetFields(bindingFlags);
-
-            List<string> commonDataRaw = resultsIOData.resultsRow[0].resultsColumn.GetRange(0, commonFields.Length * 2);
-            List<string> resultsDataRaw = resultsIOData.resultsRow[0].resultsColumn.GetRange(commonFields.Length * 2, resultsIOData.resultsRow[0].resultsColumn.Count - (commonFields.Length * 2));
-
-            for (int f = 0; f < customFields.Length; f++)
-            {
-                if (f == 0)
-                {
-                    //do the common class
-                    for (int cf = 0; cf < commonFields.Length; cf++)
-                    {
-                        string value = commonDataRaw[(cf * 2) + 1];
-                        FieldInfo fieldInfo = common.GetType().GetField(commonFields[cf].Name);
-                        fieldInfo.SetValue(common, Convert.ChangeType(value, fieldInfo.FieldType));
-                    }
-                }
-                else
-                {
-                    var value = resultsDataRaw[(f * 2) - 1];
-                    FieldInfo fieldInfo = resultData.GetType().GetField(customFields[0].Name); // TODO - Why did this become 0?
-                    if (fieldInfo.FieldType.IsArray) // This handles arrays
-                    {
-                        Type type = resultData.GetType().GetField(customFields[f].Name).FieldType.GetElementType();
-                        GenerateGenericArray(fieldInfo, resultData.GetType(), resultData, type, value);
-                    }
-                    else // Non array types
-                    {
-                        fieldInfo.SetValue(resultData, Convert.ChangeType(value, fieldInfo.FieldType));
-                    }
-                }
-            }
-            return resultData;
+            return new object();
         }
     }
 
@@ -394,6 +356,50 @@ namespace GraphicsTestFramework
             newResultsData.common.SceneName = activeTestEntry.sceneName; // Set scene name
             newResultsData.common.TestName = activeTestEntry.testName; // Set test name
             activeResultData = newResultsData; // Set as active
+        }
+
+        public override object DeserializeResults(ResultsIOData resultsIOData)
+        {
+            //var resultData = Convert.ChangeType(activeBaselineData, results); // Create instance (Old - Used from base class)
+            ResultsBase resultData = (R)Activator.CreateInstance(results); // Create instance
+            var common = new ResultsDataCommon(); //blank common data
+
+            BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
+            FieldInfo[] commonFields = typeof(ResultsDataCommon).GetFields(bindingFlags);
+            FieldInfo[] customFields = results.GetFields(bindingFlags);
+
+            List<string> commonDataRaw = resultsIOData.resultsRow[0].resultsColumn.GetRange(0, commonFields.Length * 2);
+            List<string> resultsDataRaw = resultsIOData.resultsRow[0].resultsColumn.GetRange(commonFields.Length * 2, resultsIOData.resultsRow[0].resultsColumn.Count - (commonFields.Length * 2));
+
+            for (int f = 0; f < customFields.Length; f++)
+            {
+                if (f == 0)
+                {
+                    //do the common class
+                    for (int cf = 0; cf < commonFields.Length; cf++)
+                    {
+                        string value = commonDataRaw[(cf * 2) + 1];
+                        FieldInfo fieldInfo = common.GetType().GetField(commonFields[cf].Name);
+                        fieldInfo.SetValue(common, Convert.ChangeType(value, fieldInfo.FieldType));
+                    }
+                }
+                else
+                {
+                    var value = resultsDataRaw[(f * 2) - 1];
+                    FieldInfo fieldInfo = resultData.GetType().GetField(customFields[0].Name); // TODO - Why did this become 0?
+                    if (fieldInfo.FieldType.IsArray) // This handles arrays
+                    {
+                        Type type = resultData.GetType().GetField(customFields[f].Name).FieldType.GetElementType();
+                        GenerateGenericArray(fieldInfo, resultData.GetType(), resultData, type, value);
+                    }
+                    else // Non array types
+                    {
+                        fieldInfo.SetValue(resultData, Convert.ChangeType(value, fieldInfo.FieldType));
+                    }
+                }
+            }
+            resultData.common = common; // Assign common
+            return resultData;
         }
     }
 

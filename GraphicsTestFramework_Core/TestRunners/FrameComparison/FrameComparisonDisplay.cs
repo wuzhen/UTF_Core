@@ -97,6 +97,7 @@ namespace GraphicsTestFramework
                     break;
                 case 1:     // Comparison
                     SetupMaterial(comparisonData.baselineTex, comparisonData.resultsTex); // Setup material
+                    resultsContextImage.texture = comparisonData.resultsTex; // Set texture
                     resultsContextImage.material = material; // Set material
                     break;
                 case 2:     // Baseline

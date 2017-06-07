@@ -205,7 +205,6 @@ namespace GraphicsTestFramework
 		/// Parses the cloud data.
 		/// </summary>
 		public void ParseCloudData(CloudConnectorCore.QueryType query, List<string> objTypeNames, List<string> jsonData){
-			Debug.LogWarning ("this is getting called");
 
 			if (query == CloudConnectorCore.QueryType.tableExists) {
 				Debug.Log (jsonData [0]);

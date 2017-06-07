@@ -55,14 +55,15 @@ namespace GraphicsTestFramework
         IEnumerator WaitForTestStructure()
         {
             do { yield return null; } while (!TestStructure.Instance.IsGenerated); // Wait for test structure
-            if(TestStructure.Instance.CheckForBaselines()) // Baselines exist
+            UpdateMenu(); // Update the menu
+            /*if(TestStructure.Instance.CheckForBaselines()) // Baselines exist
             {
                 breadcrumb.home.SetupHome(); // Setup breadcrumb home button
                 GenerateList(); // Generate list
                 SetupActions(); // Setup actions panel
             }
             else // Any or all baselines are missing
-                GenerateResolveList(); // Generate a resolve list
+                GenerateResolveList(); // Generate a resolve list*/
         }
 
         // Generate the breadcrumb
@@ -98,7 +99,9 @@ namespace GraphicsTestFramework
         void SetupActions()
         {
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Generating actions"); // Write to console
+            actions.run.onClick.RemoveAllListeners(); // Remove listeners
             actions.run.onClick.AddListener(delegate { OnRunButtonClick(); }); // Add listsner
+            actions.view.onClick.RemoveAllListeners(); // Remove listeners
             actions.view.onClick.AddListener(delegate { OnViewButtonClick(); }); // Add listsner
         }
 
@@ -116,15 +119,28 @@ namespace GraphicsTestFramework
         // Update the menu
         void UpdateMenu()
         {
-            if (!TestStructure.Instance.CheckForBaselines()) // If baselines missing
+            if (TestStructure.Instance.CheckForBaselines()) // Baselines exist
+            {
+                if (selectedId.currentLevel == 4) // If returning to meny from TestViewer go back one level
+                    selectedId.currentLevel = 3; // Set
+                ClearList(); // Clear list
+                breadcrumb.home.SetupHome(); // Setup breadcrumb home button
+                GenerateList(); // Generate list
+                SetupActions(); // Setup actions panel
+            }
+            else // Any or all baselines are missing
+                GenerateResolveList(); // Generate a resolve list
+
+            /*if (!TestStructure.Instance.CheckForBaselines()) // If baselines missing
                 GenerateResolveList(); // Generate the resolve list
             else
             {
                 if (selectedId.currentLevel == 4) // If returning to meny from TestViewer go back one level
                     selectedId.currentLevel = 3; // Set
                 ClearList(); // Clear list
+                SetupActions(); // Setup actions
                 GenerateList(); // Generate new list
-            }
+            }*/
         }
 
         // ------------------------------------------------------------------------------------

@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 namespace GraphicsTestFramework
 {
@@ -27,6 +28,7 @@ namespace GraphicsTestFramework
         public GameObject statisticsEntryPrefab;
         bool isHidden = false;
         bool isPopulated = false;
+        public List<GameObject> entries = new List<GameObject>();
 
         // ------------------------------------------------------------------------------------
         // Context & State
@@ -46,10 +48,14 @@ namespace GraphicsTestFramework
         void Generate(TestViewerTabData.TestViewerTabStatistic[] input)
         {
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Generating statistics"); // Write to console
+            foreach (GameObject go in entries) // Iterate current entries
+                Destroy(go); // Delete them
+            entries.Clear(); // Reset
             float entryHeight = 0; // Collect entry height to scale window
             for(int i = 0; i < input.Length; i++) // Iterate statistics
             {
                 GameObject newStat = Instantiate(statisticsEntryPrefab, transform, false); // Create stat instance
+                entries.Add(newStat); // Add to list to track
                 RectTransform newStatRect = newStat.GetComponent<RectTransform>(); // Get rect
                 newStatRect.anchoredPosition = new Vector2(0, (i + 1) * -newStatRect.sizeDelta.y); // Set position
                 entryHeight = newStatRect.sizeDelta.y; // Get height of an entry

@@ -70,8 +70,8 @@ namespace GraphicsTestFramework
             ComparisonData newComparison = new ComparisonData(); // Create new ComparisonData instance (mandatory)
             FrameComparisonResults baselineDataTyped = (FrameComparisonResults)baselineData;
             FrameComparisonResults resultsDataTyped = (FrameComparisonResults)resultsData;
-            newComparison.baselineTex = Common.ConvertStringToTexture(baselineData.common.TestName + "_Reference", baselineDataTyped.resultFrame); // Convert baseline frame to Texture2D (logic specific)
-            newComparison.resultsTex = Common.ConvertStringToTexture(resultsData.common.TestName + "_Results", resultsDataTyped.resultFrame); // Convert result frame to Texture2D (logic specific)
+            newComparison.baselineTex = Common.ConvertStringToTexture(resultsDataTyped.common.TestName + "_Reference", baselineDataTyped.resultFrame); // Convert baseline frame to Texture2D (logic specific)
+            newComparison.resultsTex = Common.ConvertStringToTexture(resultsDataTyped.common.TestName + "_Results", resultsDataTyped.resultFrame); // Convert result frame to Texture2D (logic specific)
             newComparison.DiffPercentage = Common.GetTextureComparisonValue(newComparison.baselineTex, newComparison.resultsTex); // Calculate diff percentage (logic specific)
             return newComparison; // Return (mandatory)
         }
@@ -108,8 +108,8 @@ namespace GraphicsTestFramework
         void Cleanup()
         {
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, this.GetType().Name + " is cleaning up"); // Write to console
-            if (dummyCamera) // If dummy camera exists
-                Destroy(dummyCamera); // Destroy it
+            //if (dummyCamera) // If dummy camera exists // TODO - This removes camera when restarting test. Find a better way
+            //    Destroy(dummyCamera); // Destroy it
             resultsTexture = null; // Null
         }
     }
