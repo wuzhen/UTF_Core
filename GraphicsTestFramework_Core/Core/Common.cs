@@ -34,8 +34,8 @@ namespace GraphicsTestFramework
         // ------------------------------------------------------------------------------------
         // Get Type Data
 
-        // Gets all subtypes of a Type
-        public static List<Type> GetSubTypes<T>() where T : class
+        // Gets all subtypes of a Type (Replaced by Test Dictionary) - TODO - Remove when sure
+        /*public static List<Type> GetSubTypes<T>() where T : class
         {
             var types = new List<Type>(); // Create a new list
             foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies()) // Iterate assemblies
@@ -68,7 +68,7 @@ namespace GraphicsTestFramework
                 }
             }
             return types; // Return collected types
-        }
+        }*/
 
         // ------------------------------------------------------------------------------------
         // Common Conversions

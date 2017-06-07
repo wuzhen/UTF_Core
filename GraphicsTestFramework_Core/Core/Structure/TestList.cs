@@ -64,8 +64,7 @@ namespace GraphicsTestFramework
         {
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Getting logic instance"); // Write to console
             TestLogicBase output; // Create logic instance
-            List<Type> modelList = Common.GetSubTypes<TestModelBase>(); // Get the model list
-            TestModelBase activeModelInstance = (TestModelBase)activeTest.testObject.GetComponent(modelList[testTypes[activeEntry.typeIndex].testType]); // Get the active test model
+            TestModelBase activeModelInstance = (TestModelBase)activeTest.testObject.GetComponent(TestTypes.GetTypeFromIndex(testTypes[activeEntry.typeIndex].testType)); // Get the active test model
             activeModelInstance.SetLogic(); // Set the logic reference on the model
             output = TestTypeManager.Instance.GetLogicInstanceFromName(activeModelInstance.logic.ToString().Replace("GraphicsTestFramework.", "").Replace("Logic", "")); // Get test  logic instance
             output.SetModel(activeModelInstance); // Set the active test model in the logic
@@ -114,19 +113,16 @@ namespace GraphicsTestFramework
         //Get models of all test types and add components to test objects
         void GetModels()
         {
-            List<Type> modelList = Common.GetSubTypes<TestModelBase>(); // Get all model types
             for (int t = 0; t < testTypes.Count; t++) // Iterate test types
             {
-                int model = testTypes[t].testType; // Get index of test type
+                int modelIndex = testTypes[t].testType; // Get index of test type
                 for (int r = 0; r < testTypes[t].tests.Count; r++) // Iterate tests of that model
                 {
                     if (testTypes[t].tests[r].testObject != null) // If test object exists
                     {
-                        if (modelList.Count > model) // If found in model list
-                        {
-                            if (!testTypes[t].tests[r].testObject.GetComponent(modelList[model])) // If component doesnt already exist
-                                testTypes[t].tests[r].testObject.AddComponent(modelList[model]); // Add it
-                        }
+                        Type model = TestTypes.GetTypeFromIndex(modelIndex); // Get model at the index
+                        if (!testTypes[t].tests[r].testObject.GetComponent(model)) // If component doesnt already exist
+                            testTypes[t].tests[r].testObject.AddComponent(model); // Add it
                     }
                 }
             }
@@ -138,7 +134,10 @@ namespace GraphicsTestFramework
             for (int t = 0; t < testTypes.Count; t++) // Iterate test types
             {
                 for (int r = 0; r < testTypes[t].tests.Count; r++) // Iterate tests
-                    testTypes[t].tests[r].testInformation = new TestInfo(testTypes[t].tests[r].testObject.name, gameObject.scene.name); // Set test information
+                {
+                    if(testTypes[t].tests[r].testObject) // IF object is assigned
+                        testTypes[t].tests[r].testInformation = new TestInfo(testTypes[t].tests[r].testObject.name, gameObject.scene.name); // Set test information
+                }
             }
         }
 #endif

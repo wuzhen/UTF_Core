@@ -106,8 +106,8 @@ namespace GraphicsTestFramework
         // TODO - Move these methods to a unique ID
         public string GetTestTypeNameFromIndex(int index)
         {
-            List<Type> types = Common.GetSubTypes<TestModelBase>(); // Get a type list
-            return types[index].ToString().Replace("GraphicsTestFramework.", "").Replace("Model", ""); // Return the type name of the requested index
+            Type type = TestTypes.GetTypeFromIndex(index); // Get the type at that index
+            return type.ToString().Replace("GraphicsTestFramework.", "").Replace("Model", ""); // Return the type name of the requested index
         }
 
         // Get the active test logic

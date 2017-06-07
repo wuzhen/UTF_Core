@@ -78,7 +78,6 @@ namespace GraphicsTestFramework
         IEnumerator GenerateStructure()
         {
             testStructure = new Structure(); // Create new test structure instance
-            List<Type> modelList = Common.GetSubTypes<TestModelBase>(); // Get model list
             for (int su = 0; su < SuiteManager.Instance.suites.Count; su++) // Iterate suites on SuiteManager
             {
                 Suite newSuite = new Suite(); // Create new suite instance
@@ -93,7 +92,7 @@ namespace GraphicsTestFramework
                     TestList testList = FindObjectOfType<TestList>(); // Get TestList from current scene
                     for (int ty = 0; ty < testList.testTypes.Count; ty++) // Iterate test types
                     {
-                        TestModelBase model = (TestModelBase)testList.testTypes[ty].tests[0].testObject.GetComponent(modelList[testList.testTypes[ty].testType]); // Get a model reference from the test list
+                        TestModelBase model = (TestModelBase)testList.testTypes[ty].tests[0].testObject.GetComponent(TestTypes.GetTypeFromIndex(testList.testTypes[ty].testType)); // Get a model reference from the test list
                         model.SetLogic(); // Need to set logic before generating type instances
                         string testTypeName = TestTypeManager.Instance.GetTestTypeNameFromIndex(testList.testTypes[ty].testType); // Get test type name
                         TestType newType = FindDuplicateTypeInSuite(newSuite, testTypeName); // Check for duplicate types and return if found
