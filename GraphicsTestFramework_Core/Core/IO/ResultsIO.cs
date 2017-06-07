@@ -220,7 +220,7 @@ namespace GraphicsTestFramework
 		/// <param name="inputData">Input data.</param>
 		public ResultsIOData RetrieveBaseline(string suiteName, string testType, ResultsDataCommon inputData)
 		{
-			string rawJSONdata = LocalIO.Instance.FetchDataFile (suiteName, testType, inputData, true);//fetch string from file
+            string rawJSONdata = LocalIO.Instance.FetchDataFile (suiteName, testType, inputData, true);//fetch string from file
 			ResultsIOData data = JSONHelper.FromJSON (rawJSONdata);//take JSON convert to ResultsIOData //REORG
 			return data;
 		}
