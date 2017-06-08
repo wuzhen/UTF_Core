@@ -39,6 +39,7 @@ namespace GraphicsTestFramework
         public void GenerateTestTypeInstances(string suiteName, TestModelBase model)
         {
             string typeName = model.logic.ToString().Replace("GraphicsTestFramework.", "").Replace("Logic", ""); // Get type name from logic name
+            Debug.LogWarning("This " + typeName);
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Generating test type instances for " + typeName); // Write to console
             Transform instanceParent = Master.Instance.transform.Find("TestRunners"); // Find instance parent
             if (instanceParent) // If it exists
@@ -96,6 +97,7 @@ namespace GraphicsTestFramework
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Getting logic instance from name " + nameInput); // Write to console
             for (int i = 0; i < typeList.Count; i++) // Iterate types
             {
+                Debug.LogWarning(typeList[i].typeName);
                 if(typeList[i].typeName == nameInput) // If type name is equal to input
                     return typeList[i].logicInstance; // Return it
             }
@@ -115,6 +117,22 @@ namespace GraphicsTestFramework
         {
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Getting active test logic"); // Write to console
             return typeList[activeTestLogic].logicInstance; // Return active
+        }
+
+        // Get an array of selected test types from a bit mask
+        public int[] GetTypeSelectionFromBitMask(int bitMask)
+        {
+            int length = TestTypes.GetTypeStringList().Length;
+            int[] output = new int[length];
+            List<int> intList = new List<int>();
+            for (int i = 0; i < length; i++)
+            {
+                if (bitMask == (bitMask | (1 << i)))
+                {
+                    intList.Add(i);
+                }
+            }
+            return intList.ToArray();
         }
 
         // ------------------------------------------------------------------------------------

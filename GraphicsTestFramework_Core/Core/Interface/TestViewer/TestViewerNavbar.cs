@@ -61,7 +61,7 @@ namespace GraphicsTestFramework
         {
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Generating breadcrumb"); // Write to console
             TestEntry currentTest = TestRunner.Instance.GetCurrentTestEntry(); // Get the current test entry
-            breadcrumbLabel.text = currentTest.suiteName + " - " + currentTest.sceneName + " - " + currentTest.typeName + " - " + currentTest.testName; // Set breadcrumb label
+            breadcrumbLabel.text = currentTest.suiteName + " - " + currentTest.groupName + " - " + currentTest.typeName + " - " + currentTest.testName; // Set breadcrumb label
         }
 
         // Generate new tabs

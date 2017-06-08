@@ -98,14 +98,14 @@ namespace GraphicsTestFramework
         void GenerateList()
         {
             ClearList();
-            int sceneCount = TestStructure.Instance.testStructure.suites[selectedSuite].types[selectedType].scenes.Count;
-            for (int sc = 0; sc < sceneCount; sc++)
+            int groupCount = TestStructure.Instance.testStructure.suites[selectedSuite].types[selectedType].groups.Count;
+            for (int gr = 0; gr < groupCount; gr++)
             {
-                string sceneName = TestStructure.Instance.testStructure.suites[selectedSuite].types[selectedType].scenes[sc].sceneName;
-                int testCount = TestStructure.Instance.testStructure.suites[selectedSuite].types[selectedType].scenes[sc].tests.Count;
+                string sceneName = TestStructure.Instance.testStructure.suites[selectedSuite].types[selectedType].groups[gr].groupName;
+                int testCount = TestStructure.Instance.testStructure.suites[selectedSuite].types[selectedType].groups[gr].tests.Count;
                 for (int te = 0; te < testCount; te++)
                 {
-                    string testName = TestStructure.Instance.testStructure.suites[selectedSuite].types[selectedType].scenes[sc].tests[te].testName;
+                    string testName = TestStructure.Instance.testStructure.suites[selectedSuite].types[selectedType].groups[gr].tests[te].testName;
                     ResultsDataCommon common = BuildResultsDataCommon(sceneName, testName);
                     ResultsIOData data = ResultsIO.Instance.RetrieveResult(TestStructure.Instance.testStructure.suites[selectedSuite].suiteName, TestStructure.Instance.testStructure.suites[selectedSuite].types[selectedType].typeName, common);
                     TestLogicBase logic = TestTypeManager.Instance.GetLogicInstanceFromName(TestStructure.Instance.testStructure.suites[selectedSuite].types[selectedType].typeName);

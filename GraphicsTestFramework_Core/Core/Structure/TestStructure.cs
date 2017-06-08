@@ -77,20 +77,61 @@ namespace GraphicsTestFramework
         // - Reorganises for menu layout
         IEnumerator GenerateStructure()
         {
+            yield return null; // TODO - Remove
             testStructure = new Structure(); // Create new test structure instance
-            for (int su = 0; su < SuiteManager.Instance.suites.Count; su++) // Iterate suites on SuiteManager
+            for (int su = 0; su < SuiteManager.Instance.suites.Length; su++) // Iterate suites on SuiteManager
             {
                 Suite newSuite = new Suite(); // Create new suite instance
                 newSuite.suiteName = SuiteManager.Instance.suites[su].suiteName; // Set suite name from SuiteManager
-                for (int sc = 0; sc < SuiteManager.Instance.suites[su].scenes.Count; sc++) // Iterate scenes
+                for (int gr = 0; gr < SuiteManager.Instance.suites[su].groups.Count; gr++) // Iterate groups
                 {
-                    SceneManager.LoadSceneAsync(SuiteManager.Instance.suites[su].scenes[sc].path); // Load scene
-                    while (!levelWasLoaded) // Wait for scene load complete
-                        yield return null;
-                    levelWasLoaded = false; // Reset
-                    UnityEngine.SceneManagement.Scene scene = SceneManager.GetSceneAt(0); // Get a scene reference
-                    TestList testList = FindObjectOfType<TestList>(); // Get TestList from current scene
-                    for (int ty = 0; ty < testList.testTypes.Count; ty++) // Iterate test types
+                    Group newGroup = new Group(); // Create a new scene instance
+                    newGroup.groupName = SuiteManager.Instance.suites[su].groups[gr].groupName; // Set scene name
+                    for (int te = 0; te < SuiteManager.Instance.suites[su].groups[gr].tests.Count; te++) // Iterate tests
+                    {
+                        GraphicsTestFramework.Test test = SuiteManager.Instance.suites[su].groups[gr].tests[te];
+                        int[] types = TestTypeManager.Instance.GetTypeSelectionFromBitMask(test.testTypes);
+                        Debug.LogWarning(types[0]);
+                        for (int ty = 0; ty < types.Length; ty++)
+                        {
+                            TestModelBase model = (TestModelBase)Activator.CreateInstance(TestTypes.GetTypeFromIndex(types[ty]));
+                            model.SetLogic(); // Need to set logic before generating type instances
+                            string testTypeName = TestTypeManager.Instance.GetTestTypeNameFromIndex(types[ty]); // Get test type name
+                            Debug.LogWarning("Now its "+ testTypeName);
+                            TestType newType = FindDuplicateTypeInSuite(newSuite, testTypeName); // Check for duplicate types and return if found
+                            if (newType == null) // If no duplicate type was found
+                            {
+                                newType = new TestType(); // Create a new type instance
+                                newType.typeName = testTypeName; // Set type name
+                                newType.typeIndex = types[ty];  // Set type index
+                                newSuite.types.Add(newType); // Add type to suite
+                                TestTypeManager.Instance.GenerateTestTypeInstances(newSuite.suiteName, model); // Generate an instance object for test logic/display
+                                Destroy(model);
+                            }
+                            
+                            Test newTest = new Test(); // Create new test instance
+                            newTest.testName = SuiteManager.Instance.suites[su].groups[gr].tests[te].scene.name.ToString(); //testList.testTypes[ty].tests[te].testInformation.TestName; // Set test name
+                            UnityEngine.Object scene = SuiteManager.Instance.suites[su].groups[gr].tests[te].scene; // Get reference to scene
+                            newTest.scenePath = UnityEditor.AssetDatabase.GetAssetPath(scene); // Set scene path
+                            newGroup.tests.Add(newTest); // Add test to scene
+
+                            newType.groups.Add(newGroup); // Add scene to type
+
+                            /*Group newGroup = FindDuplicateSceneInType(newSuite, newType, scene.name);  // Check for duplicate scenes and return if found
+                            if (newGroup == null) // If no duplicate scene was found
+                            {
+                                
+                            }*/
+                        }
+                    }
+
+                    //SceneManager.LoadSceneAsync(SuiteManager.Instance.suites[su].scenes[gr].path); // Load scene
+                    //while (!levelWasLoaded) // Wait for scene load complete
+                    //    yield return null;
+                    //levelWasLoaded = false; // Reset
+                    //UnityEngine.SceneManagement.Scene scene = SceneManager.GetSceneAt(0); // Get a scene reference
+                    //TestList testList = FindObjectOfType<TestList>(); // Get TestList from current scene
+                    /*for (int ty = 0; ty < testList.testTypes.Count; ty++) // Iterate test types
                     {
                         TestModelBase model = (TestModelBase)testList.testTypes[ty].tests[0].testObject.GetComponent(TestTypes.GetTypeFromIndex(testList.testTypes[ty].testType)); // Get a model reference from the test list
                         model.SetLogic(); // Need to set logic before generating type instances
@@ -118,7 +159,7 @@ namespace GraphicsTestFramework
                             }
                             newType.scenes.Add(newScene); // Add scene to type
                         }
-                    }
+                    }*/
                 }
                 testStructure.suites.Add(newSuite); // Add suite to structure
             }
@@ -141,18 +182,18 @@ namespace GraphicsTestFramework
                 for(int ty = 0; ty < testStructure.suites[su].types.Count; ty++)
                 {
                     testStructure.suites[su].types[ty].baseline = true;
-                    for(int sc = 0; sc < testStructure.suites[su].types[ty].scenes.Count; sc++)
+                    for(int gr = 0; gr < testStructure.suites[su].types[ty].groups.Count; gr++)
                     {
-                        testStructure.suites[su].types[ty].scenes[sc].baseline = true;
-                        for(int te = 0; te < testStructure.suites[su].types[ty].scenes[sc].tests.Count; te++)
+                        testStructure.suites[su].types[ty].groups[gr].baseline = true;
+                        for(int te = 0; te < testStructure.suites[su].types[ty].groups[gr].tests.Count; te++)
                         {
-                            bool baseline = ResultsIO.Instance.BaselineExists(testStructure.suites[su].suiteName, "Standard Legacy", testStructure.suites[su].types[ty].typeName, testStructure.suites[su].types[ty].scenes[sc].sceneName, testStructure.suites[su].types[ty].scenes[sc].tests[te].testName);
-                            testStructure.suites[su].types[ty].scenes[sc].tests[te].baseline = baseline;
+                            bool baseline = ResultsIO.Instance.BaselineExists(testStructure.suites[su].suiteName, "Standard Legacy", testStructure.suites[su].types[ty].typeName, testStructure.suites[su].types[ty].groups[gr].groupName, testStructure.suites[su].types[ty].groups[gr].tests[te].testName);
+                            testStructure.suites[su].types[ty].groups[gr].tests[te].baseline = baseline;
                             if(baseline == false)
                             {
                                 testStructure.suites[su].baseline = false;
                                 testStructure.suites[su].types[ty].baseline = false;
-                                testStructure.suites[su].types[ty].scenes[sc].baseline = false;
+                                testStructure.suites[su].types[ty].groups[gr].baseline = false;
                                 output = false;
                             }
                         }
@@ -193,22 +234,22 @@ namespace GraphicsTestFramework
             return null;
         }
 
-        Scene FindDuplicateSceneInType(Suite suite, TestType type, string sceneName)
+        /*Group FindDuplicateSceneInType(Suite suite, TestType type, string sceneName)
         {
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Finding duplicates of scene " + sceneName + " in suite " + suite.suiteName+" and type "+type.typeName); // Write to console
             for (int b = 0; b < suite.types.Count; b++)
             {
                 if (suite.types[b].typeName == type.typeName)
                 {
-                    for (int c = 0; c < type.scenes.Count; c++)
+                    for (int c = 0; c < type.groups.Count; c++)
                     {
-                        if (type.scenes[c].sceneName == name)
-                            return type.scenes[c];
+                        if (type.groups[c].groupName == name)
+                            return type.groups[c];
                     }
                 }
             }
             return null;
-        }
+        }*/
 
         // Checks whether any tests are selected (true if >0 tests are selected)
         public bool CheckSelectionNotNull()
@@ -276,8 +317,8 @@ namespace GraphicsTestFramework
                                 if (ty == input.typeId)
                                 {
                                     if (input.currentLevel == 2)
-                                        output = new MenuEntryData[testStructure.suites[su].types[ty].scenes.Count];
-                                    for (int sc = 0; sc < testStructure.suites[su].types[ty].scenes.Count; sc++)
+                                        output = new MenuEntryData[testStructure.suites[su].types[ty].groups.Count];
+                                    for (int gr = 0; gr < testStructure.suites[su].types[ty].groups.Count; gr++)
                                     {
                                         if (input.currentLevel == 2 && ty == input.typeId)
                                         {
@@ -286,31 +327,31 @@ namespace GraphicsTestFramework
                                             id.currentLevel = 2;                            // Replace relevent data 
                                             id.suiteId = su;                                // Replace relevent data 
                                             id.typeId = ty;                                 // Replace relevent data 
-                                            id.sceneId = sc;                                 // Replace relevent data 
-                                            entry.entryName = testStructure.suites[su].types[ty].scenes[sc].sceneName;
-                                            entry.selectionState = testStructure.suites[su].types[ty].scenes[sc].selectionState;
+                                            id.groupId = gr;                                 // Replace relevent data 
+                                            entry.entryName = testStructure.suites[su].types[ty].groups[gr].groupName;
+                                            entry.selectionState = testStructure.suites[su].types[ty].groups[gr].selectionState;
                                             entry.id = id;
-                                            output[sc] = entry;
+                                            output[gr] = entry;
                                         }
                                         if (input.currentLevel >= 3)
                                         {
-                                            if (sc == input.sceneId)
+                                            if (gr == input.groupId)
                                             {
                                                 if (input.currentLevel == 3)
-                                                    output = new MenuEntryData[testStructure.suites[su].types[ty].scenes[sc].tests.Count];
-                                                for (int te = 0; te < testStructure.suites[su].types[ty].scenes[sc].tests.Count; te++)
+                                                    output = new MenuEntryData[testStructure.suites[su].types[ty].groups[gr].tests.Count];
+                                                for (int te = 0; te < testStructure.suites[su].types[ty].groups[gr].tests.Count; te++)
                                                 {
-                                                    if (input.currentLevel == 3 && sc == input.sceneId)
+                                                    if (input.currentLevel == 3 && gr == input.groupId)
                                                     {
                                                         MenuEntryData entry = new MenuEntryData();
                                                         MenuTestEntry id = Menu.Instance.CloneMenuTestEntry(input);
                                                         id.currentLevel = 3;                            // Replace relevent data 
                                                         id.suiteId = su;                                // Replace relevent data 
                                                         id.typeId = ty;                                 // Replace relevent data 
-                                                        id.sceneId = sc;                                 // Replace relevent data 
+                                                        id.groupId = gr;                                 // Replace relevent data 
                                                         id.testId = te;                                 // Replace relevent data 
-                                                        entry.entryName = testStructure.suites[su].types[ty].scenes[sc].tests[te].testName;
-                                                        entry.selectionState = testStructure.suites[su].types[ty].scenes[sc].tests[te].selectionState;
+                                                        entry.entryName = testStructure.suites[su].types[ty].groups[gr].tests[te].testName;
+                                                        entry.selectionState = testStructure.suites[su].types[ty].groups[gr].tests[te].selectionState;
                                                         entry.id = id;
                                                         output[te] = entry;
                                                     }
@@ -329,7 +370,7 @@ namespace GraphicsTestFramework
         }
 
         // Gets the name of a specific entry in the test structure
-        public string GetNameOfEntry(int level, int suiteIndex, int typeIndex, int sceneIndex, int testIndex) // TODO - Move this to MenuEntryData input
+        public string GetNameOfEntry(int level, int suiteIndex, int typeIndex, int groupIndex, int testIndex) // TODO - Move this to MenuEntryData input
         {
             string output = null;
             switch(level)
@@ -341,10 +382,10 @@ namespace GraphicsTestFramework
                     output = testStructure.suites[suiteIndex].types[typeIndex].typeName;
                     break;
                 case 2:     // Scene
-                    output = testStructure.suites[suiteIndex].types[typeIndex].scenes[sceneIndex].sceneName;
+                    output = testStructure.suites[suiteIndex].types[typeIndex].groups[groupIndex].groupName;
                     break;
                 case 3:     // Test
-                    output = testStructure.suites[suiteIndex].types[typeIndex].scenes[sceneIndex].tests[testIndex].testName;
+                    output = testStructure.suites[suiteIndex].types[typeIndex].groups[groupIndex].tests[testIndex].testName;
                     break;
             }
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Returned name of entry " + output); // Write to console
@@ -366,10 +407,10 @@ namespace GraphicsTestFramework
                     testStructure.suites[entryData.id.suiteId].types[entryData.id.typeId].selectionState = entryData.selectionState;
                     break;
                 case 2:     // Scene
-                    testStructure.suites[entryData.id.suiteId].types[entryData.id.typeId].scenes[entryData.id.sceneId].selectionState = entryData.selectionState;
+                    testStructure.suites[entryData.id.suiteId].types[entryData.id.typeId].groups[entryData.id.groupId].selectionState = entryData.selectionState;
                     break;
                 case 3:     // Test
-                    testStructure.suites[entryData.id.suiteId].types[entryData.id.typeId].scenes[entryData.id.sceneId].tests[entryData.id.testId].selectionState = entryData.selectionState;
+                    testStructure.suites[entryData.id.suiteId].types[entryData.id.typeId].groups[entryData.id.groupId].tests[entryData.id.testId].selectionState = entryData.selectionState;
                     break;
             }
             SetSelectionStateOnChildren(entryData);
@@ -404,30 +445,30 @@ namespace GraphicsTestFramework
                     for (int ty = 0; ty < testStructure.suites[entryData.id.suiteId].types.Count; ty++)
                     {
                         testStructure.suites[entryData.id.suiteId].types[ty].selectionState = entryData.selectionState;
-                        for (int sc = 0; sc < testStructure.suites[entryData.id.suiteId].types[ty].scenes.Count; sc++)
+                        for (int gr = 0; gr < testStructure.suites[entryData.id.suiteId].types[ty].groups.Count; gr++)
                         {
-                            testStructure.suites[entryData.id.suiteId].types[ty].scenes[sc].selectionState = entryData.selectionState;
-                            for (int te = 0; te < testStructure.suites[entryData.id.suiteId].types[ty].scenes[sc].tests.Count; te++)
+                            testStructure.suites[entryData.id.suiteId].types[ty].groups[gr].selectionState = entryData.selectionState;
+                            for (int te = 0; te < testStructure.suites[entryData.id.suiteId].types[ty].groups[gr].tests.Count; te++)
                             {
-                                testStructure.suites[entryData.id.suiteId].types[ty].scenes[sc].tests[te].selectionState = entryData.selectionState;
+                                testStructure.suites[entryData.id.suiteId].types[ty].groups[gr].tests[te].selectionState = entryData.selectionState;
                             }
                         }
                     }
                     break;
                 case 1:     // Type
-                    for (int sc = 0; sc < testStructure.suites[entryData.id.suiteId].types[entryData.id.typeId].scenes.Count; sc++)
+                    for (int gr = 0; gr < testStructure.suites[entryData.id.suiteId].types[entryData.id.typeId].groups.Count; gr++)
                     {
-                        testStructure.suites[entryData.id.suiteId].types[entryData.id.typeId].scenes[sc].selectionState = entryData.selectionState;
-                        for (int te = 0; te < testStructure.suites[entryData.id.suiteId].types[entryData.id.typeId].scenes[sc].tests.Count; te++)
+                        testStructure.suites[entryData.id.suiteId].types[entryData.id.typeId].groups[gr].selectionState = entryData.selectionState;
+                        for (int te = 0; te < testStructure.suites[entryData.id.suiteId].types[entryData.id.typeId].groups[gr].tests.Count; te++)
                         {
-                            testStructure.suites[entryData.id.suiteId].types[entryData.id.typeId].scenes[sc].tests[te].selectionState = entryData.selectionState;
+                            testStructure.suites[entryData.id.suiteId].types[entryData.id.typeId].groups[gr].tests[te].selectionState = entryData.selectionState;
                         }
                     }
                     break;
                 case 2:     // Scene
-                    for (int i = 0; i < testStructure.suites[entryData.id.suiteId].types[entryData.id.typeId].scenes[entryData.id.sceneId].tests.Count; i++)
+                    for (int i = 0; i < testStructure.suites[entryData.id.suiteId].types[entryData.id.typeId].groups[entryData.id.groupId].tests.Count; i++)
                     {
-                        testStructure.suites[entryData.id.suiteId].types[entryData.id.typeId].scenes[entryData.id.sceneId].tests[i].selectionState = entryData.selectionState;
+                        testStructure.suites[entryData.id.suiteId].types[entryData.id.typeId].groups[entryData.id.groupId].tests[i].selectionState = entryData.selectionState;
                     }
                     break;
             }
@@ -478,38 +519,38 @@ namespace GraphicsTestFramework
                         testStructure.suites[entryData.id.suiteId].selectionState = 2;
                     break;
                 case 1:     // Type
-                    for (int i = 0; i < testStructure.suites[entryData.id.suiteId].types[entryData.id.typeId].scenes.Count; i++)
+                    for (int i = 0; i < testStructure.suites[entryData.id.suiteId].types[entryData.id.typeId].groups.Count; i++)
                     {
-                        if (testStructure.suites[entryData.id.suiteId].types[entryData.id.typeId].scenes[i].selectionState == 2)
+                        if (testStructure.suites[entryData.id.suiteId].types[entryData.id.typeId].groups[i].selectionState == 2)
                             break;
-                        else if (testStructure.suites[entryData.id.suiteId].types[entryData.id.typeId].scenes[i].selectionState == 0)
+                        else if (testStructure.suites[entryData.id.suiteId].types[entryData.id.typeId].groups[i].selectionState == 0)
                             x--;
                         else
                             x++;
                     }
-                    if (x == testStructure.suites[entryData.id.suiteId].types[entryData.id.typeId].scenes.Count)
+                    if (x == testStructure.suites[entryData.id.suiteId].types[entryData.id.typeId].groups.Count)
                         testStructure.suites[entryData.id.suiteId].types[entryData.id.typeId].selectionState = 1;
-                    else if (x == -testStructure.suites[entryData.id.suiteId].types[entryData.id.typeId].scenes.Count)
+                    else if (x == -testStructure.suites[entryData.id.suiteId].types[entryData.id.typeId].groups.Count)
                         testStructure.suites[entryData.id.suiteId].types[entryData.id.typeId].selectionState = 0;
                     else
                         testStructure.suites[entryData.id.suiteId].types[entryData.id.typeId].selectionState = 2;
                     break;
                 case 2:     // Scene
-                    for (int i = 0; i < testStructure.suites[entryData.id.suiteId].types[entryData.id.typeId].scenes[entryData.id.sceneId].tests.Count; i++)
+                    for (int i = 0; i < testStructure.suites[entryData.id.suiteId].types[entryData.id.typeId].groups[entryData.id.groupId].tests.Count; i++)
                     {
-                        if (testStructure.suites[entryData.id.suiteId].types[entryData.id.typeId].scenes[entryData.id.sceneId].tests[i].selectionState == 2)
+                        if (testStructure.suites[entryData.id.suiteId].types[entryData.id.typeId].groups[entryData.id.groupId].tests[i].selectionState == 2)
                             break;
-                        else if (testStructure.suites[entryData.id.suiteId].types[entryData.id.typeId].scenes[entryData.id.sceneId].tests[i].selectionState == 0)
+                        else if (testStructure.suites[entryData.id.suiteId].types[entryData.id.typeId].groups[entryData.id.groupId].tests[i].selectionState == 0)
                             x--;
                         else
                             x++;
                     }
-                    if (x == testStructure.suites[entryData.id.suiteId].types[entryData.id.typeId].scenes[entryData.id.sceneId].tests.Count)
+                    if (x == testStructure.suites[entryData.id.suiteId].types[entryData.id.typeId].groups[entryData.id.groupId].tests.Count)
                         testStructure.suites[entryData.id.suiteId].types[entryData.id.typeId].selectionState = 1;
-                    else if (x == -testStructure.suites[entryData.id.suiteId].types[entryData.id.typeId].scenes[entryData.id.sceneId].tests.Count)
-                        testStructure.suites[entryData.id.suiteId].types[entryData.id.typeId].scenes[entryData.id.sceneId].selectionState = 0;
+                    else if (x == -testStructure.suites[entryData.id.suiteId].types[entryData.id.typeId].groups[entryData.id.groupId].tests.Count)
+                        testStructure.suites[entryData.id.suiteId].types[entryData.id.typeId].groups[entryData.id.groupId].selectionState = 0;
                     else
-                        testStructure.suites[entryData.id.suiteId].types[entryData.id.typeId].scenes[entryData.id.sceneId].selectionState = 2;
+                        testStructure.suites[entryData.id.suiteId].types[entryData.id.typeId].groups[entryData.id.groupId].selectionState = 2;
                     break;
             }
         }
@@ -523,7 +564,43 @@ namespace GraphicsTestFramework
             public List<Suite> suites = new List<Suite>();
         }
 
+        public class Suite
+        {
+            public string suiteName;
+            public int selectionState;
+            public bool baseline;
+            public List<TestType> types = new List<TestType>();
+        }
+
         [Serializable]
+        public class TestType
+        {
+            public string typeName;
+            public int typeIndex;
+            public int selectionState;
+            public bool baseline;
+            public List<Group> groups = new List<Group>();
+        }
+
+        [Serializable]
+        public class Group
+        {
+            public string groupName;
+            public int selectionState;
+            public bool baseline;
+            public List<Test> tests = new List<Test>();
+        }
+
+        [Serializable]
+        public class Test
+        {
+            public string testName;
+            public string scenePath;
+            public int selectionState;
+            public bool baseline;
+        }
+
+        /*[Serializable]
         public class Suite
         {
             public string suiteName;
@@ -558,6 +635,6 @@ namespace GraphicsTestFramework
             public string testName;
             public bool baseline;
             public int selectionState;
-        }
+        }*/
     }
 }

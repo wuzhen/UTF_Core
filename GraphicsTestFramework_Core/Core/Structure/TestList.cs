@@ -4,6 +4,7 @@ using UnityEngine;
 
 namespace GraphicsTestFramework
 {
+    /*
     // ------------------------------------------------------------------------------------
     // TestList
     // - User defined test list per scene
@@ -171,5 +172,5 @@ namespace GraphicsTestFramework
                 SceneName = inputScene;
             }
         }
-    }
+    }*/
 }

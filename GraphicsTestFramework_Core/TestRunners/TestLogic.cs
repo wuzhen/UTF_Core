@@ -215,7 +215,7 @@ namespace GraphicsTestFramework
         public void CheckForBaseline()
         {
             ProgressScreen.Instance.SetState(true, ProgressType.LocalLoad, "Retrieving baseline data"); // Enable ProgressScreen
-            baselineExists = ResultsIO.Instance.BaselineExists(activeTestEntry.suiteName, "Standard Legacy", activeTestEntry.typeName/*testTypeName*/, activeTestEntry.sceneName, activeTestEntry.testName); // Check for baseline
+            baselineExists = ResultsIO.Instance.BaselineExists(activeTestEntry.suiteName, "Standard Legacy", activeTestEntry.typeName/*testTypeName*/, activeTestEntry.groupName, activeTestEntry.testName); // Check for baseline
         }
 
         //Convert an array on unknown type to a typed array
@@ -353,7 +353,7 @@ namespace GraphicsTestFramework
         {
             ResultsBase newResultsData = (R)Activator.CreateInstance(results); // Create instance
             newResultsData.common = Common.GetCommonResultsData(); // Initialize common
-            newResultsData.common.SceneName = activeTestEntry.sceneName; // Set scene name
+            newResultsData.common.SceneName = activeTestEntry.groupName; // Set scene name
             newResultsData.common.TestName = activeTestEntry.testName; // Set test name
             activeResultData = newResultsData; // Set as active
         }

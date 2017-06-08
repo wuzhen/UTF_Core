@@ -102,6 +102,13 @@ namespace GraphicsTestFramework
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, this.GetType().Name + " is setting up cameras"); // Write to console
             if (dummyCamera == null) // Dummy camera isnt initialized
                 dummyCamera = this.gameObject.AddComponent<Camera>(); // Create camera component
+            if (model.settings.captureCamera == null) // If no capture camera
+            {
+                FrameComparisonModel.Settings settings = model.settings; // Clone the settings
+                settings.captureCamera = dummyCamera; // Set default camera
+                model.settings = settings; // Set settings back
+            }
+                
         }
 
         // Cleanup cameras after test finishes

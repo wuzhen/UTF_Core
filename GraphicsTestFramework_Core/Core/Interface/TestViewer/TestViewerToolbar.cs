@@ -69,7 +69,7 @@ namespace GraphicsTestFramework
         public void OnClickPrevious()
 		{
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Clicked: Previous"); // Write to console
-            TestList.Instance.EndTest(); // Need to disable test objects TODO - Consider using broadcast here
+            TestRunner.Instance.EndTest(); // Need to disable test objects TODO - Consider using broadcast here
 			TestRunner.Instance.PreviousTest(); // Move to previous
 		}
 
@@ -79,7 +79,7 @@ namespace GraphicsTestFramework
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Clicked: Next"); // Write to console
             if (!TestRunner.Instance.CheckEndOfRunner()) // Check for end of runner
             {
-                TestList.Instance.EndTest(); // End the current test
+                TestRunner.Instance.EndTest(); // End the current test
                 TestRunner.Instance.NextTest(); // Move to next test
             }
             else
@@ -130,7 +130,7 @@ namespace GraphicsTestFramework
         public void OnClickReturnToMenu()
 		{
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Clicked: Return to Menu"); // Write to console
-            TestList.Instance.EndTest(); // End the test
+            TestRunner.Instance.EndTest(); // End the test
 			TestViewer.Instance.SetState(false); // Disable the TestViewer
 			Menu.Instance.SetMenuState(true); // Enable the Menu
 		}

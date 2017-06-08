@@ -170,7 +170,7 @@ namespace GraphicsTestFramework
                 RectTransform goRect = go.GetComponent<RectTransform>(); // Get rect
                 goRect.anchoredPosition = new Vector2(0, entryHeight); // Set position
                 MenuResolveListEntry newEntry = go.GetComponent<MenuResolveListEntry>(); // Get script reference
-                newEntry.Setup(currentTest.suiteName+" - "+currentTest.sceneName, currentTest.typeName+" - "+currentTest.testName); // Setup
+                newEntry.Setup(currentTest.suiteName+" - "+currentTest.groupName, currentTest.typeName+" - "+currentTest.testName); // Setup
                 entryHeight -= goRect.sizeDelta.y; // Add to position tracker
             }
             resolveWindow.contentRect.sizeDelta = new Vector2(resolveWindow.contentRect.sizeDelta.x, -entryHeight); // Set content rect size
@@ -374,7 +374,7 @@ namespace GraphicsTestFramework
             MenuTestEntry output = new MenuTestEntry();
             output.suiteId = input.suiteId;
             output.typeId = input.typeId;
-            output.sceneId = input.sceneId;
+            output.groupId = input.groupId;
             output.testId = input.testId;
             output.currentLevel = input.currentLevel;
             return output;
@@ -435,7 +435,7 @@ namespace GraphicsTestFramework
     {
         public int suiteId = -1;
         public int typeId = -1;
-        public int sceneId = -1;
+        public int groupId = -1;
         public int testId = -1;
         public int currentLevel = 0;
     }

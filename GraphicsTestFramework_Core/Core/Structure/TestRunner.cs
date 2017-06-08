@@ -44,12 +44,28 @@ namespace GraphicsTestFramework
         public Runner runner;
         bool runnerIsWaiting;
         int currentTestIndex;
+        public Test activeTest;
 
         // Level load (TODO - Update API)
         private bool levelWasLoaded = false;
         private void OnLevelWasLoaded(int iLevel)
         {
             levelWasLoaded = true;
+        }
+
+        // ------------------------------------------------------------------------------------
+        // Broadcast
+
+        //Subscribe to event delegates
+        void OnEnable()
+        {
+            TestLogicBase.endTestAction += EndTest;
+        }
+
+        //Desubscribe from event delegates
+        void OnDisable()
+        {
+            TestLogicBase.endTestAction -= EndTest;
         }
 
         // ------------------------------------------------------------------------------------
@@ -79,20 +95,20 @@ namespace GraphicsTestFramework
                         {
                             string typeName = inputStructure.suites[su].types[ty].typeName;
                             int typeIndex = inputStructure.suites[su].types[ty].typeIndex;
-                            for (int sc = 0; sc < inputStructure.suites[su].types[ty].scenes.Count; sc++) // Iterate scenes
+                            for (int gr = 0; gr < inputStructure.suites[su].types[ty].groups.Count; gr++) // Iterate scenes
                             {
-                                if (inputStructure.suites[su].types[ty].scenes[sc].selectionState != 0 || runnerType != RunnerType.Automation) // If selected or automation
+                                if (inputStructure.suites[su].types[ty].groups[gr].selectionState != 0 || runnerType != RunnerType.Automation) // If selected or automation
                                 {
-                                    string sceneName = inputStructure.suites[su].types[ty].scenes[sc].sceneName;
-                                    string scenePath = inputStructure.suites[su].types[ty].scenes[sc].scenePath;
-                                    for (int te = 0; te < inputStructure.suites[su].types[ty].scenes[sc].tests.Count; te++) // Iterate tests
+                                    string groupName = inputStructure.suites[su].types[ty].groups[gr].groupName;
+                                    for (int te = 0; te < inputStructure.suites[su].types[ty].groups[gr].tests.Count; te++) // Iterate tests
                                     {
-                                        if (inputStructure.suites[su].types[ty].scenes[sc].tests[te].selectionState != 0 || runnerType != RunnerType.Automation) // If selected or automation
+                                        if (inputStructure.suites[su].types[ty].groups[gr].tests[te].selectionState != 0 || runnerType != RunnerType.Automation) // If selected or automation
                                         {
-                                            string testName = inputStructure.suites[su].types[ty].scenes[sc].tests[te].testName;
-                                            if (!inputStructure.suites[su].types[ty].scenes[sc].tests[te].baseline || runnerType != RunnerType.Resolve) // If baseline resolution mode return all with no baselines
+                                            string testName = inputStructure.suites[su].types[ty].groups[gr].tests[te].testName;
+                                            string scenePath = inputStructure.suites[su].types[ty].groups[gr].tests[te].scenePath;
+                                            if (!inputStructure.suites[su].types[ty].groups[gr].tests[te].baseline || runnerType != RunnerType.Resolve) // If baseline resolution mode return all with no baselines
                                             {
-                                                TestEntry newTest = new TestEntry(suiteName, sceneName, scenePath, typeName, testName, typeIndex, su, sc, ty, te); // Create new TestEntry instance
+                                                TestEntry newTest = new TestEntry(suiteName, groupName, scenePath, typeName, testName, typeIndex, su, gr, ty, te); // Create new TestEntry instance
                                                 runner.tests.Add(newTest); // Add to runner
                                             }
                                         }
@@ -149,15 +165,15 @@ namespace GraphicsTestFramework
         // Load Test of currentTestIndex
         IEnumerator LoadTest()
         {
-            if (SceneManager.GetActiveScene().name != runner.tests[currentTestIndex].sceneName) // If current scene name does not match requested
+            if (SceneManager.GetActiveScene().name != runner.tests[currentTestIndex].scenePath) // If current scene name does not match requested
             {
-                SceneManager.LoadScene(runner.tests[currentTestIndex].sceneName); // Load requested scene
+                SceneManager.LoadScene(runner.tests[currentTestIndex].scenePath); // Load requested scene
                 while (!levelWasLoaded) // Wait for load
                     yield return null;
                 levelWasLoaded = false; // Reset
             }
             Console.Instance.Write(DebugLevel.Logic, MessageLevel.Log, "Loading test "+ runner.tests[currentTestIndex].testName); // Write to console
-            TestList.Instance.StartTest(runner.tests[currentTestIndex], runnerType); // Start the test
+            StartTest(runner.tests[currentTestIndex], runnerType); // Start the test
         }
 
         // Load the currently selected test for view
@@ -198,6 +214,59 @@ namespace GraphicsTestFramework
             runnerIsWaiting = false; // To waiting to false so automation can continue
         }
 
+        
+
+        // ------------------------------------------------------------------------------------
+        // Test Execution
+
+        // Start an individual test (called by TestRunner)
+        public void StartTest(TestEntry inputTest, RunnerType runnerType)
+        {
+            Console.Instance.Write(DebugLevel.Logic, MessageLevel.Log, "Starting test " + inputTest.testName); // Write to console
+            activeTest = SuiteManager.Instance.suites[inputTest.suiteIndex].groups[inputTest.groupIndex].tests[inputTest.testIndex]; // Get the active test
+            //activeTest = testTypes[GetTypeIndexInArray(inputTest.typeValue)].tests[inputTest.testIndex]; // Get the active test
+            //activeTest.testObject.SetActive(true); // Enable the active test object
+            TestLogicBase activeTestLogic = GetLogicInstance(activeTest, inputTest); // Get active test logic instance
+            Debug.LogWarning(activeTestLogic);
+            activeTestLogic.SetupTest(inputTest, runnerType); // Setup test
+        }
+
+        TestModelBase activeModelInstance;
+
+        // Get a logic instance and set model instance on it
+        TestLogicBase GetLogicInstance(Test activeTest, TestEntry activeEntry)
+        {
+            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Getting logic instance"); // Write to console
+            TestLogicBase output; // Create logic instance
+            int[] models = TestTypeManager.Instance.GetTypeSelectionFromBitMask(activeTest.testTypes);
+            var ModelType = TestTypes.GetTypeFromIndex(models[0]);
+            Debug.LogWarning(ModelType);
+
+            activeModelInstance = (TestModelBase)FindObjectOfType(ModelType);
+            if(activeModelInstance == null)
+            {
+                GameObject go = new GameObject();
+                go.name = ModelType.GetType().ToString().Replace("GraphicsTestFramework.", "");
+                activeModelInstance = (TestModelBase)go.AddComponent(ModelType);
+            }
+            activeModelInstance.SetLogic(); // Set the logic reference on the model
+            Debug.LogWarning(activeModelInstance.logic.ToString().Replace("GraphicsTestFramework.", "").Replace("Logic", ""));
+            output = TestTypeManager.Instance.GetLogicInstanceFromName(activeModelInstance.logic.ToString().Replace("GraphicsTestFramework.", "").Replace("Logic", "")); // Get test  logic instance
+            Debug.LogWarning(output);
+            output.SetModel(activeModelInstance); // Set the active test model in the logic
+            TestTypeManager.Instance.SetActiveLogic(output); // Set as active test logic
+            return output; // Return
+        }
+
+        // End the current Test (called by TestLogic.EndTestAction)
+        public void EndTest()
+        {
+            Console.Instance.Write(DebugLevel.Logic, MessageLevel.Log, "Ended test " + activeTest.scene.ToString()); // Write to console
+            //activeTest.testObject.SetActive(false); // Disable the active test object
+            ProgressScreen.Instance.SetState(false, ProgressType.LocalLoad, ""); // Disable ProgressScreen
+            TestRunner.Instance.FinalizeTest(); // Finalize test on TestRunner
+        }
+
         // ------------------------------------------------------------------------------------
         // Get Data
 
@@ -218,7 +287,7 @@ namespace GraphicsTestFramework
             for (int i = 0; i < runner.tests.Count; i++) // Iterate tests
             {
                 if (runner.tests[i].suiteIndex == selectedEntry.suiteId &&
-                    runner.tests[i].sceneIndex == selectedEntry.sceneId &&
+                    runner.tests[i].groupIndex == selectedEntry.groupId &&
                     runner.tests[i].typeIndex == selectedEntry.typeId &&
                     runner.tests[i].testIndex == selectedEntry.testId) // If all data matches
                 {
@@ -256,26 +325,26 @@ namespace GraphicsTestFramework
     public class TestEntry
     {
         public string suiteName;
-        public string sceneName;
+        public string groupName;
         public string scenePath;
         public string typeName;
         public string testName;
         public int typeValue;
         public int suiteIndex;
-        public int sceneIndex;
+        public int groupIndex;
         public int typeIndex;
         public int testIndex;
 
-        public TestEntry(string inputSuiteName, string inputSceneName, string inputScenePath, string inputTypeName, string inputTestName, int inputTypeValue, int inputSuiteIndex, int inputSceneIndex, int inputTypeIndex, int inputTestIndex)
+        public TestEntry(string inputSuiteName, string inputGroupName, string inputScenePath, string inputTypeName, string inputTestName, int inputTypeValue, int inputSuiteIndex, int inputGroupIndex, int inputTypeIndex, int inputTestIndex)
         {
             suiteName = inputSuiteName;
-            sceneName = inputSceneName;
+            groupName = inputGroupName;
             scenePath = inputScenePath;
             typeName = inputTypeName;
             testName = inputTestName;
             typeValue = inputTypeValue;
             suiteIndex = inputSuiteIndex;
-            sceneIndex = inputSceneIndex;
+            groupIndex = inputGroupIndex;
             typeIndex = inputTypeIndex;
             testIndex = inputTestIndex;
         }
