@@ -47,7 +47,8 @@ namespace GraphicsTestFramework
         // Attempt to open a dialogue window for a specific ID
         public bool TryDialogue(bool active, int dialogueId, out Button[] buttons)
 		{
-			buttons = new Button[0]; // Create buttons to return
+            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Trying for dialogue for ID "+dialogueId); // Write to console
+            buttons = new Button[0]; // Create buttons to return
 			if(!dialogueDatabase.databaseEntries[dialogueId].ignoreDialogue) // If not set to ignore
 			{
 				buttons = SetState(active, dialogueId); // Set dialogue state and return buttons to set from caller
@@ -60,7 +61,8 @@ namespace GraphicsTestFramework
         // Set dialogue window state from ID and return buttons to be set from caller
 		public Button[] SetState(bool active, int dialogueId)
 		{
-			//activeDialogueId = dialogueId;
+            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Setting dialogue state to "+active); // Write to console
+            //activeDialogueId = dialogueId;
             Button[] buttons = new Button[0]; // Create buttons to return
 			if(dialogueId >= dialogueDatabase.databaseEntries.Length) // If invalid
                 Console.Instance.Write(DebugLevel.Critical, MessageLevel.Log, "Dialogue manager tried to access dialogue ID that is out of bounds. Aborting."); // Write to console

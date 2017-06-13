@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using System.IO;
 
 namespace GraphicsTestFramework
@@ -334,9 +335,21 @@ namespace GraphicsTestFramework
 		}
 
 		public void ClearLocalData(){
-			File.Delete (dataPath);
+			Directory.Delete (dataPath, true);
 			Directory.CreateDirectory (dataPath);
-		}
+            Button[] buttons = new Button[2]; // Create button array
+            bool openDialogue = Dialogue.Instance.TryDialogue(true, 2, out buttons); // Try for dialogue window and out buttons
+            if (openDialogue) // If dialogue opens
+            {
+                buttons[0].onClick.AddListener(delegate { ResultsIO.Instance.Restart(); }); // Add listeners
+                buttons[0].onClick.AddListener(delegate { Dialogue.Instance.SetState(false, 2); });
+                buttons[1].onClick.AddListener(delegate { Master.Instance.ExitApplication(); }); // Add listeners
+                buttons[1].onClick.AddListener(delegate { Dialogue.Instance.SetState(false, 2); });
+            }
+            else
+                ResultsIO.Instance.Restart(); // Save baseline
+        }
 
+        
 	}
 }

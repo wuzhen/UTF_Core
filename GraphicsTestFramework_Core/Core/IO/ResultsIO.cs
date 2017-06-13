@@ -43,6 +43,11 @@ namespace GraphicsTestFramework
 				StartCoroutine (Init ());
 		}
 
+        public void Restart()
+        {
+            StartCoroutine(Init());
+        }
+
 		public IEnumerator Init(){
 			//Show loading screen
 			ProgressScreen.Instance.SetState(true, ProgressType.LocalLoad, "Loading local data");

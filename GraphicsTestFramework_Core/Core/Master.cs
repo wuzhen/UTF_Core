@@ -58,6 +58,18 @@ namespace GraphicsTestFramework
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Getting system time"); // Write to console
             return DateTime.UtcNow; // Return current DateTime
 		}
+
+        // ------------------------------------------------------------------------------------
+        // Application
+
+        // Exit the application
+        public void ExitApplication()
+        {
+            Application.Quit(); // Quit
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false; // If editor stop play mode
+#endif
+        }
     }
 
     // ------------------------------------------------------------------------------------
