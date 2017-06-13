@@ -46,8 +46,7 @@ namespace GraphicsTestFramework
 					}
 					output [rows] += "}";
 				}
-				if (Master.Instance.debugMode == Master.DebugMode.Messages)
-					Debug.Log ("Converted to JSON");
+                Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Converted to JSON"); // Write to console
 				return output;
 			}
 		}
@@ -198,7 +197,7 @@ namespace GraphicsTestFramework
 					RDC.RenderPipe = splitData [i];
 					break;
 				case 13:
-					RDC.SceneName = splitData [i];
+					RDC.GroupName = splitData [i];
 					break;
 				case 15:
 					RDC.TestName = splitData [i];

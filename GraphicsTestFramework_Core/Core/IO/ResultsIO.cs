@@ -1,7 +1,6 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using System.IO;
 using System;
 
 namespace GraphicsTestFramework
@@ -62,7 +61,7 @@ namespace GraphicsTestFramework
 			//fetch suite names from the suite manager
 			string[] suiteNames = SuiteManager.Instance.GetSuiteNames ();
 			if(suiteNames.Length == 0){
-				Debug.LogWarning("No suites loaded in SuiteManager, unable to continue");
+                Console.Instance.Write(DebugLevel.Critical, MessageLevel.LogWarning, "No suites loaded in SuiteManager, unable to continue"); // Write to console
 			}else{
 				foreach(string suiteName in suiteNames){
 					CloudIO.Instance.GetBaselineTimestamp (suiteName);
@@ -76,7 +75,7 @@ namespace GraphicsTestFramework
 				if(suiteBaselinesPullList.Count > 0)
 					CloudIO.Instance.FetchCloudBaselines (suiteBaselinesPullList.ToArray ());
 				else{
-					Debug.LogWarning("No cloud based baselines to pull");
+                    Console.Instance.Write(DebugLevel.Logic, MessageLevel.Log, "No cloud based baselines to pull"); // Write to console
 					BroadcastBaselineParsed ();
 				}
 			}
@@ -127,7 +126,7 @@ namespace GraphicsTestFramework
 			System.DateTime cloudTimestamp = System.DateTime.Parse (dateTime);
 
 			if(_suiteBaselineData.Count == 0){//TODO - shouldnt add this to pull baselines as has issue with iOS trying to pull baselines for OSX
-				Debug.Log("putting it in the pull list");
+                Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "putting it in the pull list"); // Write to console
 				suiteBaselinesPullList.Add(suiteName);
 			}else
 			{
@@ -137,13 +136,12 @@ namespace GraphicsTestFramework
 
 						int timeDiff = cloudTimestamp.CompareTo (localTimestamp);
 						if (timeDiff < 0f) {
-							Debug.Log ("Cloud Timestamp is old");
+                            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Cloud Timestamp is old"); // Write to console
 						} else if (timeDiff > 0f) {
-							if(Master.Instance.debugMode == Master.DebugMode.Messages)
-								Debug.Log ("Cloud Timestamp is newer, adding " + suiteName + " to pull list");
+                            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Cloud Timestamp is newer, adding " + suiteName + " to pull list"); // Write to console
 							suiteBaselinesPullList.Add (suiteName);
 						} else if (timeDiff == 0f) {
-							Debug.Log ("Cloud Timestamp is the same"); // never gonna happen
+                            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Cloud Timestamp is the same"); // Write to console
 						}
 					}
 				}
@@ -192,7 +190,7 @@ namespace GraphicsTestFramework
 			}
             else
             {
-                Debug.LogWarning("Results are empty for Suite: "+suiteName+" Type: "+ testType + ". Nothing to write");
+                Console.Instance.Write(DebugLevel.Critical, MessageLevel.LogWarning, "Results are empty for Suite: " + suiteName + " Type: " + testType + ". Nothing to write"); // Write to console
                 BroadcastEndResultsSave();
             }
 		}
@@ -295,7 +293,6 @@ namespace GraphicsTestFramework
 				suiteBaselineDataIndex = _suiteBaselineData.Count-1;
 			}
 			_suiteBaselineData [suiteBaselineDataIndex].suiteTimestamp = System.DateTime.UtcNow.ToString ();
-			//Debug.Log ("Passing SDB index of " + suiteBaselineDataIndex);
 			baselineIndex = suiteBaselineDataIndex;
 		}
 

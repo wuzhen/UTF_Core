@@ -69,7 +69,7 @@ namespace GraphicsTestFramework
         public void OnClickPrevious()
 		{
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Clicked: Previous"); // Write to console
-            TestList.Instance.EndTest(); // Need to disable test objects TODO - Consider using broadcast here
+            TestRunner.Instance.EndTest(); // Need to disable test objects TODO - Consider using broadcast here
 			TestRunner.Instance.PreviousTest(); // Move to previous
 		}
 
@@ -79,7 +79,7 @@ namespace GraphicsTestFramework
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Clicked: Next"); // Write to console
             if (!TestRunner.Instance.CheckEndOfRunner()) // Check for end of runner
             {
-                TestList.Instance.EndTest(); // End the current test
+                TestRunner.Instance.EndTest(); // End the current test
                 TestRunner.Instance.NextTest(); // Move to next test
             }
             else
@@ -98,18 +98,16 @@ namespace GraphicsTestFramework
         public void OnClickSaveBaseline()
 		{
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Clicked: Save Baseline"); // Write to console
-            Button[] buttons = new Button[2]; 
-			bool openDialogue = Dialogue.Instance.TryDialogue(true, 0, out buttons);
-			if(openDialogue)
+            Button[] buttons = new Button[2]; // Create button array
+			bool openDialogue = Dialogue.Instance.TryDialogue(true, 0, out buttons); // Try for dialogue window and out buttons
+			if(openDialogue) // If dialogue opens
 			{
-				buttons[0].onClick.AddListener(delegate { SaveBaselineAction(); });
+				buttons[0].onClick.AddListener(delegate { SaveBaselineAction(); }); // Add listeners
 				buttons[0].onClick.AddListener(delegate { Dialogue.Instance.SetState(false, 0); });
 				buttons[1].onClick.AddListener(delegate { Dialogue.Instance.SetState(false, 0); });
 			}
 			else
-			{
-				SaveBaselineAction();
-			}
+				SaveBaselineAction(); // Save baseline
 		}
 
 		// Save baseline action
@@ -130,7 +128,7 @@ namespace GraphicsTestFramework
         public void OnClickReturnToMenu()
 		{
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Clicked: Return to Menu"); // Write to console
-            TestList.Instance.EndTest(); // End the test
+            TestRunner.Instance.EndTest(); // End the test
 			TestViewer.Instance.SetState(false); // Disable the TestViewer
 			Menu.Instance.SetMenuState(true); // Enable the Menu
 		}

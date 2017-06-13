@@ -29,7 +29,7 @@ namespace GraphicsTestFramework
                     entryData = Menu.Instance.CloneMenuEntryData(data); // Clone the entry data
                     mainButton.onClick.RemoveAllListeners(); // Remove listeners
                     mainButton.onClick.AddListener(delegate { Menu.Instance.OnBreadcrumbEntryClick(this); }); // Add listener
-                    entryLabel.text = TestStructure.Instance.GetNameOfEntry(level, entryData.id.suiteId, entryData.id.typeId, entryData.id.sceneId, entryData.id.testId); // Get the label text
+                    entryLabel.text = TestStructure.Instance.GetNameOfEntry(level, entryData.id.suiteId, entryData.id.typeId, entryData.id.groupId, entryData.id.testId); // Get the label text
                     entryLabel.color = Menu.Instance.GetColor(0); // Set color
                     mainButton.interactable = true; // Set interactable
                     break;

@@ -27,7 +27,8 @@ namespace GraphicsTestFramework
         }
 
         // Data
-        public List<Suite> suites = new List<Suite>(); // Local Suite and Scene structure
+        public bool includeDebug = true; // Include debug suites?
+        public List<Suite> suites = new List<Suite>(); // Suite list
 
         // ------------------------------------------------------------------------------------
         // Get Data
@@ -51,51 +52,44 @@ namespace GraphicsTestFramework
         [UnityEditor.MenuItem("Graphics Test Framework/Get Scene List")]
         public static void GetSceneListMenu()
         {
-            Instance.CreateSuiteAndSceneStructure(); // Create structure
+            Instance.GenerateSceneList(); // Create structure
         }
 
         // Create Suite and Scene structure
         [ExecuteInEditMode]
-        public void CreateSuiteAndSceneStructure()
+        public void GenerateSceneList()
         {
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Creating Suite and Scene structure"); // Write to console
-            suites.Clear(); // Clear current suite list
-            GraphicsTestFramework.Suite[] allSuites = Resources.LoadAll<GraphicsTestFramework.Suite>(""); // Load all Suite scriptable objects into array
-            List<UnityEditor.EditorBuildSettingsScene> buildSettingsScenes = new List<UnityEditor.EditorBuildSettingsScene>(); // Create new build settings scene list
-            string thisScenePath = this.gameObject.scene.path; // Get scene path for Master scene
-            buildSettingsScenes.Add(new UnityEditor.EditorBuildSettingsScene(thisScenePath, true)); // Add to build settings scene list
-            for (int i = 0; i < allSuites.Length; i++) // Iterate scriptable object list
+            suites.Clear(); // Clear suites list
+            Suite[] foundSuites = Resources.LoadAll<Suite>(""); // Load all Suite scriptable objects into array
+            for(int i = 0; i < foundSuites.Length; i++)
             {
-                if (!FindDuplicateSuite(allSuites[i].name)) // If no duplicate suite found
+                if (includeDebug || !foundSuites[i].isDebugSuite)
+                    suites.Add(foundSuites[i]);
+            }
+            List<UnityEditor.EditorBuildSettingsScene> buildSettingsScenes = new List<UnityEditor.EditorBuildSettingsScene>(); // Create new build settings scene list
+            AddManualMasterScene(buildSettingsScenes); // Add manual master TODO - Switch this for full automation
+            for (int su = 0; su < suites.Count; su++) // Iterate scriptable object list
+            {
+                for (int gr = 0; gr < suites[su].groups.Count; gr++) // Iterate groups on the suite
                 {
-                    Suite newSuite = new Suite(); // Create new suite instance
-                    newSuite.suiteName = allSuites[i].SuiteName; // Set name from scriptable object
-                    for (int s = 0; s < allSuites[i].scenes.Length; s++) // Iterate scenes on the scriptable object
+                    for (int te = 0; te < suites[su].groups[gr].tests.Count; te++) // Iterate tests on the group
                     {
-                        if (allSuites[i].scenes[s] != null) // If the scene reference isnt null
-                        {
-                            Scene newScene = new Scene(); // Create new scene instance
-                            string pathToScene = UnityEditor.AssetDatabase.GetAssetPath(allSuites[i].scenes[s]); // Get scenes asset path
-                            newScene.path = pathToScene; // Set asset path on scene instance
-                            newSuite.scenes.Add(newScene); // Add scene instance to suites instances scene list
-                            UnityEditor.EditorBuildSettingsScene scene = new UnityEditor.EditorBuildSettingsScene(pathToScene, true); // Create new build settings scene from asset path
-                            if (!FindDuplicateScene(buildSettingsScenes, pathToScene)) // If no duplicate scene found
-                                buildSettingsScenes.Add(scene); // Add to build settings scenes list
-                        }
+                        string pathToScene = UnityEditor.AssetDatabase.GetAssetPath(suites[su].groups[gr].tests[te].scene); // Get scene path
+                        UnityEditor.EditorBuildSettingsScene scene = new UnityEditor.EditorBuildSettingsScene(pathToScene, true); // Create new build settings scene from asset path
+                        if (!FindDuplicateScene(buildSettingsScenes, pathToScene)) // If no duplicate scene found
+                            buildSettingsScenes.Add(scene); // Add to build settings scenes list
                     }
-                    suites.Add(newSuite); // Add suite instance to local suite list
                 }
             }
             UnityEditor.EditorBuildSettings.scenes = buildSettingsScenes.ToArray(); // Set build settings scene list
-            for (int i = 0; i < suites.Count; i++) // Iterate local suite list
-            {
-                for (int s = 0; s < suites[i].scenes.Count; s++) // Iterate scenes
-                {
-                    suites[i].scenes[s].scene = UnityEngine.SceneManagement.SceneManager.GetSceneByPath(suites[i].scenes[s].path); // Get scene reference by asset path
-                    Debug.LogWarning(suites[i].scenes[s].scene);
-                    suites[i].scenes[s].sceneName = suites[i].scenes[s].scene.name; // Set scene name
-                }
-            }
+        }
+
+        // Add the manual master scene
+        void AddManualMasterScene(List<UnityEditor.EditorBuildSettingsScene> buildSettingsScenes)
+        {
+            string thisScenePath = gameObject.scene.path; // Get scene path for Master scene
+            buildSettingsScenes.Add(new UnityEditor.EditorBuildSettingsScene(thisScenePath, true)); // Add to build settings scene list
         }
 
         // Find duplicate suite by name
@@ -124,22 +118,5 @@ namespace GraphicsTestFramework
 
 #endif
 
-        // ------------------------------------------------------------------------------------
-        // Local Data Structures
-
-        [Serializable]
-        public class Suite
-        {
-            public string suiteName;
-            public List<Scene> scenes = new List<Scene>();
-        }
-
-        [Serializable]
-        public class Scene
-        {
-            public string sceneName;
-            public UnityEngine.SceneManagement.Scene scene;
-            public string path;
-        }
     }
 }

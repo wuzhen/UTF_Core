@@ -167,15 +167,10 @@ namespace GraphicsTestFramework
             if (TestTypeManager.Instance.GetActiveTestLogic() == this) // Check this is the active test logic
             {
                 Console.Instance.Write(DebugLevel.Logic, MessageLevel.Log, this.GetType().Name + " confirmed results save for test"); // Write to console
-                if (activeRunType == RunnerType.Automation) // If Automation broadcast end of test
-                {
-                    ProgressScreen.Instance.SetState(false, ProgressType.LocalSave, ""); // Disable ProgressScreen
-                    BroadcastEndTestAction(); // Broadcast to TestList that rest is completed
-                }
-                else if (activeRunType == RunnerType.Resolve) // If Resolve update viewer
-                {
+                if (activeRunType == RunnerType.Resolve) // If Resolve update viewer
                     TestViewerToolbar.Instance.OnClickNext(); // Emulate OnClickNext on ViewerToolbar
-                }
+                else
+                    BroadcastEndTestAction(); // Broadcast to TestList that rest is completed
             }
         }
 
@@ -200,8 +195,7 @@ namespace GraphicsTestFramework
         // ------------------------------------------------------------------------------------
         // Display Methods
 
-            // Called by the TestViewer when restarting the current test
-            // TODO - Revisit this when rewriting the TestViewer
+        // Called by the TestViewer when restarting the current test
         public void RestartTest()
         {
             StartTest(); // Restart
@@ -215,7 +209,7 @@ namespace GraphicsTestFramework
         public void CheckForBaseline()
         {
             ProgressScreen.Instance.SetState(true, ProgressType.LocalLoad, "Retrieving baseline data"); // Enable ProgressScreen
-            baselineExists = ResultsIO.Instance.BaselineExists(activeTestEntry.suiteName, "Standard Legacy", activeTestEntry.typeName/*testTypeName*/, activeTestEntry.sceneName, activeTestEntry.testName); // Check for baseline
+            baselineExists = ResultsIO.Instance.BaselineExists(activeTestEntry.suiteName, "Standard Legacy", activeTestEntry.typeName/*testTypeName*/, activeTestEntry.groupName, activeTestEntry.testName); // Check for baseline
         }
 
         //Convert an array on unknown type to a typed array
@@ -224,8 +218,7 @@ namespace GraphicsTestFramework
         {
             var resultData = System.Convert.ChangeType(resultObject, resultType);
             string[] stringArray = arrayValue.Split(new string[1] { "|" }, StringSplitOptions.RemoveEmptyEntries);
-            if (Master.Instance.debugMode == Master.DebugMode.Messages)
-                Debug.Log(this.GetType().Name + " is generating Generic Array for " + resultData + " of type " + arrayType.ToString());
+            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, GetType().Name + " is generating Generic Array for " + resultData + " of type " + arrayType.ToString()); // Write to console
             switch (arrayType.ToString())
             {
                 case "System.Object":
@@ -247,7 +240,7 @@ namespace GraphicsTestFramework
         }
 
         // ------------------------------------------------------------------------------------
-        // Serialization Methods
+        // Serialization
         // TODO - Clean and comment (DANGER)
 
         // Serialize ResultsData(class) to ResultsIOData(string arrays)
@@ -300,8 +293,7 @@ namespace GraphicsTestFramework
                 else //If its a non-array type that has not had values set
                     output.resultsRow[1].resultsColumn.Add("");
             }
-            if (Master.Instance.debugMode == Master.DebugMode.Messages)
-                Debug.Log(this.GetType().Name + " generated resultsIO data");
+            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, GetType().Name + " generated resultsIO data"); // Write to console
             return output;
         }
 
@@ -348,16 +340,24 @@ namespace GraphicsTestFramework
             activeResultData = newData; // Set as active
         }
 
+        // ------------------------------------------------------------------------------------
+        // Initialization
+
         // Setup the results structs every test
         public override void SetupResultsStructs()
         {
             ResultsBase newResultsData = (R)Activator.CreateInstance(results); // Create instance
             newResultsData.common = Common.GetCommonResultsData(); // Initialize common
-            newResultsData.common.SceneName = activeTestEntry.sceneName; // Set scene name
+            newResultsData.common.GroupName = activeTestEntry.groupName; // Set scene name
             newResultsData.common.TestName = activeTestEntry.testName; // Set test name
             activeResultData = newResultsData; // Set as active
         }
 
+        // ------------------------------------------------------------------------------------
+        // Serialization
+        // TODO - Clean and comment (DANGER)
+
+        // Deserialize ResultsIOData(string arrays) to ResultsData(class)
         public override object DeserializeResults(ResultsIOData resultsIOData)
         {
             //var resultData = Convert.ChangeType(activeBaselineData, results); // Create instance (Old - Used from base class)

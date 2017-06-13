@@ -62,8 +62,7 @@ namespace GraphicsTestFramework
 		/// <param name="sheetName">Sheet name.</param>
 		/// <param name="baseline">Baseline.</param>
 		public IEnumerator UploadData(string[] jsonData, string sheetName, int baseline, string[] fields){
-			if(Master.Instance.debugMode == Master.DebugMode.Messages)
-				Debug.Log ("Uploading JSON data to sheet=" + sheetName);
+            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Uploading JSON data to sheet=" + sheetName); // Write to console
 			float uploadStartTime = Time.realtimeSinceStartup;
 
 			string[] trimmedJson = new string[jsonData.Length - 1];
@@ -91,14 +90,10 @@ namespace GraphicsTestFramework
 			//wait for cloudcore to be idle
 			while (CloudConnectorCore.isWaiting)
 				yield return null;
-			//Debug the time it took to upload
-			if(Master.Instance.debugMode == Master.DebugMode.Messages){
-				Debug.Log ("Upload of " + (jsonData.Length - 1) + " items in " + (Time.realtimeSinceStartup - uploadStartTime) + "ms");
-			}
-
+            //Debug the time it took to upload
+            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Upload of " + (jsonData.Length - 1) + " items in " + (Time.realtimeSinceStartup - uploadStartTime) + "ms"); // Write to console
 			while (CloudConnectorCore.isWaiting || CloudImagesConnector.responseCount != 0)
 				yield return new WaitForEndOfFrame ();
-			ProgressScreen.Instance.SetState(false, ProgressType.CloudSave, "");
 			ResultsIO.Instance.BroadcastEndResultsSave ();
 		}
 
@@ -156,10 +151,9 @@ namespace GraphicsTestFramework
 		/// </summary>
 		public void FetchCloudBaselines(string[] suiteNames){
 			ProgressScreen.Instance.SetState(true, ProgressType.CloudLoad, "Retrieving cloud data");
-			SystemData sysData = Master.Instance.GetSystemData ();
-			Debug.Log ("getting baselines for " + sysData.Platform + " on API " + sysData.API);
+            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "getting baselines for " + sysData.Platform + " on API " + sysData.API); // Write to console
 			foreach (string s in suiteNames)
-				Debug.Log ("pulling suite=" + s);
+                Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "pulling suite=" + s); // Write to console
 			CloudConnectorCore.GetBaselineData (suiteNames, sysData.Platform, sysData.API, cloudMode);
 		}
 
@@ -193,8 +187,10 @@ namespace GraphicsTestFramework
 		/// </summary>
 		/// <returns>the originnal string.</returns>
 		/// <param name="UID">The key for the file.</param>
-		public void FetchLargeEntry(string UID){
-			CloudImagesConnector.RequestTxt (UID);
+		public void FetchLargeEntry(string UID)
+        {
+            string output = UID.Replace("\"", ""); // TODO - Look at this
+			CloudImagesConnector.RequestTxt (output);
 		}
 
 		/// ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -207,7 +203,7 @@ namespace GraphicsTestFramework
 		public void ParseCloudData(CloudConnectorCore.QueryType query, List<string> objTypeNames, List<string> jsonData){
 
 			if (query == CloudConnectorCore.QueryType.tableExists) {
-				Debug.Log (jsonData [0]);
+                Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, jsonData[0]); // Write to console
 			}
 
 			if (query == CloudConnectorCore.QueryType.getBaselineData) {
@@ -217,14 +213,13 @@ namespace GraphicsTestFramework
 			if(query == CloudConnectorCore.QueryType.getObjects){
 				if (objTypeNames [0] == "SuiteBaselineTimestamps"){
 					if(jsonData[0].Length < 4)
-						Debug.LogWarning("Baseline timestamp does not exist in cloud");
+                        Console.Instance.Write(DebugLevel.Key, MessageLevel.LogWarning, "Baseline timestamp does not exist in cloud"); // Write to console
 					else
 						ResultsIO.Instance.ProcessBaselineTimestamp (objTypeNames, jsonData);
 				}
 			}
 
 			if (query == CloudConnectorCore.QueryType.baselineNone) {
-				//Debug.LogError ("no baseline data matching the platform/api");
 				ResultsIO.Instance.BroadcastBaselineParsed ();
 			}
 
@@ -237,10 +232,9 @@ namespace GraphicsTestFramework
 		{
 			if(responseType == "DATA_")
 			{
-				//process cloud data coming down
+                //process cloud data coming down
 				string value = response.Split(new string[]{"_FILE_NAME_"}, System.StringSplitOptions.None)[1];
 				string name = response.Remove(response.IndexOf("_FILE_NAME_")).TrimEnd ((".png").ToCharArray ());
-				//Debug.LogWarning (value);
 				LocalIO.Instance.LargeFileWrite (value, name);
 			}
 		}

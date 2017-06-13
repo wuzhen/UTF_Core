@@ -25,14 +25,8 @@ namespace GraphicsTestFramework
             }
         }
 
-        // TODO - Remove
-        public enum DebugMode { None, Messages, DummyData, OnlyMessages };
-        public DebugMode debugMode;
-
         //Data
         public float applicationVersion;
-        //public string buildDirectory; // TODO - Consider removing. Not currently using custom build menu
-        //public string buildName; // TODO - Consider removing. Not currently using custom build menu
 
         // ------------------------------------------------------------------------------------
         // Setup

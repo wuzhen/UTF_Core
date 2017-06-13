@@ -32,45 +32,6 @@ namespace GraphicsTestFramework
         }        
 
         // ------------------------------------------------------------------------------------
-        // Get Type Data
-
-        // Gets all subtypes of a Type (Replaced by Test Dictionary) - TODO - Remove when sure
-        /*public static List<Type> GetSubTypes<T>() where T : class
-        {
-            var types = new List<Type>(); // Create a new list
-            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies()) // Iterate assemblies
-            {
-                if (assembly.FullName.StartsWith("Mono.Cecil"))
-                    continue;
-                if (assembly.FullName.StartsWith("UnityScript"))
-                    continue;
-                if (assembly.FullName.StartsWith("Boo.Lan"))
-                    continue;
-                if (assembly.FullName.StartsWith("System"))
-                    continue;
-                if (assembly.FullName.StartsWith("I18N"))
-                    continue;
-                if (assembly.FullName.StartsWith("UnityEngine"))
-                    continue;
-                if (assembly.FullName.StartsWith("UnityEditor"))
-                    continue;
-                if (assembly.FullName.StartsWith("mscorlib"))
-                    continue;
-                foreach (Type type in assembly.GetTypes()) // Iterate types in remaining assemblies
-                {
-                    if (!type.IsClass) // Ignore non-class
-                        continue;
-                    if (type.IsAbstract) // Ignore abstracts
-                        continue;
-                    if (!type.IsSubclassOf(typeof(T))) // Ignore non-subclass
-                        continue;
-                    types.Add(type); // Add remaining type (subclass of input type)
-                }
-            }
-            return types; // Return collected types
-        }*/
-
-        // ------------------------------------------------------------------------------------
         // Common Conversions
 
         // Convert Array types ready to be serialized for saving
@@ -150,7 +111,7 @@ namespace GraphicsTestFramework
         public string Platform;
         public string API;
 		public string RenderPipe;
-        public string SceneName;
+        public string GroupName;
         public string TestName;
         public bool PassFail;
     }
