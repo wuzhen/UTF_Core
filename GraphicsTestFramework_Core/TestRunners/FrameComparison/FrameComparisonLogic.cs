@@ -105,7 +105,17 @@ namespace GraphicsTestFramework
             if (model.settings.captureCamera == null) // If no capture camera
             {
                 FrameComparisonModel.Settings settings = model.settings; // Clone the settings
-                settings.captureCamera = dummyCamera; // Set default camera
+                settings.captureCamera = Camera.main; // Attempt to set capture camera to main
+                if (settings.captureCamera == null) // If no main camera found
+                {
+                    Camera[] cams = FindObjectsOfType<Camera>(); // Find all cameras
+                    settings.captureCamera = cams[cams.Length-1]; // Set to last in found array so avoid setting to UI or dummy cameras
+                }
+                if(settings.captureCamera == null) // If still not found
+                {
+                    settings.captureCamera = dummyCamera; // Set to dummy camera as fallback
+                    Console.Instance.Write(DebugLevel.Critical, MessageLevel.LogWarning, "Frame Comparison test found no camera inside test "+activeTestEntry.testName); // Write to console
+                }
                 model.settings = settings; // Set settings back
             }
                 
@@ -115,8 +125,6 @@ namespace GraphicsTestFramework
         void Cleanup()
         {
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, this.GetType().Name + " is cleaning up"); // Write to console
-            //if (dummyCamera) // If dummy camera exists // TODO - This removes camera when restarting test. Find a better way
-            //    Destroy(dummyCamera); // Destroy it
             resultsTexture = null; // Null
         }
     }

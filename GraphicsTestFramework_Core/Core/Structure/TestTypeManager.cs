@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq; // TODO - Workaround
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -36,10 +35,9 @@ namespace GraphicsTestFramework
         // Instance Management
 
         // Generate script instances for a type (Called by TestStructure)
-        public void GenerateTestTypeInstances(string suiteName, TestModelBase model)
+        public void GenerateTestTypeInstance(TestModelBase model)
         {
             string typeName = model.logic.ToString().Replace("GraphicsTestFramework.", "").Replace("Logic", ""); // Get type name from logic name
-            Debug.LogWarning("This " + typeName);
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Generating test type instances for " + typeName); // Write to console
             Transform instanceParent = Master.Instance.transform.Find("TestRunners"); // Find instance parent
             if (instanceParent) // If it exists
@@ -51,7 +49,6 @@ namespace GraphicsTestFramework
                     newChild.name = typeName; // Set gameobject name
                     TestLogicBase logic = (TestLogicBase)newChild.AddComponent(model.logic); // Add logic component
                     logic.SetName(); // Set name on logic
-                    logic.SetSuiteName(suiteName); // Set suite name on logic
                     logic.SetDisplay(); // Set display on logic
                     logic.SetResults(); // Set results type on logic
                     TestDisplayBase display = (TestDisplayBase)newChild.AddComponent(logic.display); // Add display component
@@ -97,7 +94,6 @@ namespace GraphicsTestFramework
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Getting logic instance from name " + nameInput); // Write to console
             for (int i = 0; i < typeList.Count; i++) // Iterate types
             {
-                Debug.LogWarning(typeList[i].typeName);
                 if(typeList[i].typeName == nameInput) // If type name is equal to input
                     return typeList[i].logicInstance; // Return it
             }
@@ -122,17 +118,16 @@ namespace GraphicsTestFramework
         // Get an array of selected test types from a bit mask
         public int[] GetTypeSelectionFromBitMask(int bitMask)
         {
-            int length = TestTypes.GetTypeStringList().Length;
-            int[] output = new int[length];
-            List<int> intList = new List<int>();
-            for (int i = 0; i < length; i++)
+            int length = TestTypes.GetTypeStringList().Length; // Get length of type list
+            List<int> intList = new List<int>(); // Create int list to track
+            for (int i = 0; i < length; i++) // Iterate type list
             {
-                if (bitMask == (bitMask | (1 << i)))
+                if (bitMask == (bitMask | (1 << i))) // If bit mask returns true
                 {
-                    intList.Add(i);
+                    intList.Add(i); // Add to list
                 }
             }
-            return intList.ToArray();
+            return intList.ToArray(); // Return list as array
         }
 
         // ------------------------------------------------------------------------------------

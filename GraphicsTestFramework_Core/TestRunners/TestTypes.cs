@@ -32,17 +32,17 @@ namespace GraphicsTestFramework
         // Get an array of test types names
         public static string[] GetTypeStringList()
         {
-            string[] output = new string[m_TypeList.Count];
-            for (int i = 0; i < m_TypeList.Count; i++)
-                output[i] = m_TypeList[i].ToString().Replace("GraphicsTestFramework.", "").Replace("Model", "");
+            string[] output = new string[m_TypeList.Count]; // Create array of type list length
+            for (int i = 0; i < m_TypeList.Count; i++) // Iterate types
+                output[i] = m_TypeList[i].ToString().Replace("GraphicsTestFramework.", "").Replace("Model", ""); // Set entry
             return output; // Return
         }
 
         // Get a logic type from list index
         public static object GetModelInstance(int index)
         {
-            var T = GetTypeFromIndex(index);
-            return Activator.CreateInstance(T);
+            var T = GetTypeFromIndex(index); // Get type at an index
+            return Activator.CreateInstance(T); // Create and return an instance
         }
     }
 

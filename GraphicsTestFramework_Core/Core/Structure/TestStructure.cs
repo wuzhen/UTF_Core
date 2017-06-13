@@ -32,13 +32,6 @@ namespace GraphicsTestFramework
         // Data
         public Structure testStructure;
 
-        // Level load (TODO - Update API)
-        private bool levelWasLoaded = false;
-        private void OnLevelWasLoaded(int iLevel)
-        {
-            levelWasLoaded = true;
-        }
-
         // Generation check
         private bool m_IsGenerated = false;
         public bool IsGenerated
@@ -79,89 +72,55 @@ namespace GraphicsTestFramework
         {
             yield return null; // TODO - Remove
             testStructure = new Structure(); // Create new test structure instance
-            for (int su = 0; su < SuiteManager.Instance.suites.Length; su++) // Iterate suites on SuiteManager
+
+            string[] testTypes = TestTypes.GetTypeStringList(); // Get the type list
+            List<TestType> typeList = new List<TestType>(); // Create new list to fill
+            for(int i = 0; i < testTypes.Length; i++) // ITerate type list
+            {
+                TestType newType = new TestType(); // Create new instance
+                newType.typeName = testTypes[i]; // Set name
+                newType.typeIndex = i; // Set index
+                typeList.Add(newType); // Add to list
+                TestModelBase model = (TestModelBase)Activator.CreateInstance(TestTypes.GetTypeFromIndex(i)); // Create model instance for logic references
+                model.SetLogic(); // Need to set logic before generating type instances
+                TestTypeManager.Instance.GenerateTestTypeInstance(model); // Generate an instance object for test logic/display
+            }
+            for (int su = 0; su < SuiteManager.Instance.suites.Count; su++) // Iterate suites on SuiteManager
             {
                 Suite newSuite = new Suite(); // Create new suite instance
                 newSuite.suiteName = SuiteManager.Instance.suites[su].suiteName; // Set suite name from SuiteManager
+                newSuite.types = CloneTestTypeList(typeList); // Clone the type list
                 for (int gr = 0; gr < SuiteManager.Instance.suites[su].groups.Count; gr++) // Iterate groups
                 {
-                    Group newGroup = new Group(); // Create a new scene instance
-                    newGroup.groupName = SuiteManager.Instance.suites[su].groups[gr].groupName; // Set scene name
                     for (int te = 0; te < SuiteManager.Instance.suites[su].groups[gr].tests.Count; te++) // Iterate tests
                     {
-                        GraphicsTestFramework.Test test = SuiteManager.Instance.suites[su].groups[gr].tests[te];
-                        int[] types = TestTypeManager.Instance.GetTypeSelectionFromBitMask(test.testTypes);
-                        Debug.LogWarning(types[0]);
-                        for (int ty = 0; ty < types.Length; ty++)
+                        GraphicsTestFramework.Test test = SuiteManager.Instance.suites[su].groups[gr].tests[te]; // Get test
+                        int[] types = TestTypeManager.Instance.GetTypeSelectionFromBitMask(test.testTypes); // Get type array from test's bitmask
+                        for(int ty = 0; ty < types.Length; ty++) // Iterate types of the test
                         {
-                            TestModelBase model = (TestModelBase)Activator.CreateInstance(TestTypes.GetTypeFromIndex(types[ty]));
-                            model.SetLogic(); // Need to set logic before generating type instances
-                            string testTypeName = TestTypeManager.Instance.GetTestTypeNameFromIndex(types[ty]); // Get test type name
-                            Debug.LogWarning("Now its "+ testTypeName);
-                            TestType newType = FindDuplicateTypeInSuite(newSuite, testTypeName); // Check for duplicate types and return if found
-                            if (newType == null) // If no duplicate type was found
+                            Group newGroup = FindDuplicateGroupInType(newSuite, types[ty], SuiteManager.Instance.suites[su].groups[gr].groupName); // Find duplicate groups in the type
+                            if(newGroup == null) // If not found
                             {
-                                newType = new TestType(); // Create a new type instance
-                                newType.typeName = testTypeName; // Set type name
-                                newType.typeIndex = types[ty];  // Set type index
-                                newSuite.types.Add(newType); // Add type to suite
-                                TestTypeManager.Instance.GenerateTestTypeInstances(newSuite.suiteName, model); // Generate an instance object for test logic/display
-                                Destroy(model);
+                                newGroup = new Group(); // Create a new group instance
+                                newGroup.groupName = SuiteManager.Instance.suites[su].groups[gr].groupName; // Set group name
+                                FindDuplicateTypeInSuite(newSuite, types[ty]).groups.Add(newGroup); // Add the group to the type
                             }
-                            
+                            string testName = SuiteManager.Instance.suites[su].groups[gr].tests[te].scene.name.ToString(); //testList.testTypes[ty].tests[te].testInformation.TestName; // Get test name
                             Test newTest = new Test(); // Create new test instance
-                            newTest.testName = SuiteManager.Instance.suites[su].groups[gr].tests[te].scene.name.ToString(); //testList.testTypes[ty].tests[te].testInformation.TestName; // Set test name
+                            newTest.testName = testName; // Set test name
                             UnityEngine.Object scene = SuiteManager.Instance.suites[su].groups[gr].tests[te].scene; // Get reference to scene
                             newTest.scenePath = UnityEditor.AssetDatabase.GetAssetPath(scene); // Set scene path
                             newGroup.tests.Add(newTest); // Add test to scene
-
-                            newType.groups.Add(newGroup); // Add scene to type
-
-                            /*Group newGroup = FindDuplicateSceneInType(newSuite, newType, scene.name);  // Check for duplicate scenes and return if found
-                            if (newGroup == null) // If no duplicate scene was found
-                            {
-                                
-                            }*/
                         }
                     }
-
-                    //SceneManager.LoadSceneAsync(SuiteManager.Instance.suites[su].scenes[gr].path); // Load scene
-                    //while (!levelWasLoaded) // Wait for scene load complete
-                    //    yield return null;
-                    //levelWasLoaded = false; // Reset
-                    //UnityEngine.SceneManagement.Scene scene = SceneManager.GetSceneAt(0); // Get a scene reference
-                    //TestList testList = FindObjectOfType<TestList>(); // Get TestList from current scene
-                    /*for (int ty = 0; ty < testList.testTypes.Count; ty++) // Iterate test types
-                    {
-                        TestModelBase model = (TestModelBase)testList.testTypes[ty].tests[0].testObject.GetComponent(TestTypes.GetTypeFromIndex(testList.testTypes[ty].testType)); // Get a model reference from the test list
-                        model.SetLogic(); // Need to set logic before generating type instances
-                        string testTypeName = TestTypeManager.Instance.GetTestTypeNameFromIndex(testList.testTypes[ty].testType); // Get test type name
-                        TestType newType = FindDuplicateTypeInSuite(newSuite, testTypeName); // Check for duplicate types and return if found
-                        if(newType == null) // If no duplicate type was found
-                        {
-                            newType = new TestType(); // Create a new type instance
-                            newType.typeName = testTypeName; // Set type name
-                            newType.typeIndex = testList.testTypes[ty].testType;  // Set type index
-                            newSuite.types.Add(newType); // Add type to suite
-                            TestTypeManager.Instance.GenerateTestTypeInstances(newSuite.suiteName, model); // Generate an instance object for test logic/display
-                        }
-                        Scene newScene = FindDuplicateSceneInType(newSuite, newType, scene.name);  // Check for duplicate scenes and return if found
-                        if (newScene == null) // If no duplicate scene was found
-                        {
-                            newScene = new Scene(); // Create a new scene instance
-                            newScene.sceneName = scene.name; // Set scene name
-                            newScene.scenePath = scene.path; // Set scene path
-                            for (int te = 0; te < testList.testTypes[ty].tests.Count; te++) // Iterate tests
-                            {
-                                Test newTest = new Test(); // Create new test instance
-                                newTest.testName = testList.testTypes[ty].tests[te].testInformation.TestName; // Set test name
-                                newScene.tests.Add(newTest); // Add test to scene
-                            }
-                            newType.scenes.Add(newScene); // Add scene to type
-                        }
-                    }*/
                 }
-                testStructure.suites.Add(newSuite); // Add suite to structure
+                for (int ty = 0; ty < newSuite.types.Count; ty++) // Iterate types
+                {
+                    if (newSuite.types[ty].groups.Count == 0) // If empty
+                        newSuite.types.RemoveAt(ty); // Remove it
+                }
+                newSuite.types.TrimExcess(); // Trim the types list
+                testStructure.suites.Add(newSuite); // Add to suites list
             }
             m_IsGenerated = true; // Set generated
             Console.Instance.Write(DebugLevel.Logic, MessageLevel.Log, "TestStructure finished generating"); // Write to console
@@ -175,92 +134,77 @@ namespace GraphicsTestFramework
         public bool CheckForBaselines()
         {
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Checking for baselines"); // Write to console
-            bool output = true;
-            for(int su = 0; su < testStructure.suites.Count; su++)
+            bool output = true; // Set output
+            for(int su = 0; su < testStructure.suites.Count; su++) // Iterate suites
             {
-                testStructure.suites[su].baseline = true;
-                for(int ty = 0; ty < testStructure.suites[su].types.Count; ty++)
+                testStructure.suites[su].baseline = true; // Set init state
+                for(int ty = 0; ty < testStructure.suites[su].types.Count; ty++) // Iterate types
                 {
-                    testStructure.suites[su].types[ty].baseline = true;
-                    for(int gr = 0; gr < testStructure.suites[su].types[ty].groups.Count; gr++)
+                    testStructure.suites[su].types[ty].baseline = true; // Set init state
+                    for(int gr = 0; gr < testStructure.suites[su].types[ty].groups.Count; gr++) // Iterate groups
                     {
-                        testStructure.suites[su].types[ty].groups[gr].baseline = true;
-                        for(int te = 0; te < testStructure.suites[su].types[ty].groups[gr].tests.Count; te++)
+                        testStructure.suites[su].types[ty].groups[gr].baseline = true; // Set init state
+                        for(int te = 0; te < testStructure.suites[su].types[ty].groups[gr].tests.Count; te++) // Iterate tests
                         {
-                            bool baseline = ResultsIO.Instance.BaselineExists(testStructure.suites[su].suiteName, "Standard Legacy", testStructure.suites[su].types[ty].typeName, testStructure.suites[su].types[ty].groups[gr].groupName, testStructure.suites[su].types[ty].groups[gr].tests[te].testName);
-                            testStructure.suites[su].types[ty].groups[gr].tests[te].baseline = baseline;
-                            if(baseline == false)
+                            bool baseline = ResultsIO.Instance.BaselineExists(testStructure.suites[su].suiteName, "Standard Legacy", testStructure.suites[su].types[ty].typeName, testStructure.suites[su].types[ty].groups[gr].groupName, testStructure.suites[su].types[ty].groups[gr].tests[te].testName); // Get baseline state
+                            testStructure.suites[su].types[ty].groups[gr].tests[te].baseline = baseline; // Set baseline state to structure
+                            if(baseline == false) // If no baseline
                             {
-                                testStructure.suites[su].baseline = false;
-                                testStructure.suites[su].types[ty].baseline = false;
-                                testStructure.suites[su].types[ty].groups[gr].baseline = false;
-                                output = false;
+                                testStructure.suites[su].baseline = false; // Set to suite
+                                testStructure.suites[su].types[ty].baseline = false; // Set to type
+                                testStructure.suites[su].types[ty].groups[gr].baseline = false; // Set to group
+                                output = false; // Set to output
                             }
                         }
                     }
                 }
             }
-            return output;
+            return output; // Return
         }
 
-        // TODO - Dont use this anymore. Need this?. See GenerateStructure()
-        TestType GetTypeIndex(string suiteName, string typeName)
+        // Find duplicate group entries in a type
+        Group FindDuplicateGroupInType(Suite suite, int typeId, string groupName)
         {
-            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Getting type index for type "+typeName+" in suite "+suiteName); // Write to console
-            for (int a = 0; a < testStructure.suites.Count; a++)
+            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Finding duplicates of group " + groupName + " in type ID " + typeId); // Write to console
+            for (int ty = 0; ty < suite.types.Count; ty++) // Iterate types
             {
-                if (testStructure.suites[a].suiteName == suiteName)
+                if (suite.types[ty].typeIndex == typeId) // If type matches input
                 {
-                    for (int b = 0; b < testStructure.suites[a].types.Count; b++)
+                    for (int gr = 0; gr < suite.types[ty].groups.Count; gr++) // Iterate groups
                     {
-                        if (testStructure.suites[a].types[b].typeName == typeName)
+                        if (suite.types[ty].groups[gr].groupName == groupName) // If group matches input
                         {
-                            return testStructure.suites[a].types[b];
+                            return suite.types[ty].groups[gr]; // Return group
                         }
                     }
                 }
             }
-            return null;
+            return null; // Return fail
         }
 
-        TestType FindDuplicateTypeInSuite(Suite suite, string name)
+        // Find duplicate type entries in a suite
+        TestType FindDuplicateTypeInSuite(Suite suite, int typeId)
         {
-            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Finding duplicates of type "+name+" in suite "+suite.suiteName); // Write to console
-            for (int b = 0; b < suite.types.Count; b++)
+            for (int ty = 0; ty < suite.types.Count; ty++) // Iterate types
             {
-                if (suite.types[b].typeName == name)
-                    return suite.types[b];
-            }
-            return null;
-        }
-
-        /*Group FindDuplicateSceneInType(Suite suite, TestType type, string sceneName)
-        {
-            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Finding duplicates of scene " + sceneName + " in suite " + suite.suiteName+" and type "+type.typeName); // Write to console
-            for (int b = 0; b < suite.types.Count; b++)
-            {
-                if (suite.types[b].typeName == type.typeName)
+                if (suite.types[ty].typeIndex == typeId) // If type index matches
                 {
-                    for (int c = 0; c < type.groups.Count; c++)
-                    {
-                        if (type.groups[c].groupName == name)
-                            return type.groups[c];
-                    }
+                    return suite.types[ty]; // Return the type
                 }
             }
-            return null;
-        }*/
+            return null; // Return fail
+        }
 
         // Checks whether any tests are selected (true if >0 tests are selected)
         public bool CheckSelectionNotNull()
         {
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Checking for null selection"); // Write to console
-            for (int su = 0; su < testStructure.suites.Count; su++)
+            for (int su = 0; su < testStructure.suites.Count; su++) // Iterate suites
             {
-                if (testStructure.suites[su].selectionState != 0)
-                    return true;
+                if (testStructure.suites[su].selectionState != 0) // If selection not 0
+                    return true; // Return true
             }
-            return false;
+            return false; // Return false
         }
 
         // ------------------------------------------------------------------------------------
@@ -474,6 +418,8 @@ namespace GraphicsTestFramework
             }
         }
 
+        
+
         // Master class for setting selection state recursively up the hierarchy. Calls sub-function per level for every necessary level
         void SetSelectionStateOnParents(MenuEntryData entryData)
         {
@@ -556,6 +502,25 @@ namespace GraphicsTestFramework
         }
 
         // ------------------------------------------------------------------------------------
+        // Helper Functions
+        // - TODO - Clean and comment this
+
+        List<TestType> CloneTestTypeList(List<TestType> input)
+        {
+            List < TestType > output = new List<TestType>();
+            for (int i = 0; i < input.Count; i++)
+            {
+                TestType type = new TestType();
+                type.typeName = input[i].typeName;
+                type.typeIndex = input[i].typeIndex;
+                type.selectionState = input[i].selectionState;
+                type.baseline = input[i].baseline;
+                output.Add(type);
+            }
+            return output;
+        }
+
+        // ------------------------------------------------------------------------------------
         // Local Data Structures
 
         [Serializable]
@@ -564,6 +529,7 @@ namespace GraphicsTestFramework
             public List<Suite> suites = new List<Suite>();
         }
 
+        [Serializable]
         public class Suite
         {
             public string suiteName;

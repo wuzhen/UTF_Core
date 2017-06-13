@@ -234,11 +234,17 @@ namespace GraphicsTestFramework
         {
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Getting logic instance"); // Write to console
             TestLogicBase output; // Create logic instance
-            int[] models = TestTypeManager.Instance.GetTypeSelectionFromBitMask(activeTest.testTypes);
+            var ModelType = TestTypes.GetTypeFromIndex(activeEntry.typeIndex); // Get the model type from its index
+            activeModelInstance = (TestModelBase)FindObjectOfType(ModelType); // Find a model insatnce within the scene
+            if(activeModelInstance == null) // If user did not set one up
             {
+                GameObject go = new GameObject(); // Generate a new one
+                go.name = ModelType.ToString().Replace("GraphicsTestFramework.", ""); // Name it
+                activeModelInstance = (TestModelBase)go.AddComponent(ModelType); // Add model component of correct type
             }
             activeModelInstance.SetLogic(); // Set the logic reference on the model
             output = TestTypeManager.Instance.GetLogicInstanceFromName(activeModelInstance.logic.ToString().Replace("GraphicsTestFramework.", "").Replace("Logic", "")); // Get test  logic instance
+            output.SetSuiteName(suiteName); // Set suite name on the logic
             output.SetModel(activeModelInstance); // Set the active test model in the logic
             TestTypeManager.Instance.SetActiveLogic(output); // Set as active test logic
             return output; // Return
@@ -248,6 +254,9 @@ namespace GraphicsTestFramework
         public void EndTest()
         {
             Console.Instance.Write(DebugLevel.Logic, MessageLevel.Log, "Ended test " + activeTest.scene.ToString()); // Write to console
+            if(runnerType == RunnerType.Manual) // If manual run
+                ProgressScreen.Instance.SetState(false, ProgressType.LocalLoad, ""); // Disable ProgressScreen
+            FinalizeTest(); // Finalize test on TestRunner
         }
 
         // ------------------------------------------------------------------------------------
