@@ -39,6 +39,7 @@ namespace GraphicsTestFramework
         public void SetState(bool state)
         {
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Setting state to "+state); // Write to console
+            ProgressScreen.Instance.SetState(false, ProgressType.LocalLoad, ""); // Disable ProgressScreen
             testViewerParent.SetActive(state); // Set state
         }
         

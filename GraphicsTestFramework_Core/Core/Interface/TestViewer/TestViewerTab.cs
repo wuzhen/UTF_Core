@@ -63,11 +63,11 @@ namespace GraphicsTestFramework
         public void SetupTab(int index, TestViewerTabData data)
 		{
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Setting up tab"); // Write to console
-            tabIndex = index;
-			tabData = data;
-			button = GetComponent<Button>();
-			button.onClick.AddListener(delegate { TestViewerNavbar.Instance.OnClickTab(tabIndex); });
-			tabLabel.text = tabData.tabName;
+            tabIndex = index; // Set tab index
+			tabData = data; // Set tab data
+			button = GetComponent<Button>(); // Get button
+			button.onClick.AddListener(delegate { TestViewerNavbar.Instance.OnClickTab(tabIndex); }); // Add listener
+			tabLabel.text = tabData.tabName; // Set tab label
 		}
 
         // ------------------------------------------------------------------------------------

@@ -40,8 +40,8 @@ namespace GraphicsTestFramework
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Generating navbar"); // Write to console
             Cleanup(); // Cleanup
             GenerateBreadcrumb(); // Generate breadcrumb
-            GenerateTabs(tabDatas);
-            tabs[0].EnableTab();
+            GenerateTabs(tabDatas); // Generate tabs
+            tabs[0].EnableTab(); // Enable first tab
         }
 
         // Cleanup the navbar
@@ -61,7 +61,7 @@ namespace GraphicsTestFramework
         {
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Generating breadcrumb"); // Write to console
             TestEntry currentTest = TestRunner.Instance.GetCurrentTestEntry(); // Get the current test entry
-            breadcrumbLabel.text = currentTest.suiteName + " - " + currentTest.groupName + " - " + currentTest.typeName + " - " + currentTest.testName; // Set breadcrumb label
+            breadcrumbLabel.text = currentTest.suiteName + " - " + currentTest.typeName + " - " + currentTest.groupName + " - " + currentTest.testName; // Set breadcrumb label
         }
 
         // Generate new tabs

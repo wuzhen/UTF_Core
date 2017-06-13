@@ -124,9 +124,7 @@ namespace GraphicsTestFramework
 		/// <param name="filetype">Filetype.</param>
 		public IEnumerator WriteDataFiles (string suite, string testType, ResultsIOData resultIOdata, string[] data, fileType filetype)
 		{
-			if (Master.Instance.debugMode == Master.DebugMode.Messages) {
-				Debug.Log ("Beginning to write suite " + suite + " testType " + testType + " which contains " + data.Length + " files to write");
-			}
+            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Beginning to write suite " + suite + " testType " + testType + " which contains " + data.Length + " files to write"); // Write to console
 			string filePath = CreateDataDirectory (suite, resultIOdata.resultsRow [0].commonResultsIOData.API, resultIOdata.resultsRow [0].commonResultsIOData.RenderPipe, testType);  //dataPath + "/" + suite + "/" + resultIOdata.resultsRow [1].commonResultsIOData.API + "/" + resultIOdata.resultsRow [1].commonResultsIOData.RenderPipe + "/" + testType;
 			string prefix = "InvalidData"; // prefix for whether a results file or baseline file
 
@@ -145,23 +143,20 @@ namespace GraphicsTestFramework
 				//write data to files
 				if (!Directory.Exists (filePath)) // check to see ig folder exists if not create it
 					Directory.CreateDirectory (filePath);
-				string fileName = prefix + "_" + commonData.SceneName + "_" + commonData.TestName + ".txt";
+				string fileName = prefix + "_" + commonData.GroupName + "_" + commonData.TestName + ".txt";
 				File.WriteAllText (filePath + "/" + fileName, data [i]);
 				while (!File.Exists (filePath + "/" + fileName)) {
-					if (Master.Instance.debugMode == Master.DebugMode.Messages)
-						Debug.Log ("Writing...");
+                    Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Writing..."); // Write to console
 					yield return new WaitForEndOfFrame ();
 				}
 				//update baseline dictionary(not a dictionary) if needed
 				if(filetype == fileType.Baseline){
-					ResultsIO.Instance.BaselineDictionaryEntry (suiteBaselineDataIndex, testType, commonData.SceneName, commonData.TestName, commonData.DateTime);
+					ResultsIO.Instance.BaselineDictionaryEntry (suiteBaselineDataIndex, testType, commonData.GroupName, commonData.TestName, commonData.DateTime);
 				}
 
 				fileCount++;
 			}
-			if (Master.Instance.debugMode == Master.DebugMode.Messages)
-				Debug.Log ("Wrote " + fileCount + " files to disk");
-
+            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Wrote " + fileCount + " files to disk"); // Write to console
 			//Write baseline dictionary for suite and update timestamp TODO might need work/tweaking
 			if (filetype == fileType.Baseline) {
 				StartCoroutine (UpdateSuiteDataFiles());
@@ -220,10 +215,7 @@ namespace GraphicsTestFramework
 		/// <param name="testType">Test type.</param>
 		public string CreateDataDirectory(string suite, string api, string renderPipe, string testType){
 			string filePath = dataPath + "/" + suite + "/" + api + "/" + renderPipe + "/" + testType; // format the folder hierachy
-
-			if (Master.Instance.debugMode == Master.DebugMode.Messages)
-				Debug.Log ("Checking directory:" + filePath);
-
+            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Checking directory:" + filePath); // Write to console
 			if (!Directory.Exists (filePath)) // check to see if folder exists if not create it
 				Directory.CreateDirectory (filePath);
 			return filePath; // return the 
@@ -277,12 +269,9 @@ namespace GraphicsTestFramework
 		/// <param name="baseline">If set to <c>true</c> baseline.</param>
 		public string FetchDataFile (string suite, string testType, ResultsDataCommon resultsDataCommon, bool baseline)
 		{
-			if (Master.Instance.debugMode == Master.DebugMode.Messages) {
-				Debug.Log ("Beginning fetch process");
-			}
-
+            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Beginning fetch process"); // Write to console
 			string filePath = dataPath + "/" + suite + "/" + resultsDataCommon.API + "/" + resultsDataCommon.RenderPipe + "/" + testType;
-			string fileName = "_" + resultsDataCommon.SceneName + "_" + resultsDataCommon.TestName + ".txt";
+			string fileName = "_" + resultsDataCommon.GroupName + "_" + resultsDataCommon.TestName + ".txt";
 
 			if (baseline)
 				fileName = baselinePrefix + fileName;
@@ -290,18 +279,12 @@ namespace GraphicsTestFramework
 				fileName = resultsCurrentPrefix + fileName;
 
 			if (!Directory.Exists (filePath)) {
-				if (Master.Instance.debugMode == Master.DebugMode.Messages) {
-					Debug.LogWarning ("Directory for baseline does not exist, please pull latest baselines or create them");
-				}
+                Console.Instance.Write(DebugLevel.Critical, MessageLevel.Log, "Directory for baseline does not exist, please pull latest baselines or create them"); // Write to console
 				return null;
 			} else {
-				if (Master.Instance.debugMode == Master.DebugMode.Messages) {
-					Debug.Log ("Directory for baseline exists, attempting to fetch requested baseline");
-				}
+                Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Directory for baseline exists, attempting to fetch requested baseline"); // Write to console
 				if (!File.Exists (filePath + "/" + fileName)) {
-					if (Master.Instance.debugMode == Master.DebugMode.Messages) {
-						Debug.LogWarning ("Baseline file does not exist for the requested test, please make sure you pull the latest or create them");
-					}
+                    Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Baseline file does not exist for the requested test, please make sure you pull the latest or create them"); // Write to console
 					return null;
 				} else {
 					return File.ReadAllText (filePath + "/" + fileName);

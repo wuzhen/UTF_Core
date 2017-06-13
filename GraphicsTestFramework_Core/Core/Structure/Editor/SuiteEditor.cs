@@ -19,6 +19,7 @@ namespace GraphicsTestFramework.Experimental
             string[] testTypeEntries = TestTypes.GetTypeStringList(); // Get the test type list for use in mask fields
 
             EditorGUILayout.PropertyField(serializedObject.FindProperty("suiteName"), false); // Draw suiteName;
+            EditorGUILayout.PropertyField(serializedObject.FindProperty("isDebugSuite"), false); // Draw suiteName;
             var groups = serializedObject.FindProperty("groups"); // Get groups list
             EditorGUILayout.PropertyField(groups, false); // Draw groups
             if (groups.isExpanded) // If the groups list is expanded

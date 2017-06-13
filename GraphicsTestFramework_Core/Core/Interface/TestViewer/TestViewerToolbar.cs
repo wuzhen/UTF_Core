@@ -98,18 +98,16 @@ namespace GraphicsTestFramework
         public void OnClickSaveBaseline()
 		{
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Clicked: Save Baseline"); // Write to console
-            Button[] buttons = new Button[2]; 
-			bool openDialogue = Dialogue.Instance.TryDialogue(true, 0, out buttons);
-			if(openDialogue)
+            Button[] buttons = new Button[2]; // Create button array
+			bool openDialogue = Dialogue.Instance.TryDialogue(true, 0, out buttons); // Try for dialogue window and out buttons
+			if(openDialogue) // If dialogue opens
 			{
-				buttons[0].onClick.AddListener(delegate { SaveBaselineAction(); });
+				buttons[0].onClick.AddListener(delegate { SaveBaselineAction(); }); // Add listeners
 				buttons[0].onClick.AddListener(delegate { Dialogue.Instance.SetState(false, 0); });
 				buttons[1].onClick.AddListener(delegate { Dialogue.Instance.SetState(false, 0); });
 			}
 			else
-			{
-				SaveBaselineAction();
-			}
+				SaveBaselineAction(); // Save baseline
 		}
 
 		// Save baseline action

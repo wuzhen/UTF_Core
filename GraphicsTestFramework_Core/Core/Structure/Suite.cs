@@ -13,6 +13,7 @@ namespace GraphicsTestFramework
     public class Suite : ScriptableObject
     {
         [SerializeField] public string suiteName;
+        [SerializeField] public bool isDebugSuite;
         [SerializeField] public List<Group> groups = new List<Group>();
     }
 

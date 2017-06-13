@@ -159,6 +159,7 @@ namespace GraphicsTestFramework
             }
             do { yield return null; } while (runnerIsWaiting == true); // Wait for previous test to finish before enabling menus
             Console.Instance.Write(DebugLevel.Logic, MessageLevel.Log, "Ended automation run"); // Write to console
+            ProgressScreen.Instance.SetState(false, ProgressType.LocalLoad, ""); // Disable ProgressScreen
             Menu.Instance.SetMenuState(true); // Enable menu
         }
 
@@ -214,8 +215,6 @@ namespace GraphicsTestFramework
             runnerIsWaiting = false; // To waiting to false so automation can continue
         }
 
-        
-
         // ------------------------------------------------------------------------------------
         // Test Execution
 
@@ -224,35 +223,22 @@ namespace GraphicsTestFramework
         {
             Console.Instance.Write(DebugLevel.Logic, MessageLevel.Log, "Starting test " + inputTest.testName); // Write to console
             activeTest = SuiteManager.Instance.suites[inputTest.suiteIndex].groups[inputTest.groupIndex].tests[inputTest.testIndex]; // Get the active test
-            //activeTest = testTypes[GetTypeIndexInArray(inputTest.typeValue)].tests[inputTest.testIndex]; // Get the active test
-            //activeTest.testObject.SetActive(true); // Enable the active test object
-            TestLogicBase activeTestLogic = GetLogicInstance(activeTest, inputTest); // Get active test logic instance
-            Debug.LogWarning(activeTestLogic);
+            TestLogicBase activeTestLogic = GetLogicInstance(SuiteManager.Instance.suites[inputTest.suiteIndex].suiteName, activeTest, inputTest); // Get active test logic instance
             activeTestLogic.SetupTest(inputTest, runnerType); // Setup test
         }
 
         TestModelBase activeModelInstance;
 
         // Get a logic instance and set model instance on it
-        TestLogicBase GetLogicInstance(Test activeTest, TestEntry activeEntry)
+        TestLogicBase GetLogicInstance(string suiteName, Test activeTest, TestEntry activeEntry)
         {
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Getting logic instance"); // Write to console
             TestLogicBase output; // Create logic instance
             int[] models = TestTypeManager.Instance.GetTypeSelectionFromBitMask(activeTest.testTypes);
-            var ModelType = TestTypes.GetTypeFromIndex(models[0]);
-            Debug.LogWarning(ModelType);
-
-            activeModelInstance = (TestModelBase)FindObjectOfType(ModelType);
-            if(activeModelInstance == null)
             {
-                GameObject go = new GameObject();
-                go.name = ModelType.GetType().ToString().Replace("GraphicsTestFramework.", "");
-                activeModelInstance = (TestModelBase)go.AddComponent(ModelType);
             }
             activeModelInstance.SetLogic(); // Set the logic reference on the model
-            Debug.LogWarning(activeModelInstance.logic.ToString().Replace("GraphicsTestFramework.", "").Replace("Logic", ""));
             output = TestTypeManager.Instance.GetLogicInstanceFromName(activeModelInstance.logic.ToString().Replace("GraphicsTestFramework.", "").Replace("Logic", "")); // Get test  logic instance
-            Debug.LogWarning(output);
             output.SetModel(activeModelInstance); // Set the active test model in the logic
             TestTypeManager.Instance.SetActiveLogic(output); // Set as active test logic
             return output; // Return
@@ -262,9 +248,6 @@ namespace GraphicsTestFramework
         public void EndTest()
         {
             Console.Instance.Write(DebugLevel.Logic, MessageLevel.Log, "Ended test " + activeTest.scene.ToString()); // Write to console
-            //activeTest.testObject.SetActive(false); // Disable the active test object
-            ProgressScreen.Instance.SetState(false, ProgressType.LocalLoad, ""); // Disable ProgressScreen
-            TestRunner.Instance.FinalizeTest(); // Finalize test on TestRunner
         }
 
         // ------------------------------------------------------------------------------------

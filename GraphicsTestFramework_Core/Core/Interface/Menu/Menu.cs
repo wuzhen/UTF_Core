@@ -51,19 +51,11 @@ namespace GraphicsTestFramework
             StartCoroutine(WaitForTestStructure()); // Begin waiting for TestStructure
         }
 
-        // Have to wait for Test Structure to generate before generating menus (TODO - move this to a delegate)
+        // Have to wait for Test Structure to generate before generating menus (TODO - move this to a delegate?)
         IEnumerator WaitForTestStructure()
         {
             do { yield return null; } while (!TestStructure.Instance.IsGenerated); // Wait for test structure
             UpdateMenu(); // Update the menu
-            /*if(TestStructure.Instance.CheckForBaselines()) // Baselines exist
-            {
-                breadcrumb.home.SetupHome(); // Setup breadcrumb home button
-                GenerateList(); // Generate list
-                SetupActions(); // Setup actions panel
-            }
-            else // Any or all baselines are missing
-                GenerateResolveList(); // Generate a resolve list*/
         }
 
         // Generate the breadcrumb
@@ -75,22 +67,22 @@ namespace GraphicsTestFramework
                 case -1:     // Home
                     breadcrumb.suite.Setup(inputData, 1, 0);
                     breadcrumb.type.Setup(inputData, 1, 1);
-                    breadcrumb.scene.Setup(inputData, 1, 2);
+                    breadcrumb.group.Setup(inputData, 1, 2);
                     break;
                 case 0:     // Suite
                     breadcrumb.suite.Setup(inputData, 0, 0);
                     breadcrumb.type.Setup(inputData, 1, 1);
-                    breadcrumb.scene.Setup(inputData, 1, 2);
+                    breadcrumb.group.Setup(inputData, 1, 2);
                     break;
                 case 1:     // Type
                     breadcrumb.suite.Setup(inputData, 2, 0);
                     breadcrumb.type.Setup(inputData, 0, 1);
-                    breadcrumb.scene.Setup(inputData, 1, 2);
+                    breadcrumb.group.Setup(inputData, 1, 2);
                     break;
                 case 2:     // Scene
                     breadcrumb.suite.Setup(inputData, 2, 0);
                     breadcrumb.type.Setup(inputData, 2, 1);
-                    breadcrumb.scene.Setup(inputData, 0, 2);
+                    breadcrumb.group.Setup(inputData, 0, 2);
                     break;
             }
         }
@@ -111,6 +103,7 @@ namespace GraphicsTestFramework
         // Enable/disable menu
         public void SetMenuState(bool state /*int state*/)
         {
+            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Setting menu state to "+state); // Write to console
             menuParent.SetActive(state); // Set active
             if(state) // If enabling
                 UpdateMenu(); // Update
@@ -119,6 +112,7 @@ namespace GraphicsTestFramework
         // Update the menu
         void UpdateMenu()
         {
+            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Updating menu"); // Write to console
             if (TestStructure.Instance.CheckForBaselines()) // Baselines exist
             {
                 if (selectedId.currentLevel == 4) // If returning to meny from TestViewer go back one level
@@ -130,17 +124,6 @@ namespace GraphicsTestFramework
             }
             else // Any or all baselines are missing
                 GenerateResolveList(); // Generate a resolve list
-
-            /*if (!TestStructure.Instance.CheckForBaselines()) // If baselines missing
-                GenerateResolveList(); // Generate the resolve list
-            else
-            {
-                if (selectedId.currentLevel == 4) // If returning to meny from TestViewer go back one level
-                    selectedId.currentLevel = 3; // Set
-                ClearList(); // Clear list
-                SetupActions(); // Setup actions
-                GenerateList(); // Generate new list
-            }*/
         }
 
         // ------------------------------------------------------------------------------------
@@ -151,6 +134,7 @@ namespace GraphicsTestFramework
         // Generate a resolve list
         void GenerateResolveList()
         {
+            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Generating resolve list"); // Write to console
             GenerateTestRunner(RunnerType.Resolve); // Generate a test runner of type Resolve
             ProgressScreen.Instance.SetState(false, ProgressType.LocalLoad, ""); // disable progress screen
             EnableResolveMenu(); // Enable resolve menu
@@ -170,7 +154,7 @@ namespace GraphicsTestFramework
                 RectTransform goRect = go.GetComponent<RectTransform>(); // Get rect
                 goRect.anchoredPosition = new Vector2(0, entryHeight); // Set position
                 MenuResolveListEntry newEntry = go.GetComponent<MenuResolveListEntry>(); // Get script reference
-                newEntry.Setup(currentTest.suiteName+" - "+currentTest.groupName, currentTest.typeName+" - "+currentTest.testName); // Setup
+                newEntry.Setup(currentTest.suiteName+" - "+currentTest.typeName, currentTest.groupName+" - "+currentTest.testName); // Setup
                 entryHeight -= goRect.sizeDelta.y; // Add to position tracker
             }
             resolveWindow.contentRect.sizeDelta = new Vector2(resolveWindow.contentRect.sizeDelta.x, -entryHeight); // Set content rect size
@@ -344,7 +328,7 @@ namespace GraphicsTestFramework
                 case 1:
                     return "Type";
                 case 2:
-                    return "Scene";
+                    return "Group";
                 case 3:
                     return "Test";
             }
@@ -407,7 +391,7 @@ namespace GraphicsTestFramework
             public MenuBreadcrumbEntry home;
             public MenuBreadcrumbEntry suite;
             public MenuBreadcrumbEntry type;
-            public MenuBreadcrumbEntry scene;
+            public MenuBreadcrumbEntry group;
         }
 
         [Serializable]
