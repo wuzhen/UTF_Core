@@ -21,14 +21,6 @@ namespace GraphicsTestFramework
     public class ExampleModel : TestModel<ExampleLogic>
     {
         // ------------------------------------------------------------------------------------
-        // ID
-
-        public override void SetID()
-        {
-            id = 000;
-        }
-
-        // ------------------------------------------------------------------------------------
         // Settings
 
         [Serializable]

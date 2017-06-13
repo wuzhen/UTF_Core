@@ -34,7 +34,9 @@ namespace GraphicsTestFramework
         // - Set up cameras and create RenderTexture
         public override void TestPreProcess()
         {
-            temporaryRt = new RenderTexture((int)model.settings.frameResolution.x, (int)model.settings.frameResolution.y, 24); // Get a temporary RenderTexture for blit operations
+            Vector2 resolution = Vector2.zero; // Create vector2
+            model.resolutionList.TryGetValue(model.settings.frameResolution, out resolution); // Get resolution
+            temporaryRt = new RenderTexture((int)resolution.x, (int)resolution.y, 24); // Get a temporary RenderTexture for blit operations
             SetupCameras(); // Setup cameras
             StartTest(); // Start test
         }
@@ -86,9 +88,11 @@ namespace GraphicsTestFramework
             if (doCapture) // If running blit operations
             {
                 doCapture = false; // Reset
-                var rt1 = RenderTexture.GetTemporary((int)model.settings.frameResolution.x, (int)model.settings.frameResolution.y, 24, temporaryRt.format, RenderTextureReadWrite.sRGB); // Get a temporary RT for blitting to
+                Vector2 resolution = Vector2.zero; // Create vector2
+                model.resolutionList.TryGetValue(model.settings.frameResolution, out resolution); // Get resolution
+                var rt1 = RenderTexture.GetTemporary((int)resolution.x, (int)resolution.y, 24, temporaryRt.format, RenderTextureReadWrite.sRGB); // Get a temporary RT for blitting to
                 Graphics.Blit(temporaryRt, rt1); // Blit models camera to the RT
-                resultsTexture = Common.ConvertRenderTextureToTexture2D(activeTestEntry.testName + "_Result", rt1, model.settings.frameResolution, model.settings.textureFormat, model.settings.filterMode); // Convert the resulting render texture to a Texture2D
+                resultsTexture = Common.ConvertRenderTextureToTexture2D(activeTestEntry.testName + "_Result", rt1, resolution, model.settings.textureFormat, model.settings.filterMode); // Convert the resulting render texture to a Texture2D
                 model.settings.captureCamera.targetTexture = null; // Set target texture to null
                 RenderTexture.ReleaseTemporary(rt1); // Release the temporary RT
                 temporaryRt.Release(); // Release main RT
