@@ -48,13 +48,6 @@ namespace GraphicsTestFramework
 
 #if UNITY_EDITOR
 
-        // Menu entry to create Suite and Scene structure
-        [UnityEditor.MenuItem("Graphics Test Framework/Get Scene List")]
-        public static void GetSceneListMenu()
-        {
-            Instance.GenerateSceneList(); // Create structure
-        }
-
         // Create Suite and Scene structure
         [ExecuteInEditMode]
         public void GenerateSceneList()

@@ -1,5 +1,6 @@
 ﻿using System;
 using UnityEngine;
+using UnityEditor;
 
 namespace GraphicsTestFramework
 {
@@ -26,7 +27,7 @@ namespace GraphicsTestFramework
         }
 
         //Data
-        public float applicationVersion;
+        public static string applicationVersion = "1.0b1";
 
         // ------------------------------------------------------------------------------------
         // Setup
@@ -67,9 +68,28 @@ namespace GraphicsTestFramework
         {
             Application.Quit(); // Quit
 #if UNITY_EDITOR
-            UnityEditor.EditorApplication.isPlaying = false; // If editor stop play mode
+            EditorApplication.isPlaying = false; // If editor stop play mode
 #endif
         }
+
+        // ------------------------------------------------------------------------------------
+        // Editor
+
+#if UNITY_EDITOR
+
+        // Setup for build
+        [UnityEditor.MenuItem("RuntimeTestFramework/Prepare Build")]
+        public static void Prebuild()
+        {
+            SuiteManager.Instance.GenerateSceneList(); // Create suite structure
+            int platformCount = Enum.GetNames(typeof(BuildTargetGroup)).Length; // Get platform count
+            for(int i = 0; i < platformCount; i++) // Iterate all platforms
+                PlayerSettings.SetApplicationIdentifier((BuildTargetGroup)i, "com.UnityTechnologies.RuntimeTestFramework"); // Set bundle identifiers
+            PlayerSettings.bundleVersion = applicationVersion; // Set application version
+        }
+
+#endif
+
     }
 
     // ------------------------------------------------------------------------------------
