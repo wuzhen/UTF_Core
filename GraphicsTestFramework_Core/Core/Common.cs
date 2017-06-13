@@ -25,9 +25,12 @@ namespace GraphicsTestFramework
             SystemData systemData = Master.Instance.GetSystemData(); // Get SystemData from Master
             output.UnityVersion = systemData.UnityVersion; // Extract from SystemData
             output.AppVersion = systemData.AppVersion; // Extract from SystemData
+            output.OS = systemData.OS; // Extract from SystemData
+            output.Device = systemData.Device; // Extract from SystemData
             output.Platform = systemData.Platform; // Extract from SystemData
             output.API = systemData.API; // Extract from SystemData
             output.RenderPipe = "Standard Legacy"; // TODO - Remove hardcoding
+            output.Custom = ""; // Futureproof
             return output; // Return
         }        
 
@@ -108,11 +111,14 @@ namespace GraphicsTestFramework
         public string DateTime;
         public string UnityVersion;
         public string AppVersion;
+        public string OS;
+        public string Device;
         public string Platform;
         public string API;
 		public string RenderPipe;
         public string GroupName;
         public string TestName;
         public bool PassFail;
+        public string Custom;
     }
 }

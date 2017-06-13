@@ -39,7 +39,7 @@ namespace GraphicsTestFramework
 
             int passFail = 2; // Set default state (no results)
             if (resultsData != null) // If results data exists
-                passFail = resultsData.resultsRow[0].resultsColumn[17] == "True" ? 1 : 0; // Set pass fail state
+                passFail = resultsData.resultsRow[0].resultsColumn[21] == "True" ? 1 : 0; // Set pass fail state
 
             switch (passFail) // Switch on pass fail
             {

@@ -77,8 +77,8 @@ namespace GraphicsTestFramework
 			if (baseline == 1) {
 				//replace each individually
 				for(int i = 0; i < trimmedJson.Length; i++){
-					//update rows based on matching columns 4, 5, 6, 7, 8 > Platform, API, RenderPipe, SceneName, TestName
-					CloudConnectorCore.UpdateUniqueRow (sheetName, new int[]{4, 5, 6, 7, 8}, trimmedJson[i], cloudMode);
+					//update rows based on matching columns 6, 7, 8, 9, 10 > Platform, API, RenderPipe, SceneName, TestName
+					CloudConnectorCore.UpdateUniqueRow (sheetName, new int[]{6, 7, 8, 9, 10}, trimmedJson[i], cloudMode);
 					//wait for cloudcore to be idle
 					while (CloudConnectorCore.isWaiting)
 						yield return null;

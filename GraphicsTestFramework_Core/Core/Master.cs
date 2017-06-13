@@ -48,6 +48,8 @@ namespace GraphicsTestFramework
             SystemData output = new SystemData(); // Create new class instance
 			output.UnityVersion = Application.unityVersion; // Get Unity version
 			output.AppVersion = applicationVersion.ToString(); // Get application version
+            output.OS = SystemInfo.operatingSystem; // Get OS
+            output.Device = SystemInfo.deviceModel + "|" + SystemInfo.graphicsDeviceName + "|" + SystemInfo.processorType;
 			output.Platform = Application.platform.ToString(); // Get platform
 			output.API = SystemInfo.graphicsDeviceType.ToString(); // Get graphics device type
 			return output; // Return
@@ -101,6 +103,8 @@ namespace GraphicsTestFramework
 	{
 		public string UnityVersion;
 		public string AppVersion;
+        public string OS;
+        public string Device;
 		public string Platform;
 		public string API;
 	}

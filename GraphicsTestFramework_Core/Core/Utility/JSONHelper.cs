@@ -187,22 +187,34 @@ namespace GraphicsTestFramework
 				case 5:
 					RDC.AppVersion = splitData [i];
 					break;
-				case 7:
-					RDC.Platform = splitData [i];
-					break;
-				case 9:
+                case 7:
+                    RDC.OS = splitData[i];
+                    break;
+                case 9:
+                    RDC.Device = splitData[i];
+                    break;
+                case 11:
+			        RDC.Platform = splitData [i];
+			        break;
+				case 13:
 					RDC.API = splitData [i];
 					break;
-				case 11:
+				case 15:
 					RDC.RenderPipe = splitData [i];
 					break;
-				case 13:
+				case 17:
 					RDC.GroupName = splitData [i];
 					break;
-				case 15:
+				case 19:
 					RDC.TestName = splitData [i];
 					break;
-				default:
+                case 21:
+                    RDC.PassFail = bool.Parse(splitData[i]);
+                    break;
+                case 23:
+                    RDC.Custom = splitData[i];
+                    break;
+                    default:
 					break;
 				}
 			}
