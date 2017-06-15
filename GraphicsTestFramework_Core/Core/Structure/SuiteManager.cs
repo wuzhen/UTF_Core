@@ -68,9 +68,8 @@ namespace GraphicsTestFramework
                 {
                     for (int te = 0; te < suites[su].groups[gr].tests.Count; te++) // Iterate tests on the group
                     {
-                        string pathToScene = UnityEditor.AssetDatabase.GetAssetPath(suites[su].groups[gr].tests[te].scene); // Get scene path
-                        UnityEditor.EditorBuildSettingsScene scene = new UnityEditor.EditorBuildSettingsScene(pathToScene, true); // Create new build settings scene from asset path
-                        if (!FindDuplicateScene(buildSettingsScenes, pathToScene)) // If no duplicate scene found
+                        UnityEditor.EditorBuildSettingsScene scene = new UnityEditor.EditorBuildSettingsScene(suites[su].groups[gr].tests[te].scenePath, true); // Create new build settings scene from asset path
+                        if (!FindDuplicateScene(buildSettingsScenes, suites[su].groups[gr].tests[te].scenePath)) // If no duplicate scene found
                             buildSettingsScenes.Add(scene); // Add to build settings scenes list
                     }
                 }

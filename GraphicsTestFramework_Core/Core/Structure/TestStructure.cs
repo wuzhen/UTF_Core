@@ -109,7 +109,7 @@ namespace GraphicsTestFramework
                             Test newTest = new Test(); // Create new test instance
                             newTest.testName = testName; // Set test name
                             UnityEngine.Object scene = SuiteManager.Instance.suites[su].groups[gr].tests[te].scene; // Get reference to scene
-                            newTest.scenePath = UnityEditor.AssetDatabase.GetAssetPath(scene); // Set scene path
+                            newTest.scenePath = SuiteManager.Instance.suites[su].groups[gr].tests[te].scenePath; // Set scene path
                             newGroup.tests.Add(newTest); // Add test to scene
                         }
                     }

@@ -54,6 +54,8 @@ namespace GraphicsTestFramework.Experimental
                                 UnityEngine.Object scene = test.FindPropertyRelative("scene").objectReferenceValue; // Get the value of the scene field
                                 scene = EditorGUILayout.ObjectField(scene, typeof(UnityEngine.Object), false, GUILayout.ExpandWidth(true)); // Draw the object field and assign
                                 test.FindPropertyRelative("scene").objectReferenceValue = scene; // Set back to property
+                                string pathToScene = UnityEditor.AssetDatabase.GetAssetPath(scene); // Get scene path
+                                test.FindPropertyRelative("scenePath").stringValue = pathToScene; // Set to test instance
                                 EditorGUILayout.EndHorizontal(); // End horizontal (keep test properties on one line)
                             }
                             EditorGUI.indentLevel -= 1; // Remove indent
