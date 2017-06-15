@@ -83,9 +83,9 @@ namespace GraphicsTestFramework
         public static void Prebuild()
         {
             SuiteManager.Instance.GenerateSceneList(); // Create suite structure
-            int platformCount = Enum.GetNames(typeof(BuildTargetGroup)).Length; // Get platform count
+            int platformCount = Enum.GetNames(typeof(UnityEditor.BuildTargetGroup)).Length; // Get platform count
             for(int i = 0; i < platformCount; i++) // Iterate all platforms
-                UnityEditor.PlayerSettings.SetApplicationIdentifier((BuildTargetGroup)i, "com.UnityTechnologies.RuntimeTestFramework"); // Set bundle identifiers
+                UnityEditor.PlayerSettings.SetApplicationIdentifier((UnityEditor.BuildTargetGroup)i, "com.UnityTechnologies.RuntimeTestFramework"); // Set bundle identifiers
             UnityEditor.PlayerSettings.bundleVersion = applicationVersion; // Set application version
         }
 
