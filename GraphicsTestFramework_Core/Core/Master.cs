@@ -1,6 +1,5 @@
 ﻿using System;
 using UnityEngine;
-using UnityEditor;
 
 namespace GraphicsTestFramework
 {
@@ -70,7 +69,7 @@ namespace GraphicsTestFramework
         {
             Application.Quit(); // Quit
 #if UNITY_EDITOR
-            EditorApplication.isPlaying = false; // If editor stop play mode
+            UnityEditor.EditorApplication.isPlaying = false; // If editor stop play mode
 #endif
         }
 
@@ -86,8 +85,8 @@ namespace GraphicsTestFramework
             SuiteManager.Instance.GenerateSceneList(); // Create suite structure
             int platformCount = Enum.GetNames(typeof(BuildTargetGroup)).Length; // Get platform count
             for(int i = 0; i < platformCount; i++) // Iterate all platforms
-                PlayerSettings.SetApplicationIdentifier((BuildTargetGroup)i, "com.UnityTechnologies.RuntimeTestFramework"); // Set bundle identifiers
-            PlayerSettings.bundleVersion = applicationVersion; // Set application version
+                UnityEditor.PlayerSettings.SetApplicationIdentifier((BuildTargetGroup)i, "com.UnityTechnologies.RuntimeTestFramework"); // Set bundle identifiers
+            UnityEditor.PlayerSettings.bundleVersion = applicationVersion; // Set application version
         }
 
 #endif
