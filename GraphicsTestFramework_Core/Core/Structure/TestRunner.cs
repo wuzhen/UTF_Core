@@ -234,7 +234,7 @@ namespace GraphicsTestFramework
         {
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Getting logic instance"); // Write to console
             TestLogicBase output; // Create logic instance
-            var ModelType = TestTypes.GetTypeFromIndex(activeEntry.typeIndex); // Get the model type from its index
+            var ModelType = TestTypes.GetTypeFromIndex(activeEntry.typeValue); // Get the model type from its index
             activeModelInstance = (TestModelBase)FindObjectOfType(ModelType); // Find a model insatnce within the scene
             if(activeModelInstance == null) // If user did not set one up
             {
@@ -253,7 +253,7 @@ namespace GraphicsTestFramework
         // End the current Test (called by TestLogic.EndTestAction)
         public void EndTest()
         {
-            Console.Instance.Write(DebugLevel.Logic, MessageLevel.Log, "Ended test " + activeTest.scene.ToString()); // Write to console
+            Console.Instance.Write(DebugLevel.Logic, MessageLevel.Log, "Ended test " + activeTest.scenePath.ToString()); // Write to console
             if(runnerType == RunnerType.Manual) // If manual run
                 ProgressScreen.Instance.SetState(false, ProgressType.LocalLoad, ""); // Disable ProgressScreen
             FinalizeTest(); // Finalize test on TestRunner

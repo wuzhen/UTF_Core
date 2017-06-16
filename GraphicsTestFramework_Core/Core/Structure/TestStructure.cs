@@ -105,10 +105,9 @@ namespace GraphicsTestFramework
                                 newGroup.groupName = SuiteManager.Instance.suites[su].groups[gr].groupName; // Set group name
                                 FindDuplicateTypeInSuite(newSuite, types[ty]).groups.Add(newGroup); // Add the group to the type
                             }
-                            string testName = SuiteManager.Instance.suites[su].groups[gr].tests[te].scene.name.ToString(); //testList.testTypes[ty].tests[te].testInformation.TestName; // Get test name
                             Test newTest = new Test(); // Create new test instance
-                            newTest.testName = testName; // Set test name
-                            UnityEngine.Object scene = SuiteManager.Instance.suites[su].groups[gr].tests[te].scene; // Get reference to scene
+                            string[] pathSplit = SuiteManager.Instance.suites[su].groups[gr].tests[te].scenePath.Split('/'); // Split path for scene name
+                            newTest.testName = pathSplit[pathSplit.Length-1].Replace(".unity", ""); ; // Set test name
                             newTest.scenePath = SuiteManager.Instance.suites[su].groups[gr].tests[te].scenePath; // Set scene path
                             newGroup.tests.Add(newTest); // Add test to scene
                         }
