@@ -1,6 +1,6 @@
 fileFormatVersion: 2
-guid: d5cc2224a75764b949d03cb9c93c8adc
-timeCreated: 1497375857
+guid: b21323179f14e464e85fdded02e0421e
+timeCreated: 1497374502
 licenseType: Pro
 ModelImporter:
   serializedVersion: 19
@@ -9,9 +9,9 @@ ModelImporter:
     400000: //RootNode
     2300000: //RootNode
     3300000: //RootNode
-    4300000: TorusKnot
+    4300000: Teapot
   materials:
-    importMaterials: 1
+    importMaterials: 0
     materialName: 0
     materialSearch: 1
   animations:
@@ -39,13 +39,13 @@ ModelImporter:
     globalScale: 1
     meshCompression: 0
     addColliders: 0
-    importBlendShapes: 1
+    importBlendShapes: 0
     swapUVChannels: 0
-    generateSecondaryUV: 0
+    generateSecondaryUV: 1
     useFileUnits: 1
-    optimizeMeshForGPU: 1
+    optimizeMeshForGPU: 0
     keepQuads: 0
-    weldVertices: 1
+    weldVertices: 0
     secondaryUVAngleDistortion: 8
     secondaryUVAreaDistortion: 15.000001
     secondaryUVHardAngle: 88
@@ -53,9 +53,9 @@ ModelImporter:
     useFileScale: 1
   tangentSpace:
     normalSmoothAngle: 60
-    normalImportMode: 1
+    normalImportMode: 0
     tangentImportMode: 3
-  importAnimation: 1
+  importAnimation: 0
   copyAvatar: 0
   humanDescription:
     serializedVersion: 2

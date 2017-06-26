@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 7e15121f5f042ed46aba81406403f2d2
+guid: 242b3615485fa8e40ae65cff0b62d775
 timeCreated: 1441897240
 licenseType: Store
 ModelImporter:
@@ -143,10 +143,12 @@ ModelImporter:
     resampleCurves: 1
     optimizeGameObjects: 0
     motionNodeName: 
+    rigImportErrors: 
+    rigImportWarnings: "Avatar creation errors found in old project file will be treated
+      as a warnings. Error will be ignored, but current Configuration needs to be
+      fixed:\n\tTransform 'LowManSkeleton' not found in HumanDescription.\n"
     animationImportErrors: 
-    animationImportWarnings: "Avatar creation errors found in old project file will
-      be treated as a warnings. Error will be ignored, but current Configuration needs
-      to be fixed:\n\tTransform 'LowManSkeleton' not found in HumanDescription.\n"
+    animationImportWarnings: 
     animationRetargetingWarnings: 
     animationDoRetargetingWarnings: 0
     animationCompression: 3
@@ -165,9 +167,9 @@ ModelImporter:
     addColliders: 0
     importBlendShapes: 1
     swapUVChannels: 0
-    generateSecondaryUV: 0
+    generateSecondaryUV: 1
     useFileUnits: 1
-    optimizeMeshForGPU: 1
+    optimizeMeshForGPU: 0
     keepQuads: 0
     weldVertices: 1
     secondaryUVAngleDistortion: 8
