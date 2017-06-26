@@ -33,6 +33,7 @@ namespace GraphicsTestFramework
         // Setup viewer tabs
         public override TestViewerTabData[] GetViewerTabs(ResultsBase resultsObject)
         {
+            var typedSettings = (FrameComparisonSettings)logic.model.settings; // Set settings to local type
             TestViewerTabData[] output = new TestViewerTabData[1]; // Create empty output (mandatory)
             switch (logic.baselineExists)  // Switch on baseline exists
             {
@@ -40,7 +41,7 @@ namespace GraphicsTestFramework
                     var localResultData = (FrameComparisonResults)resultsObject; // Convert the input results object to this types class (mandatory)
                     output = new TestViewerTabData[2] // Want two tabs
                     {
-                        new TestViewerTabData("Live Camera", TestViewerTabType.Camera, logic.model.settings.captureCamera, null), // Live camera showing capture camera
+                        new TestViewerTabData("Live Camera", TestViewerTabType.Camera, typedSettings.captureCamera, null), // Live camera showing capture camera
                         new TestViewerTabData("Results Texture", TestViewerTabType.Texture, Common.ConvertStringToTexture("Tab_ResultsFrame", localResultData.resultFrame), null) // And the results texture
                     };
                     break;
@@ -49,7 +50,7 @@ namespace GraphicsTestFramework
                     SetupMaterial(comparisonData.baselineTex, comparisonData.resultsTex); // Setup the material
                     output = new TestViewerTabData[4] // Want four tabs
                     {
-                        new TestViewerTabData("Live Camera", TestViewerTabType.Camera, logic.model.settings.captureCamera, null), // Live camera showing capture camera
+                        new TestViewerTabData("Live Camera", TestViewerTabType.Camera, typedSettings.captureCamera, null), // Live camera showing capture camera
                         new TestViewerTabData("Results Texture", TestViewerTabType.Texture, comparisonData.resultsTex, null), // And the results texture
                         new TestViewerTabData("Comparison Texture", TestViewerTabType.Material, material, new TestViewerTabData.TestViewerTabStatistic[] // And the material for the comparison display
                         {

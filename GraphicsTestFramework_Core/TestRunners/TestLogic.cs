@@ -73,6 +73,8 @@ namespace GraphicsTestFramework
 
         public abstract void SetResults();
 
+        public abstract void SetSettings();
+
         // ------------------------------------------------------------------------------------
         // Test Execution
 
@@ -82,6 +84,7 @@ namespace GraphicsTestFramework
             ProgressScreen.Instance.SetState(true, ProgressType.LocalSave, "Preparing test"); // Enable ProgressScreen
             activeTestEntry = inputEntry; // Store active TestEntry
             activeRunType = runType; // Store active RunnerType
+            SetSettings(); // Set settings to internal
             SetupResultsStructs(); // Setup the results structs to be filled
             CheckForBaseline(); // Check for baselines
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, this.GetType().Name + " set up test " + activeTestEntry.testName); // Write to console
@@ -315,6 +318,7 @@ namespace GraphicsTestFramework
         // Variables
 
         public M model { get; set; } // Reference to the logics model type        
+        public float waitTimer = 0f; // Track wait timing for seconds
 
         // ------------------------------------------------------------------------------------
         // Set Methods
@@ -340,6 +344,12 @@ namespace GraphicsTestFramework
             activeResultData = newData; // Set as active
         }
 
+        // Initialize settings structure
+        public override void SetSettings()
+        {
+            model.SetSettings();
+        }
+
         // ------------------------------------------------------------------------------------
         // Initialization
 
@@ -351,6 +361,29 @@ namespace GraphicsTestFramework
             newResultsData.common.GroupName = activeTestEntry.groupName; // Set scene name
             newResultsData.common.TestName = activeTestEntry.testName; // Set test name
             activeResultData = newResultsData; // Set as active
+        }
+
+        // ------------------------------------------------------------------------------------
+        // Test Execution
+
+        // Wait for specified timer (requires model data)
+        public virtual IEnumerator WaitForTimer()
+        {
+            switch(model.settings.waitType)
+            {
+                case SettingsBase.WaitType.Frames:
+                    for (int i = 0; i < Mathf.Round(model.settings.waitTimer); i++) // Wait for requested wait frame count (logic specific)
+                        yield return new WaitForEndOfFrame();
+                    break;
+                case SettingsBase.WaitType.Seconds:
+                    while (waitTimer <= model.settings.waitTimer)
+                    {
+                        waitTimer += Time.deltaTime;
+                        yield return null;
+                    }
+                    waitTimer = 0f;
+                    break;
+            }
         }
 
         // ------------------------------------------------------------------------------------
@@ -401,15 +434,5 @@ namespace GraphicsTestFramework
             resultData.common = common; // Assign common
             return resultData;
         }
-    }
-
-    // ------------------------------------------------------------------------------------
-    // Public Data Structures
-
-    // Structure for results
-    [System.Serializable]
-    public class ResultsBase
-    {
-        public ResultsDataCommon common; // Set automatically (mandatory)
     }
 }

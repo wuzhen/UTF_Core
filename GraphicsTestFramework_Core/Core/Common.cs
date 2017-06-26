@@ -14,6 +14,19 @@ namespace GraphicsTestFramework
     public class Common : MonoBehaviour
     {
         // ------------------------------------------------------------------------------------
+        // Shared data
+
+        // Resolutions
+        public static Dictionary<FrameResolution, Vector2> frameResolutionList = new Dictionary<FrameResolution, Vector2>
+        {
+            //{#, typeof(ExampleModel) }, // We dont include ExampleModel here as it is only for reference
+            {FrameResolution.nHD , new Vector2(640, 360) },
+            {FrameResolution.qHD , new Vector2(960, 540) },
+            {FrameResolution.HD , new Vector2(1280, 720) },
+            {FrameResolution.FullHD , new Vector2(1920, 1080) },
+        };
+
+        // ------------------------------------------------------------------------------------
         // Get Common Data
 
         // Get common data about platform and version
@@ -120,5 +133,20 @@ namespace GraphicsTestFramework
         public string TestName;
         public bool PassFail;
         public string Custom;
+    }
+
+    // ------------------------------------------------------------------------------------
+    // Resolutions
+
+    public enum FrameResolution
+    {
+        [Tooltip("640x360")]
+        nHD,
+        [Tooltip("960x540")]
+        qHD,
+        [Tooltip("1280x720")]
+        HD,
+        [Tooltip("1920x1080")]
+        FullHD
     }
 }

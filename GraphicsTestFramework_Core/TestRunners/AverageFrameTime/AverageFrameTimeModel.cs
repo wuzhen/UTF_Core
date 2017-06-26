@@ -7,10 +7,25 @@ namespace GraphicsTestFramework
     // Results Data Structures
 
     // Structure for results
-    [System.Serializable]
+    [Serializable]
     public class AverageFrameTimeResults : ResultsBase
     {
         public float avgFrameTime;
+    }
+
+    // ------------------------------------------------------------------------------------
+    // Settings Data Structures
+
+    // Structure for settings
+    [Serializable]
+    public class AverageFrameTimeSettings : SettingsBase
+    {
+        // Local Enums
+        public enum TimingType { Seconds, Milliseconds, Ticks, Custom }
+
+        public TimingType timingType = TimingType.Milliseconds; // Timing multiplier
+        public float customTimingMultiplier = 1f; // Custom timing multiplier
+        public int sampleFrames = 32; // Amount of frames to sample
     }
 
     // ------------------------------------------------------------------------------------
@@ -19,45 +34,12 @@ namespace GraphicsTestFramework
 
     public class AverageFrameTimeModel : TestModel<AverageFrameTimeLogic> 
 	{
-        // ------------------------------------------------------------------------------------
-        // Local Enums
-
-        public enum TimingType { Seconds, Milliseconds, Ticks, Custom }
-
-        // ------------------------------------------------------------------------------------
-        // Settings
-
-        [Serializable]
-        public struct Settings
-        {
-			public TimingType timingType; // Timing multiplier
-			public float customTimingMultiplier; // Custom timing multiplier
-            public int sampleFrames; // Amount of frames to sample
-			public int waitFrames; // Amount of frames to wait
-			public float passFailThreshold; // Threshold for comparison pass/fail
-
-            public static Settings defaultSettings // Default settings
-            {
-                get
-                {
-                    return new Settings
-                    {
-                        timingType = TimingType.Milliseconds,
-						customTimingMultiplier = 1,
-						sampleFrames = 32,
-						waitFrames = 0,
-						passFailThreshold = 0.1f
-                    };
-                }
-            }
-        }
-
         [SerializeField]
-        Settings m_Settings = Settings.defaultSettings;
-        public Settings settings
+        AverageFrameTimeSettings m_Settings = new AverageFrameTimeSettings();
+
+        public override void SetSettings()
         {
-            get { return m_Settings; }
-            set { m_Settings = value; }
+            settings = m_Settings;
         }
-	}
+    }
 }

@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace GraphicsTestFramework
@@ -14,6 +13,13 @@ namespace GraphicsTestFramework
         public Type logic { get; set; } // Reference to the models logic type
 
         public abstract void SetLogic();
+        
+        public SettingsBase settings;
+
+        public virtual void SetSettings()
+        {
+            settings = new SettingsBase();
+        }
     }
 
     // ------------------------------------------------------------------------------------
@@ -28,5 +34,31 @@ namespace GraphicsTestFramework
         {
             logic = typeof(L); // Set type
         }
+    }
+
+    // ------------------------------------------------------------------------------------
+    // ResultsBase
+    // - Base class for Results
+    // - Hides ResultsDataCommon to ensure it is available
+
+    [Serializable]
+    public class ResultsBase
+    {
+        public ResultsDataCommon common; // Set automatically (mandatory)
+    }
+
+    // ------------------------------------------------------------------------------------
+    // SettingsBase
+    // - Base class for Settings
+    // - Hides common settings to ensure they are always available
+
+    [Serializable]
+    public class SettingsBase
+    {
+        public enum WaitType { Frames, Seconds }
+
+        public WaitType waitType = WaitType.Frames; // Type of measurement for waiting
+        public float waitTimer = 0f; // Count of frames or seconds to wait before capture
+        public float passFailThreshold = 0.1f; // Threshold for comparison pass/fail
     }
 }
