@@ -30,10 +30,10 @@ namespace GraphicsTestFramework
         public override IEnumerator ProcessResult()
         {
             var m_TempData = (AverageFrameTimeResults)GetResultsStruct(); // Get a results struct (mandatory)
-			for (int i = 0; i < model.settings.waitFrames; i++) // Wait for requested wait frame count (logic specific)
-                yield return new WaitForEndOfFrame();
+            var typedSettings = (AverageFrameTimeSettings)model.settings; // Set settings to local type
+            yield return WaitForTimer(); // Wait for timer
             Timestamp(false); // Perform a timestamp (logic specific)
-            for (int i = 0; i < model.settings.sampleFrames; i++) // Wait for requested sample frame count (logic specific)
+            for (int i = 0; i < typedSettings.sampleFrames; i++) // Wait for requested sample frame count (logic specific)
                 yield return new WaitForEndOfFrame();
 			m_TempData.avgFrameTime = Timestamp(true); // Perform a timestamp (logic specific)
             if (baselineExists) // Comparison (mandatory)
@@ -54,8 +54,8 @@ namespace GraphicsTestFramework
         public override object ProcessComparison(ResultsBase baselineData, ResultsBase resultsData)
         {
             ComparisonData newComparison = new ComparisonData(); // Create new ComparisonData instance (mandatory)
-            AverageFrameTimeResults baselineDataTyped = (AverageFrameTimeResults)baselineData;
-            AverageFrameTimeResults resultsDataTyped = (AverageFrameTimeResults)resultsData;
+            AverageFrameTimeResults baselineDataTyped = (AverageFrameTimeResults)baselineData; // Set baseline data to local type
+            AverageFrameTimeResults resultsDataTyped = (AverageFrameTimeResults)resultsData; // Set results data to local type
             newComparison.delta = resultsDataTyped.avgFrameTime - baselineDataTyped.avgFrameTime; // Perform comparison logic (logic specific)
             return newComparison; // Return (mandatory)
         }
@@ -67,19 +67,20 @@ namespace GraphicsTestFramework
         float Timestamp(bool debug)
 		{
 			float multiplier = 1; // Create a multiplier
-			switch(model.settings.timingType) // Set multiplier based on model settings
+            var typedSettings = (AverageFrameTimeSettings)model.settings; // Set settings to local type
+			switch(typedSettings.timingType) // Set multiplier based on model settings
 			{
-				case AverageFrameTimeModel.TimingType.Seconds:
+				case AverageFrameTimeSettings.TimingType.Seconds:
 					multiplier = 1;
 					break;
-				case AverageFrameTimeModel.TimingType.Milliseconds:
+				case AverageFrameTimeSettings.TimingType.Milliseconds:
 					multiplier = 1000;
 					break;
-				case AverageFrameTimeModel.TimingType.Ticks:
+				case AverageFrameTimeSettings.TimingType.Ticks:
 					multiplier = 10000000;
 					break;
-				case AverageFrameTimeModel.TimingType.Custom:
-					multiplier = model.settings.customTimingMultiplier;
+				case AverageFrameTimeSettings.TimingType.Custom:
+					multiplier = typedSettings.customTimingMultiplier;
 					break;
 			}
 			float currentTime = Time.realtimeSinceStartup * multiplier; // Get current time
