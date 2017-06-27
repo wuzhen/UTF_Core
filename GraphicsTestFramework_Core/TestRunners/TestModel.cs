@@ -14,6 +14,7 @@ namespace GraphicsTestFramework
 
         public abstract void SetLogic();
         
+        [HideInInspector]
         public SettingsBase settings;
 
         public virtual void SetSettings()
