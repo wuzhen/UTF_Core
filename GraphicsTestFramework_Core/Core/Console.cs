@@ -41,6 +41,7 @@ namespace GraphicsTestFramework
         }
 
         public DebugLevel debug;
+        public bool playerConsole = false;
 
         // ------------------------------------------------------------------------------------
         // Methods
@@ -58,17 +59,22 @@ namespace GraphicsTestFramework
 
             if ((int)debugLevel <= (int)debug) // Filter messages of higher level than requested
             {
-                switch(messageLevel) // Switch on message level
+                if (playerConsole) // If print all messages in player console
+                    Debug.LogError(message); // Print a LogError
+                else
                 {
-                    case MessageLevel.Log:
-                        Debug.Log(message); // Print a Log
-                        break;
-                    case MessageLevel.LogWarning:
-                        Debug.LogWarning(message); // Print a LogWarning
-                        break;
-                    case MessageLevel.LogError:
-                        Debug.LogError(message); // Print a LogError
-                        break;
+                    switch (messageLevel) // Switch on message level
+                    {
+                        case MessageLevel.Log:
+                            Debug.Log(message); // Print a Log
+                            break;
+                        case MessageLevel.LogWarning:
+                            Debug.LogWarning(message); // Print a LogWarning
+                            break;
+                        case MessageLevel.LogError:
+                            Debug.LogError(message); // Print a LogError
+                            break;
+                    }
                 }
             }
         }

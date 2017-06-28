@@ -41,6 +41,7 @@ namespace GraphicsTestFramework
         int selectedSuite;
         int selectedType;
         float entryHeight;
+        ResultsEntry activeContextEntry;
         GameObject activeContextObject;
 
         // ------------------------------------------------------------------------------------
@@ -194,7 +195,16 @@ namespace GraphicsTestFramework
             if (activeContextObject == null) // If context object is null
                 ExpandContextObject(inputEntry, display); // Create and expand
             else
-                HideContextObject(inputEntry); // Hide it
+            {
+                if(activeContextEntry == inputEntry) // If selected entry matches current context
+                    HideContextObject(inputEntry); // Hide it
+                else
+                {
+                    HideContextObject(activeContextEntry); // Hide the current
+                    ExpandContextObject(inputEntry, display); // Create and expand
+                }
+            }
+                
         }
 
         // Create and expand context object
@@ -202,6 +212,7 @@ namespace GraphicsTestFramework
         {
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Expanding context object"); // Write to console
             int entryIndex = FindEntryInList(inputEntry); // Get index of selected entry
+            activeContextEntry = inputEntry; // Track selected entry
             activeContextObject = Instantiate(display.resultsContextPrefab, listContentRect, false); // Create context object instance
             RectTransform contextObjectRect = activeContextObject.GetComponent<RectTransform>(); // Get rect
             contextObjectRect.anchoredPosition = new Vector2(0, (entryIndex+1) * -listEntries[0].GetComponent<RectTransform>().sizeDelta.y); // Set position

@@ -187,6 +187,7 @@ namespace GraphicsTestFramework
             MenuEntryData[] itemList = TestStructure.Instance.GetEntries(selectedId); // Get entries based on selected
             if (itemList != null)
             {
+                list.scrollRect.enabled = false; // Disable scrollRect to update transform correctly
                 Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Generating list"); // Write to console
                 for (int i = 0; i < itemList.Length; i++)
                 {
@@ -199,8 +200,8 @@ namespace GraphicsTestFramework
                     entryHeight -= goRect.sizeDelta.y; // Add to position tracker
                 }
                 list.contentRect.sizeDelta = new Vector2(list.contentRect.sizeDelta.x, -entryHeight); // Set content rect size
+                list.scrollRect.enabled = true; // Enable scrollRect to update transform correctly
                 Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Finished generating list"); // Write to console
-
             }
             else
                 Console.Instance.Write(DebugLevel.Critical, MessageLevel.Log, "Failed to generate list"); // Write to console
