@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using UnityEngine;
 
 namespace GraphicsTestFramework
@@ -29,6 +30,14 @@ namespace GraphicsTestFramework
 
         // ------------------------------------------------------------------------------------
         // Execution Overrides
+
+        // Manage dummy camera when logic is initialized
+        public override void SetupLogic()
+        {
+            if (dummyCamera == null) // Dummy camera isnt initialized
+                dummyCamera = this.gameObject.AddComponent<Camera>(); // Create camera component
+            dummyCamera.enabled = false; // Disable dummy camera
+        }
 
         // First injection point for custom code. Runs before any test logic (optional override)
         // - Set up cameras and create RenderTexture
@@ -64,6 +73,14 @@ namespace GraphicsTestFramework
             }
             Cleanup(); // Cleanup (logic specific)
             BuildResultsStruct(m_TempData); // Submit (mandatory)
+        }
+
+        // Last injection point for custom code. Runs after all test logic.
+        // - Disable camera
+        public override void TestPostProcess()
+        {
+            dummyCamera.enabled = false; // Disable dummy camera
+            EndTest(); // End test
         }
 
         // Logic for comparison process (mandatory)
@@ -109,6 +126,7 @@ namespace GraphicsTestFramework
             var typedSettings = (FrameComparisonSettings)model.settings; // Set settings to local type
             if (dummyCamera == null) // Dummy camera isnt initialized
                 dummyCamera = this.gameObject.AddComponent<Camera>(); // Create camera component
+            dummyCamera.enabled = true; // Enable dummy camera
             if (typedSettings.captureCamera == null) // If no capture camera
             {
                 FrameComparisonSettings settings = typedSettings; // Clone the settings

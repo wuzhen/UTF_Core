@@ -48,6 +48,7 @@ namespace GraphicsTestFramework
                     newChild.transform.SetParent(instanceParent); // Set parent
                     newChild.name = typeName; // Set gameobject name
                     TestLogicBase logic = (TestLogicBase)newChild.AddComponent(model.logic); // Add logic component
+                    logic.SetupLogic(); // Run setup on logic
                     logic.SetName(); // Set name on logic
                     logic.SetDisplay(); // Set display on logic
                     logic.SetResults(); // Set results type on logic

@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 public static class CloudConnectorCore
 {
-	static bool debugMode = false;
+	static bool debugMode = true;
 	
 	public enum QueryType
 	{
@@ -507,6 +507,7 @@ public static class CloudConnectorCore
 		}
 
 		if(response.StartsWith (MSG_BASELINE_NONE)){
+            Debug.LogWarning(response);
 			response = MSG_BASELINE_NONE;
 			processedResponseCallback.Invoke(QueryType.baselineNone, new List<string>(), new List<string>());
 			unpacked = false;

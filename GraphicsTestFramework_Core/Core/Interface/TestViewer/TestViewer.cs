@@ -57,7 +57,11 @@ namespace GraphicsTestFramework
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Settings context for type "+tabData.tabType); // Write to console
             switch (tabData.tabType) // Switch based on tab type
 			{
-				case TestViewerTabType.Camera:
+                case TestViewerTabType.DefaultCamera:
+                    textureImage.gameObject.SetActive(false); // Disable image
+                    textureImage.material = null; // Null material
+                    break;
+                case TestViewerTabType.Camera:
                     SetCameraValues(tabData); // Set camera values
                     textureImage.gameObject.SetActive(false); // Disable image
                     textureImage.material = null; // Null material

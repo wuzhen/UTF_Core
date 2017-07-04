@@ -57,6 +57,11 @@ namespace GraphicsTestFramework
         // ------------------------------------------------------------------------------------
         // Initialization
 
+        public virtual void SetupLogic()
+        {
+            // Test type specific
+        }
+
         public void SetName()
         {
             testTypeName = this.GetType().ToString().Replace("GraphicsTestFramework.", "").Replace("Logic", "");

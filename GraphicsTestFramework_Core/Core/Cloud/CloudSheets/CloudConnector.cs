@@ -14,7 +14,7 @@ public class CloudConnector : MonoBehaviour
 	static string webServiceUrl = "https://script.google.com/macros/s/AKfycby0jbK1THQxiUJmq4kExrf0yFg9vU-WYDDpEWHlM-qgUNFwkFc/exec";
 	static string spreadsheetId = "1JIZMzcGhBP31rI_PmZvkiuZ6Lt-A2Zbd-KUeQYpRKJI";
     private string servicePassword = "passcode";
-	private float timeOutLimit = 30f;
+	private float timeOutLimit = 300f;
 	public bool usePOST = true;
 	// --
 	
