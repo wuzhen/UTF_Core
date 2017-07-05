@@ -6,7 +6,7 @@ namespace GraphicsTestFramework
     // ------------------------------------------------------------------------------------
     // Results Data Structures
 
-    // Structure for results (Do not rename class. Class contents can be anything)
+    // Structure for results (Inherits from ResultsBase. Class contents can be anything)
     [System.Serializable]
     public class ExampleResults : ResultsBase
     {
@@ -15,39 +15,45 @@ namespace GraphicsTestFramework
     }
 
     // ------------------------------------------------------------------------------------
+    // ExampleSettings
+
+    // - Structure for settings 
+    // - Inherits from SettingsBase
+    // - Can contain any other settings needed fro the test type
+    // - Should also contain a constructor for default settings
+    [Serializable]
+    public class ExampleSettings : SettingsBase
+    {
+        // Insert custom settings here
+
+        public static ExampleSettings defaultSettings
+        {
+            get
+            {
+                return new ExampleSettings
+                {
+                    waitType = WaitType.Seconds, // Type of measurement for waiting
+                    waitTimer = 0f, // Count of frames or seconds to wait before capture
+                    passFailThreshold = 0.1f // Threshold for comparison pass/fail
+                };
+            }
+        }
+    }
+
+    // ------------------------------------------------------------------------------------
     // ExampleModel
     // - Contains settings for Example
 
     public class ExampleModel : TestModel<ExampleLogic>
     {
-        // ------------------------------------------------------------------------------------
-        // Settings
-
-        [Serializable]
-        public struct Settings
-        {
-            public float waitTime; // Time to wait
-            public float passFailThreshold; // Threshold for comparison pass/fail
-
-            public static Settings defaultSettings // Default settings
-            {
-                get
-                {
-                    return new Settings
-                    {
-                        waitTime = 0f,
-                        passFailThreshold = 0.1f
-                    };
-                }
-            }
-        }
-
+        // Exposed settings
         [SerializeField]
-        Settings m_Settings = Settings.defaultSettings;
-        public Settings settings
+        ExampleSettings m_Settings = ExampleSettings.defaultSettings;
+
+        // Set the exposed settings to the internal
+        public override void SetSettings()
         {
-            get { return m_Settings; }
-            set { m_Settings = value; }
+            settings = m_Settings;
         }
     }
 }
