@@ -222,8 +222,8 @@ namespace GraphicsTestFramework
         public void StartTest(TestEntry inputTest, RunnerType runnerType)
         {
             Console.Instance.Write(DebugLevel.Logic, MessageLevel.Log, "Starting test " + inputTest.testName); // Write to console
-            activeTest = SuiteManager.Instance.suites[inputTest.suiteIndex].groups[inputTest.groupIndex].tests[inputTest.testIndex]; // Get the active test
-            TestLogicBase activeTestLogic = GetLogicInstance(SuiteManager.Instance.suites[inputTest.suiteIndex].suiteName, activeTest, inputTest); // Get active test logic instance
+            activeTest = SuiteManager.GetTest(inputTest); // Get the active test
+            TestLogicBase activeTestLogic = GetLogicInstance(SuiteManager.GetSuiteName(inputTest.suiteIndex), activeTest, inputTest); // Get active test logic instance
             activeTestLogic.SetupTest(inputTest, runnerType); // Setup test
         }
 

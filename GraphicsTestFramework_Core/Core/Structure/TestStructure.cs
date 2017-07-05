@@ -85,30 +85,33 @@ namespace GraphicsTestFramework
                 model.SetLogic(); // Need to set logic before generating type instances
                 TestTypeManager.Instance.GenerateTestTypeInstance(model); // Generate an instance object for test logic/display
             }
-            for (int su = 0; su < SuiteManager.Instance.suites.Count; su++) // Iterate suites on SuiteManager
+            SuiteList suiteList = SuiteManager.GetSuiteList(); // Get the suite list
+            if (suiteList == null) // If no suite list found
+                StopAllCoroutines(); // Abort
+            for (int su = 0; su < suiteList.suites.Count; su++) // Iterate suites on suite list
             {
                 Suite newSuite = new Suite(); // Create new suite instance
-                newSuite.suiteName = SuiteManager.Instance.suites[su].suiteName; // Set suite name from SuiteManager
+                newSuite.suiteName = suiteList.suites[su].suiteName; // Set suite name from suite list
                 newSuite.types = CloneTestTypeList(typeList); // Clone the type list
-                for (int gr = 0; gr < SuiteManager.Instance.suites[su].groups.Count; gr++) // Iterate groups
+                for (int gr = 0; gr < suiteList.suites[su].groups.Count; gr++) // Iterate groups
                 {
-                    for (int te = 0; te < SuiteManager.Instance.suites[su].groups[gr].tests.Count; te++) // Iterate tests
+                    for (int te = 0; te < suiteList.suites[su].groups[gr].tests.Count; te++) // Iterate tests
                     {
-                        GraphicsTestFramework.Test test = SuiteManager.Instance.suites[su].groups[gr].tests[te]; // Get test
+                        GraphicsTestFramework.Test test = suiteList.suites[su].groups[gr].tests[te]; // Get test
                         int[] types = TestTypeManager.Instance.GetTypeSelectionFromBitMask(test.testTypes); // Get type array from test's bitmask
                         for(int ty = 0; ty < types.Length; ty++) // Iterate types of the test
                         {
-                            Group newGroup = FindDuplicateGroupInType(newSuite, types[ty], SuiteManager.Instance.suites[su].groups[gr].groupName); // Find duplicate groups in the type
+                            Group newGroup = FindDuplicateGroupInType(newSuite, types[ty], suiteList.suites[su].groups[gr].groupName); // Find duplicate groups in the type
                             if(newGroup == null) // If not found
                             {
                                 newGroup = new Group(); // Create a new group instance
-                                newGroup.groupName = SuiteManager.Instance.suites[su].groups[gr].groupName; // Set group name
+                                newGroup.groupName = suiteList.suites[su].groups[gr].groupName; // Set group name
                                 FindDuplicateTypeInSuite(newSuite, types[ty]).groups.Add(newGroup); // Add the group to the type
                             }
                             Test newTest = new Test(); // Create new test instance
-                            string[] pathSplit = SuiteManager.Instance.suites[su].groups[gr].tests[te].scenePath.Split('/'); // Split path for scene name
+                            string[] pathSplit = suiteList.suites[su].groups[gr].tests[te].scenePath.Split('/'); // Split path for scene name
                             newTest.testName = pathSplit[pathSplit.Length-1].Replace(".unity", ""); ; // Set test name
-                            newTest.scenePath = SuiteManager.Instance.suites[su].groups[gr].tests[te].scenePath; // Set scene path
+                            newTest.scenePath = suiteList.suites[su].groups[gr].tests[te].scenePath; // Set scene path
                             newGroup.tests.Add(newTest); // Add test to scene
                         }
                     }
