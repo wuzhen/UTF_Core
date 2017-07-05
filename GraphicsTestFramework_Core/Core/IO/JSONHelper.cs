@@ -8,7 +8,8 @@ namespace GraphicsTestFramework
 	/// <summary>
 	/// JSON helper.
 	/// </summary>
-	public class JSONHelper : MonoBehaviour {
+	public class JSONHelper : MonoBehaviour
+	{
 		
 		/// ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		/// Converting to JSON
@@ -34,8 +35,9 @@ namespace GraphicsTestFramework
 					for (int columns = 0; columns < inputData.resultsRow [rows].resultsColumn.Count; columns++) {
 						string value = inputData.resultsRow [rows].resultsColumn [columns];
 						//strip out large strings
-						if(value.Length > 100){
-							string UID = CloudIO.Instance.ConvertLargeEntry (value, inputData.resultsRow [rows].resultsColumn [0]);
+						if (value.Length > 100) {
+							string key = inputData.resultsRow [rows].resultsColumn [0] + inputData.resultsRow [rows].resultsColumn [8] + inputData.resultsRow [rows].resultsColumn [9];
+							string UID = CloudIO.Instance.ConvertLargeEntry (value, key);
 							LocalIO.Instance.LargeFileWrite (value, UID);
 							value = UID;
 						}
@@ -46,7 +48,7 @@ namespace GraphicsTestFramework
 					}
 					output [rows] += "}";
 				}
-                Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Converted to JSON"); // Write to console
+				Console.Instance.Write (DebugLevel.Full, MessageLevel.Log, "Converted to JSON"); // Write to console
 				return output;
 			}
 		}
@@ -61,10 +63,11 @@ namespace GraphicsTestFramework
 			string output = "{";
 			int i = 0;
 			foreach (string key in inputData.Keys) {
-				string value = inputData[key];
+				string value = inputData [key];
 				//strip out large strings
-				if(value.Length > 100){
-					string UID = CloudIO.Instance.ConvertLargeEntry (value, inputData["DateTime"]);
+				if (value.Length > 100) {
+					string keyCode = inputData ["DateTime"] + inputData ["GroupName"] + inputData ["TestName"];
+					string UID = CloudIO.Instance.ConvertLargeEntry (value, keyCode);
 					LocalIO.Instance.LargeFileWrite (value, UID);
 					value = UID;
 				}
@@ -88,13 +91,14 @@ namespace GraphicsTestFramework
 		/// </summary>
 		/// <returns>A dictionary of kay value pairs.</returns>
 		/// <param name="inputData">Input unformatted JSON string.</param>
-		public static Dictionary<string, string> JSON_Dictionary(string inputData){
+		public static Dictionary<string, string> JSON_Dictionary (string inputData)
+		{
 			string[] splitData = JSONToStringArray (inputData);
 			Dictionary<string, string> convertedJSON = new Dictionary<string, string> ();
 
-			for (int i = 0; i < splitData.Length/2; i ++) {
+			for (int i = 0; i < splitData.Length / 2; i++) {
 				//if entry has been replaced by file ID then fetch it
-				if(splitData[i].Contains ("REPLACEMENT_")){
+				if (splitData [i].Contains ("REPLACEMENT_")) {
 					CloudIO.Instance.FetchLargeEntry (splitData [i]);
 				}
 				convertedJSON.Add (splitData [i * 2], splitData [(i * 2) + 1]);
@@ -120,7 +124,7 @@ namespace GraphicsTestFramework
 					int cur = i;
 					string entry = splitData [cur];
 					//if entry has been replaced by file ID then fetch it
-					if(splitData[cur].Contains ("REPLACEMENT_")){
+					if (splitData [cur].Contains ("REPLACEMENT_")) {
 						//CloudIO.Instance.FetchLargeEntry (splitData [cur]); // TODO - might need to do cloud sometimes?
 						entry = LocalIO.Instance.LargeFileRead (entry);
 					}
@@ -145,13 +149,13 @@ namespace GraphicsTestFramework
 					string[] splitData = JSONToStringArray (inputData [a]);
 					ResultsDataCommon RDC = ArrayToResultsDataCommon (splitData);
 					for (int i = 0; i < splitData.Length; i++) {
-						data.resultsRow.Add(new ResultsIORow());
+						data.resultsRow.Add (new ResultsIORow ());
 						int cur = i;
 						string entry = splitData [cur];
 						data.resultsRow [a].resultsColumn.Add (entry);
 
 						//if entry has been replaced by file ID then fetch it
-						if(splitData[cur].Contains ("REPLACEMENT_")){
+						if (splitData [cur].Contains ("REPLACEMENT_")) {
 							entry = LocalIO.Instance.LargeFileRead (entry);
 							if (entry == null) {
 								CloudIO.Instance.FetchLargeEntry (splitData [cur]);
@@ -166,15 +170,17 @@ namespace GraphicsTestFramework
 		}
 
 
-		static string[] JSONToStringArray(string JSON){
+		static string[] JSONToStringArray (string JSON)
+		{
 			string[] separators = new string[]{ "\",\"", "\":\"" };//split by the two JSON separators
 			JSON = JSON.Replace (System.Environment.NewLine, "");
 			string[] splitData = JSON.Substring (2, JSON.Length - 5).Split (separators, System.StringSplitOptions.None);//remove curly brackets
 			return splitData;
 		}
 
-		static ResultsDataCommon ArrayToResultsDataCommon(string[] splitData){
-			ResultsDataCommon RDC = new ResultsDataCommon();
+		static ResultsDataCommon ArrayToResultsDataCommon (string[] splitData)
+		{
+			ResultsDataCommon RDC = new ResultsDataCommon ();
 
 			for (int i = 0; i < splitData.Length; i++) {
 				switch (i) {
@@ -187,15 +193,15 @@ namespace GraphicsTestFramework
 				case 5:
 					RDC.AppVersion = splitData [i];
 					break;
-                case 7:
-                    RDC.OS = splitData[i];
-                    break;
-                case 9:
-                    RDC.Device = splitData[i];
-                    break;
-                case 11:
-			        RDC.Platform = splitData [i];
-			        break;
+				case 7:
+					RDC.OS = splitData [i];
+					break;
+				case 9:
+					RDC.Device = splitData [i];
+					break;
+				case 11:
+					RDC.Platform = splitData [i];
+					break;
 				case 13:
 					RDC.API = splitData [i];
 					break;
@@ -208,13 +214,13 @@ namespace GraphicsTestFramework
 				case 19:
 					RDC.TestName = splitData [i];
 					break;
-                case 21:
-                    RDC.PassFail = bool.Parse(splitData[i]);
-                    break;
-                case 23:
-                    RDC.Custom = splitData[i];
-                    break;
-                    default:
+				case 21:
+					RDC.PassFail = bool.Parse (splitData [i]);
+					break;
+				case 23:
+					RDC.Custom = splitData [i];
+					break;
+				default:
 					break;
 				}
 			}
