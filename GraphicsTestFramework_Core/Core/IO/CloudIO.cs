@@ -4,9 +4,9 @@ using UnityEngine;
 
 namespace GraphicsTestFramework
 {
-    public class CloudIO : MonoBehaviour
-    {
-        public static CloudIO _Instance = null;
+	public class CloudIO : MonoBehaviour
+	{
+		public static CloudIO _Instance = null;
 
 		public static CloudIO Instance {
 			get {
@@ -23,18 +23,18 @@ namespace GraphicsTestFramework
 		public string cloudResponse = null;
 
 		//Setup cloud listners
-		void OnEnable()
+		void OnEnable ()
 		{
 			// Suscribe for catching cloud responses.
-			CloudConnectorCore.processedResponseCallback.AddListener(ParseCloudData);
-			CloudImagesConnector.Instance.responseCallback.AddListener(ParseData);
+			CloudConnectorCore.processedResponseCallback.AddListener (ParseCloudData);
+			CloudImagesConnector.Instance.responseCallback.AddListener (ParseData);
 		}
 
-		void OnDisable()
+		void OnDisable ()
 		{
 			// Remove listeners.
-			CloudConnectorCore.processedResponseCallback.RemoveListener(ParseCloudData);
-			CloudImagesConnector.Instance.responseCallback.RemoveListener(ParseData);
+			CloudConnectorCore.processedResponseCallback.RemoveListener (ParseCloudData);
+			CloudImagesConnector.Instance.responseCallback.RemoveListener (ParseData);
 
 		}
 
@@ -61,12 +61,13 @@ namespace GraphicsTestFramework
 		/// <param name="jsonData">Json data array</param>
 		/// <param name="sheetName">Sheet name.</param>
 		/// <param name="baseline">Baseline.</param>
-		public IEnumerator UploadData(string[] jsonData, string sheetName, int baseline, string[] fields){
-            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Uploading JSON data to sheet=" + sheetName); // Write to console
+		public IEnumerator UploadData (string[] jsonData, string sheetName, int baseline, string[] fields)
+		{
+			Console.Instance.Write (DebugLevel.Full, MessageLevel.Log, "Uploading JSON data to sheet=" + sheetName); // Write to console
 			float uploadStartTime = Time.realtimeSinceStartup;
 
 			string[] trimmedJson = new string[jsonData.Length - 1];
-			for(int i = 1; i < jsonData.Length; i++){
+			for (int i = 1; i < jsonData.Length; i++) {
 				trimmedJson [i - 1] = jsonData [i];
 			}
 			CreateWorksheet (fields, sheetName);
@@ -76,9 +77,9 @@ namespace GraphicsTestFramework
 
 			if (baseline == 1) {
 				//replace each individually
-				for(int i = 0; i < trimmedJson.Length; i++){
+				for (int i = 0; i < trimmedJson.Length; i++) {
 					//update rows based on matching columns 6, 7, 8, 9, 10 > Platform, API, RenderPipe, SceneName, TestName
-					CloudConnectorCore.UpdateUniqueRow (sheetName, new int[]{6, 7, 8, 9, 10}, trimmedJson[i], cloudMode);
+					CloudConnectorCore.UpdateUniqueRow (sheetName, new int[]{ 6, 7, 8, 9, 10 }, trimmedJson [i], cloudMode);
 					//wait for cloudcore to be idle
 					while (CloudConnectorCore.isWaiting)
 						yield return null;
@@ -90,8 +91,8 @@ namespace GraphicsTestFramework
 			//wait for cloudcore to be idle
 			while (CloudConnectorCore.isWaiting)
 				yield return null;
-            //Debug the time it took to upload
-            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Upload of " + (jsonData.Length - 1) + " items in " + (Time.realtimeSinceStartup - uploadStartTime) + "ms"); // Write to console
+			//Debug the time it took to upload
+			Console.Instance.Write (DebugLevel.Full, MessageLevel.Log, "Upload of " + (jsonData.Length - 1) + " items in " + (Time.realtimeSinceStartup - uploadStartTime) + "ms"); // Write to console
 			while (CloudConnectorCore.isWaiting || CloudImagesConnector.responseCount != 0)
 				yield return new WaitForEndOfFrame ();
 			ResultsIO.Instance.BroadcastEndResultsSave ();
@@ -101,7 +102,8 @@ namespace GraphicsTestFramework
 		/// Checks the worksheet exists.
 		/// </summary>
 		/// <param name="sheetName">Sheet name.</param>
-		public void CheckWorksheet(string sheetName){
+		public void CheckWorksheet (string sheetName)
+		{
 			CloudConnectorCore.TableExists (sheetName, cloudMode);
 		}
 
@@ -110,7 +112,8 @@ namespace GraphicsTestFramework
 		/// </summary>
 		/// <param name="headers">Worksheet headers.</param>
 		/// <param name="sheetName">Sheet name.</param>
-		void CreateWorksheet(string[] headers, string sheetName){
+		void CreateWorksheet (string[] headers, string sheetName)
+		{
 			CloudConnectorCore.CreateTable (headers, sheetName, cloudMode);
 		}
 
@@ -127,7 +130,7 @@ namespace GraphicsTestFramework
 			entry ["api"] = SBD.api;
 			entry ["suiteTimestamp"] = SBD.suiteTimestamp;
 
-			CloudConnectorCore.UpdateUniqueRow ("SuiteBaselineTimestamps", new int[]{1, 2, 3},  JSONHelper.ToJSON (entry), cloudMode);//REORG
+			CloudConnectorCore.UpdateUniqueRow ("SuiteBaselineTimestamps", new int[]{ 1, 2, 3 }, JSONHelper.ToJSON (entry), cloudMode);//REORG
 		}
 
 		/// <summary>
@@ -136,8 +139,9 @@ namespace GraphicsTestFramework
 		/// <returns>The large entry.</returns>
 		/// <param name="value">Value.</param>
 		/// <param name="key">Key.</param>
-		public string ConvertLargeEntry(string value, string key){
-			string UID = "REPLACEMENT_" + key.GetHashCode ();
+		public string ConvertLargeEntry (string value, string key)
+		{
+			string UID = "REPLACEMENT_" + CoreUtilities.StringToUI (key);
 			CloudImagesConnector.PersistText (value, UID);
 			return UID;
 		}
@@ -149,11 +153,12 @@ namespace GraphicsTestFramework
 		/// <summary>
 		/// Pull relevant baseline data from cloud.
 		/// </summary>
-		public void FetchCloudBaselines(string[] suiteNames){
-			ProgressScreen.Instance.SetState(true, ProgressType.CloudLoad, "Retrieving cloud data");
-            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "getting baselines for " + sysData.Platform + " on API " + sysData.API); // Write to console
+		public void FetchCloudBaselines (string[] suiteNames)
+		{
+			ProgressScreen.Instance.SetState (true, ProgressType.CloudLoad, "Retrieving cloud data");
+			Console.Instance.Write (DebugLevel.Full, MessageLevel.Log, "getting baselines for " + sysData.Platform + " on API " + sysData.API); // Write to console
 			foreach (string s in suiteNames)
-                Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "pulling suite=" + s); // Write to console
+				Console.Instance.Write (DebugLevel.Full, MessageLevel.Log, "pulling suite=" + s); // Write to console
 			CloudConnectorCore.GetBaselineData (suiteNames, sysData.Platform, sysData.API, cloudMode);
 		}
 
@@ -161,15 +166,17 @@ namespace GraphicsTestFramework
 		/// Gets the baseline timestamp from the cloud.
 		/// </summary>
 		/// <param name="suiteName">Suite name.</param>
-		public void GetBaselineTimestamp(string suiteName){
-			ProgressScreen.Instance.SetState(true, ProgressType.CloudLoad, "Checking for inconsistencies with cloud data");
+		public void GetBaselineTimestamp (string suiteName)
+		{
+			ProgressScreen.Instance.SetState (true, ProgressType.CloudLoad, "Checking for inconsistencies with cloud data");
 			CloudConnectorCore.GetObjectsByField ("SuiteBaselineTimestamps", "suiteName", suiteName, cloudMode);
 		}
 
 		/// <summary>
 		/// Pull Entire sheet.
 		/// </summary>
-		public void FetchCloudResults(string suiteName, string testType){
+		public void FetchCloudResults (string suiteName, string testType)
+		{
 			string tableName = suiteName + "_" + testType + "_Results";
 			CloudConnectorCore.GetTable (tableName, cloudMode);
 		}
@@ -177,7 +184,8 @@ namespace GraphicsTestFramework
 		/// <summary>
 		/// Pull relevant baseline data from cloud.
 		/// </summary>
-		public void FetchCloudResults(string suiteName, string testType, ResultsDataCommon commonData){
+		public void FetchCloudResults (string suiteName, string testType, ResultsDataCommon commonData)
+		{
 			string tableName = suiteName + "_" + testType + "_Results";
 
 		}
@@ -187,9 +195,9 @@ namespace GraphicsTestFramework
 		/// </summary>
 		/// <returns>the originnal string.</returns>
 		/// <param name="UID">The key for the file.</param>
-		public void FetchLargeEntry(string UID)
-        {
-            string output = UID.Replace("\"", ""); // TODO - Look at this
+		public void FetchLargeEntry (string UID)
+		{
+			string output = UID.Replace ("\"", ""); // TODO - Look at this
 			CloudImagesConnector.RequestTxt (output);
 		}
 
@@ -200,20 +208,21 @@ namespace GraphicsTestFramework
 		/// <summary>
 		/// Parses the cloud data.
 		/// </summary>
-		public void ParseCloudData(CloudConnectorCore.QueryType query, List<string> objTypeNames, List<string> jsonData){
+		public void ParseCloudData (CloudConnectorCore.QueryType query, List<string> objTypeNames, List<string> jsonData)
+		{
 
 			if (query == CloudConnectorCore.QueryType.tableExists) {
-                Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, jsonData[0]); // Write to console
+				Console.Instance.Write (DebugLevel.Full, MessageLevel.Log, jsonData [0]); // Write to console
 			}
 
 			if (query == CloudConnectorCore.QueryType.getBaselineData) {
 				StartCoroutine (LocalIO.Instance.CreateLocalFromCloud (objTypeNames, jsonData));
 			}
 
-			if(query == CloudConnectorCore.QueryType.getObjects){
-				if (objTypeNames [0] == "SuiteBaselineTimestamps"){
-					if(jsonData[0].Length < 4)
-                        Console.Instance.Write(DebugLevel.Key, MessageLevel.LogWarning, "Baseline timestamp does not exist in cloud"); // Write to console
+			if (query == CloudConnectorCore.QueryType.getObjects) {
+				if (objTypeNames [0] == "SuiteBaselineTimestamps") {
+					if (jsonData [0].Length < 4)
+						Console.Instance.Write (DebugLevel.Key, MessageLevel.LogWarning, "Baseline timestamp does not exist in cloud"); // Write to console
 					else
 						ResultsIO.Instance.ProcessBaselineTimestamp (objTypeNames, jsonData);
 				}
@@ -228,13 +237,12 @@ namespace GraphicsTestFramework
 		/// <summary>
 		/// Parses the data from Cloud image connector.
 		/// </summary>
-		void ParseData(string responseType, string response)
+		void ParseData (string responseType, string response)
 		{
-			if(responseType == "DATA_")
-			{
-                //process cloud data coming down
-				string value = response.Split(new string[]{"_FILE_NAME_"}, System.StringSplitOptions.None)[1];
-				string name = response.Remove(response.IndexOf("_FILE_NAME_")).TrimEnd ((".png").ToCharArray ());
+			if (responseType == "DATA_") {
+				//process cloud data coming down
+				string value = response.Split (new string[]{ "_FILE_NAME_" }, System.StringSplitOptions.None) [1];
+				string name = response.Remove (response.IndexOf ("_FILE_NAME_")).TrimEnd ((".png").ToCharArray ());
 				LocalIO.Instance.LargeFileWrite (value, name);
 			}
 		}
@@ -244,5 +252,5 @@ namespace GraphicsTestFramework
 		/// ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-    }
+	}
 }
