@@ -25,9 +25,6 @@ namespace GraphicsTestFramework
             }
         }
 
-        //Data
-        public static string applicationVersion = "1.0b1";
-
         // ------------------------------------------------------------------------------------
         // Setup
 
@@ -46,7 +43,7 @@ namespace GraphicsTestFramework
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Getting system data"); // Write to console
             SystemData output = new SystemData(); // Create new class instance
 			output.UnityVersion = Application.unityVersion; // Get Unity version
-			output.AppVersion = applicationVersion.ToString(); // Get application version
+			output.AppVersion = Common.applicationVersion.ToString(); // Get application version
             output.OS = SystemInfo.operatingSystem; // Get OS
             output.Device = SystemInfo.deviceModel + "|" + SystemInfo.graphicsDeviceName + "|" + SystemInfo.processorType;
 			output.Platform = Application.platform.ToString(); // Get platform
@@ -72,24 +69,6 @@ namespace GraphicsTestFramework
             UnityEditor.EditorApplication.isPlaying = false; // If editor stop play mode
 #endif
         }
-
-        // ------------------------------------------------------------------------------------
-        // Editor
-
-#if UNITY_EDITOR
-
-        // Setup for build
-        [UnityEditor.MenuItem("RuntimeTestFramework/Prepare Build")]
-        public static void Prebuild()
-        {
-            SuiteManager.Instance.GenerateSceneList(); // Create suite structure
-            int platformCount = Enum.GetNames(typeof(UnityEditor.BuildTargetGroup)).Length; // Get platform count
-            for(int i = 0; i < platformCount; i++) // Iterate all platforms
-                UnityEditor.PlayerSettings.SetApplicationIdentifier((UnityEditor.BuildTargetGroup)i, "com.UnityTechnologies.RuntimeTestFramework"); // Set bundle identifiers
-            UnityEditor.PlayerSettings.bundleVersion = applicationVersion; // Set application version
-        }
-
-#endif
 
     }
 

@@ -59,7 +59,7 @@ namespace GraphicsTestFramework
 
             //Hardcoded wait for SuiteManager to populate - TODO might be cleaner way to do later
             float timeout = 0;
-            while (SuiteManager.Instance.GetSuiteNames().Length == 0)
+            while (SuiteManager.GetSuiteNames().Length == 0)
             {
                 timeout += Time.deltaTime;
                 if (timeout > 5f)
@@ -70,7 +70,7 @@ namespace GraphicsTestFramework
             }
 
             //fetch suite names from the suite manager
-            string[] suiteNames = SuiteManager.Instance.GetSuiteNames();
+            string[] suiteNames = SuiteManager.GetSuiteNames();
             if (suiteNames.Length == 0)
             {
                 Console.Instance.Write(DebugLevel.Critical, MessageLevel.LogWarning, "No suites loaded in SuiteManager, unable to continue"); // Write to console
