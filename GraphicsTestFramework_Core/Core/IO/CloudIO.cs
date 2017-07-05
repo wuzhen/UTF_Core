@@ -141,7 +141,7 @@ namespace GraphicsTestFramework
 		/// <param name="key">Key.</param>
 		public string ConvertLargeEntry (string value, string key)
 		{
-			string UID = "REPLACEMENT_" + CoreUtilities.StringToUI (key);
+			string UID = "REPLACEMENT_" + CoreUtilities.StringToUI.Convert (key);
 			CloudImagesConnector.PersistText (value, UID);
 			return UID;
 		}
