@@ -48,7 +48,8 @@ namespace GraphicsTestFramework
         public override IEnumerator ProcessResult()
 		{
 			var m_TempData = (ExampleResults)GetResultsStruct(); // Must get results struct and cast to this logics results type (mandatory)
-            if (timeWaited < model.settings.waitTime) // Check if waited time specified by active test options (logic specific)
+            var typedSettings = (ExampleSettings)model.settings; // Set settings to local type (mandatory)
+            if (timeWaited < typedSettings.waitTimer) // Check if waited time specified by active test options (logic specific)
             { 
 				timeWaited += Time.deltaTime; // Contune waiting (logic specific)
                 yield return null;

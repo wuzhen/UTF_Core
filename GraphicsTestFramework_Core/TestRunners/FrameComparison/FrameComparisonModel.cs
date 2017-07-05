@@ -22,9 +22,26 @@ namespace GraphicsTestFramework
     public class FrameComparisonSettings : SettingsBase
     {
         public Camera captureCamera; //Reference to the camera used to capture
-        public FrameResolution frameResolution = FrameResolution.qHD; //Resolution of the frame capture
-        public TextureFormat textureFormat = TextureFormat.RGB24; //Format of the frame capture
-        public FilterMode filterMode = FilterMode.Bilinear; //Filter mode of the frame capture
+        public FrameResolution frameResolution; //Resolution of the frame capture
+        public TextureFormat textureFormat; //Format of the frame capture
+        public FilterMode filterMode; //Filter mode of the frame capture
+
+        public static FrameComparisonSettings defaultSettings
+        {
+            get
+            {
+                return new FrameComparisonSettings
+                {
+                    waitType = WaitType.Frames, // Type of measurement for waiting
+                    waitTimer = 1f, // Count of frames or seconds to wait before capture
+                    passFailThreshold = 0.1f, // Threshold for comparison pass/fail
+                    captureCamera = null, //Reference to the camera used to capture
+                    frameResolution = FrameResolution.qHD, //Resolution of the frame capture
+                    textureFormat = TextureFormat.RGB24, //Format of the frame capture
+                    filterMode = FilterMode.Bilinear //Filter mode of the frame capture
+                };
+            }
+        }
     }
 
     // ------------------------------------------------------------------------------------
@@ -35,9 +52,11 @@ namespace GraphicsTestFramework
     {
         public Dictionary<FrameResolution, Vector2> resolutionList { get { return Common.frameResolutionList; } }
 
+        // Exposed settings
         [SerializeField]
-        FrameComparisonSettings m_Settings = new FrameComparisonSettings();
+        FrameComparisonSettings m_Settings = FrameComparisonSettings.defaultSettings;
 
+        // Set the exposed settings to the internal
         public override void SetSettings()
         {
             settings = m_Settings;

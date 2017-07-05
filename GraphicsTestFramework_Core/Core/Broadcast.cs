@@ -23,5 +23,9 @@
         // ResultsIO > TestStructure
         // Baselines have been parsed. Start structure generation.
 		public delegate void LocalBaselineParsed ();
-	}
+
+        // TestLogic
+        // Custom delegate for waiting in custom test types
+        public delegate void ContinueTest();
+    }
 }

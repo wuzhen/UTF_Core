@@ -56,7 +56,7 @@ namespace GraphicsTestFramework
     [Serializable]
     public class SettingsBase
     {
-        public enum WaitType { Frames, Seconds }
+        public enum WaitType { Frames, Seconds, StableFramerate, Callback }
 
         public WaitType waitType = WaitType.Frames; // Type of measurement for waiting
         public float waitTimer = 0f; // Count of frames or seconds to wait before capture

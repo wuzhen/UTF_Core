@@ -21,6 +21,7 @@ namespace GraphicsTestFramework
         [HideInInspector] public bool baselineExists;
         public RunnerType activeRunType;
         public string suiteName;
+        public bool waitingForCallback = false;
 
         // Type Specific
         [HideInInspector] public string testTypeName; // Test type name
@@ -42,16 +43,25 @@ namespace GraphicsTestFramework
 				endTestAction ();
 		}
 
+        public static event Broadcast.ContinueTest waitCallback;
+        public void WaitCallback()
+        {
+            if (waitCallback != null)
+                waitCallback();
+        }
+
         // Subscribe to event delegates
         void OnEnable()
         {
             ResultsIO.endResultsSave += ConfirmResultsSaved;
+            waitCallback += ContinueTest;
         }
 
         // Desubscribe from event delegates
         void OnDisable()
         {
             ResultsIO.endResultsSave -= ConfirmResultsSaved;
+            waitCallback -= ContinueTest;
         }
 
         // ------------------------------------------------------------------------------------
@@ -117,6 +127,12 @@ namespace GraphicsTestFramework
             yield return null;
             // Custom test result processing logic here
             BuildResultsStruct(null); // Null in base logic. Will not run.
+        }
+
+        // Call this to end wait timer on "Callback" mode
+        public void ContinueTest()
+        {
+            waitingForCallback = false; // Reset
         }
 
         // Build results after main test logic is completed
@@ -372,23 +388,103 @@ namespace GraphicsTestFramework
         // Test Execution
 
         // Wait for specified timer (requires model data)
-        public virtual IEnumerator WaitForTimer()
+        public IEnumerator WaitForTimer()
         {
             switch(model.settings.waitType)
             {
                 case SettingsBase.WaitType.Frames:
-                    for (int i = 0; i < Mathf.Round(model.settings.waitTimer); i++) // Wait for requested wait frame count (logic specific)
-                        yield return new WaitForEndOfFrame();
+                    for (int i = 0; i < Mathf.Round(model.settings.waitTimer); i++) // Wait for requested wait frame count
+                        yield return new WaitForEndOfFrame(); // Wait for end of frame
                     break;
                 case SettingsBase.WaitType.Seconds:
-                    while (waitTimer <= model.settings.waitTimer)
+                    while (waitTimer <= model.settings.waitTimer) // While timeris less than settings timer
                     {
-                        waitTimer += Time.deltaTime;
-                        yield return null;
+                        waitTimer += Time.deltaTime; // Increment
+                        yield return null; // Wait
                     }
-                    waitTimer = 0f;
+                    waitTimer = 0f; // Reset
+                    break;
+                case SettingsBase.WaitType.StableFramerate:
+                    yield return WaitForStableFramerate(); // Test for stable framerate
+                    break;
+                case SettingsBase.WaitType.Callback:
+                    waitingForCallback = true; // Set waiting to true
+                    while (waitingForCallback) // While waiting
+                    {
+                        waitTimer += Time.deltaTime; // Increment
+                        if(waitTimer <= 60f)
+                            yield return null;
+                        else
+                        {
+                            waitTimer = 0f; // Reset
+                            break;
+                        }
+                    } 
                     break;
             }
+        }
+
+        // ------------------------------------------------------------------------------------
+        // Stable Framerate
+
+        // Parameters
+        StableFramerateParameters stableFramerateParameters = new StableFramerateParameters();
+        class StableFramerateParameters
+        {
+            public float time; // Track time at previous timestamp
+            public int samples; // Track samples at previous timestamp
+            public int frameCount = 4;  // Amount of frames to track
+            public List<float> frameTimes = new List<float>(); // List for tracking frame times
+            public int maxFrames = 60;
+            public int framesTested = 0;
+            public float threshold = 0.5f; // Threshold for pass
+        }
+
+        // Wait for stable framerate
+        IEnumerator WaitForStableFramerate()
+        {
+            while (stableFramerateParameters.frameTimes.Count < stableFramerateParameters.frameCount) // Still building frame list
+            {
+                float x = TimestampLight();
+                Debug.Log("Stamping frame " + x);
+                stableFramerateParameters.frameTimes.Add(x); // Add timestamp
+                yield return new WaitForEndOfFrame(); // Wait for frame
+            }
+            while (!EvaluateFramerateStability()) // Testing results for stability
+            {
+                stableFramerateParameters.frameTimes.RemoveAt(0); // Remove first entry
+                float x = TimestampLight();
+                Debug.Log("Stamping frame " + x);
+                stableFramerateParameters.frameTimes.Add(x); // Add timestamp
+                stableFramerateParameters.framesTested++; //Increment max frames
+                if (stableFramerateParameters.framesTested >= stableFramerateParameters.maxFrames) // Check whether hit max frames
+                    break; // Exit
+                yield return new WaitForEndOfFrame(); // Wait for frame
+            }
+        }
+
+        // Evaulate the stored frames
+        bool EvaluateFramerateStability()
+        {
+            Debug.LogWarning("Evaluating frame stability");
+            float[] array = stableFramerateParameters.frameTimes.ToArray(); // Convert to array
+            Array.Sort(array); // Sort the array
+            if (array[array.Length - 1] - array[0] < stableFramerateParameters.threshold) // If difference between fastest and slowest is within threshold
+                return true; // Pass
+            else
+                return false; // Fail
+        }
+
+        // Calculate time and frames since last Timestamp and return an average
+        float TimestampLight()
+        {
+            float currentTime = Time.realtimeSinceStartup * 1000; // Get current time
+            int currentSamples = Time.frameCount; // Get current samples
+            float elapsedTime = currentTime - stableFramerateParameters.time; // Get elapsed time since last Timestamp
+            int elapsedSamples = currentSamples - stableFramerateParameters.samples; // Get elapsed samples since last Timestamp
+            stableFramerateParameters.time = currentTime; // Reset time
+            stableFramerateParameters.samples = currentSamples; // Reset samples
+            return elapsedTime / (float)elapsedSamples; // Return
         }
 
         // ------------------------------------------------------------------------------------
