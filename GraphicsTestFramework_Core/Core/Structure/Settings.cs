@@ -8,9 +8,14 @@ namespace GraphicsTestFramework
     // Suite List Scriptable Object
     // - Created automatically by Suite Manager during pre build
 
-    [CreateAssetMenu]
-    public class SuiteList : ScriptableObject
+    //[CreateAssetMenu]
+    public class Settings : ScriptableObject
     {
-        [SerializeField] public List<Suite> suites = new List<Suite>();
+        [Header("Defines")]
+        [SerializeField]
+        public string[] scriptingDefines;
+        [Header ("Suites")]
+        [SerializeField]
+        public List<Suite> suiteList = new List<Suite>();
     }
 }

@@ -55,7 +55,10 @@ namespace GraphicsTestFramework
         IEnumerator WaitForTestStructure()
         {
             do { yield return null; } while (!TestStructure.Instance.IsGenerated); // Wait for test structure
-            UpdateMenu(); // Update the menu
+            if (Common.GetArg("automation") == "true") // Check for automation arg
+                RunFullAutomation(); // Bypass menu and run full automation
+            else
+                UpdateMenu(); // Update the menu
         }
 
         // Generate the breadcrumb
@@ -98,10 +101,32 @@ namespace GraphicsTestFramework
         }
 
         // ------------------------------------------------------------------------------------
+        // Automation
+
+        void RunFullAutomation()
+        {
+            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Running full automation"); // Write to console
+            if (TestStructure.Instance.CheckForBaselines()) // Baselines exist
+            {
+                GenerateList(); // Generate list
+                for(int su = 0; su < list.entryList.Count; su++) // Iterate suites
+                {
+                    list.entryList[su].GetComponent<MenuListEntry>().ChangeSelection(1); // Select all
+                }
+                OnRunButtonClick(); // Run
+            }
+            else // Any or all baselines are missing
+            {
+                Debug.LogError("No baselines found. Aborting"); // Debug
+                Common.QuitApplication(); // Quick application
+            }
+        }
+
+        // ------------------------------------------------------------------------------------
         // Menu State
 
         // Enable/disable menu
-        public void SetMenuState(bool state /*int state*/)
+        public void SetMenuState(bool state)
         {
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Setting menu state to "+state); // Write to console
             menuParent.SetActive(state); // Set active

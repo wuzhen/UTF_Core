@@ -160,7 +160,10 @@ namespace GraphicsTestFramework
             do { yield return null; } while (runnerIsWaiting == true); // Wait for previous test to finish before enabling menus
             Console.Instance.Write(DebugLevel.Logic, MessageLevel.Log, "Ended automation run"); // Write to console
             ProgressScreen.Instance.SetState(false, ProgressType.LocalLoad, ""); // Disable ProgressScreen
-            Menu.Instance.SetMenuState(true); // Enable menu
+            if(Common.GetArg("automation") == "true") // Check for automation arg
+                Common.QuitApplication(); // Quick application
+            else
+                Menu.Instance.SetMenuState(true); // Enable menu
         }
 
         // Load Test of currentTestIndex

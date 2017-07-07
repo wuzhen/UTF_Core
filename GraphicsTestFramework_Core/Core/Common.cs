@@ -17,6 +17,35 @@ namespace GraphicsTestFramework
         public static string applicationVersion = "1.0b1";
 
         // ------------------------------------------------------------------------------------
+        // System
+
+        // Get command line argument
+        public static string GetArg(string name)
+        {
+            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Getting command line arguments"); // Write to console
+            var args = System.Environment.GetCommandLineArgs(); // Get all arguments
+            for (int i = 0; i < args.Length; i++) // Iterate
+            {
+                if (args[i] == "-"+name && args.Length > i + 1) // If arg matches and has value
+                {
+                    return args[i + 1]; // Return value of arg
+                }
+            }
+            return null; // Fail
+        }
+
+        // Quit application
+        public static void QuitApplication()
+        {
+            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Quitting application"); // Write to console
+            if (!Application.isEditor) System.Diagnostics.Process.GetCurrentProcess().Kill();
+            //Application.Quit();
+#if UNITY_EDITOR
+            UnityEditor.EditorApplication.isPlaying = false;
+#endif
+        }
+
+        // ------------------------------------------------------------------------------------
         // Shared data
 
         // Resolutions
