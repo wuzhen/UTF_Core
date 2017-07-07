@@ -58,8 +58,11 @@ namespace GraphicsTestFramework
             string output = ""; // Create output string
             for (int i = 0; i < coreScriptingDefines.Length; i++) // Iterate core defines
                 output += coreScriptingDefines[i] + ";"; // Add
-            for (int i = 0; i < settings.scriptingDefines.Length; i++) // Iterate settings defines
-                output += settings.scriptingDefines[i] + ";"; // Add
+            if (settings.scriptingDefines != null) // Check for null
+            {
+                for (int i = 0; i < settings.scriptingDefines.Length; i++) // Iterate settings defines
+                    output += settings.scriptingDefines[i] + ";"; // Add
+            }
             int platformCount = Enum.GetNames(typeof(BuildTargetGroup)).Length; // Get platform count
             for (int i = 0; i < platformCount; i++) // Iterate all platforms
                 PlayerSettings.SetScriptingDefineSymbolsForGroup((BuildTargetGroup)i, output); // Add custom to current
