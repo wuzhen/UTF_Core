@@ -11,6 +11,9 @@ namespace GraphicsTestFramework
     //[CreateAssetMenu]
     public class Settings : ScriptableObject
     {
+        [SerializeField]
+        [HideInInspector] public string unityVersion;
+        [HideInInspector] public string unityBranch;
         [Header("Defines")]
         [SerializeField]
         public string[] scriptingDefines;

@@ -38,8 +38,10 @@ namespace GraphicsTestFramework
         public static void QuitApplication()
         {
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Quitting application"); // Write to console
-            if (!Application.isEditor) System.Diagnostics.Process.GetCurrentProcess().Kill();
-            //Application.Quit();
+            if (!Application.isEditor && Application.platform != RuntimePlatform.IPhonePlayer) // If not editor or iOS
+                System.Diagnostics.Process.GetCurrentProcess().Kill(); // Kill process
+            else if (Application.platform == RuntimePlatform.IPhonePlayer) // If iOS
+                Application.Quit(); // Quit
 #if UNITY_EDITOR
             UnityEditor.EditorApplication.isPlaying = false;
 #endif
