@@ -173,8 +173,10 @@ namespace GraphicsTestFramework
 		static string[] JSONToStringArray (string JSON)
 		{
 			string[] separators = new string[]{ "\",\"", "\":\"" };//split by the two JSON separators
+			JSON = JSON.Replace ("{\"", "");
+			JSON = JSON.Replace ("\"}", "");
 			JSON = JSON.Replace (System.Environment.NewLine, "");
-			string[] splitData = JSON.Substring (2, JSON.Length - 5).Split (separators, System.StringSplitOptions.None);//remove curly brackets
+			string[] splitData = JSON.Split (separators, System.StringSplitOptions.None);//remove curly brackets
 			return splitData;
 		}
 
