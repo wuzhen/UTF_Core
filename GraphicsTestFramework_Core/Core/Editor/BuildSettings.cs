@@ -1,4 +1,5 @@
 ﻿using UnityEditor;
+using UnityEditor.Build;
 using UnityEngine;
 using System;
 
@@ -65,7 +66,22 @@ namespace GraphicsTestFramework
             }
             int platformCount = Enum.GetNames(typeof(BuildTargetGroup)).Length; // Get platform count
             for (int i = 0; i < platformCount; i++) // Iterate all platforms
+            {
                 PlayerSettings.SetScriptingDefineSymbolsForGroup((BuildTargetGroup)i, output); // Add custom to current
+            }
+        }
+    }
+
+    // Build preprocess steps
+    class MyCustomBuildProcessor : IPreprocessBuild
+    {
+        public int callbackOrder { get { return 0; } }
+
+        public void OnPreprocessBuild(BuildTarget target, string path)
+        {
+            Settings settings = SuiteManager.GetSettings(); // Get settings
+            settings.unityVersion = UnityEditorInternal.InternalEditorUtility.GetFullUnityVersion(); // Set unity version
+            settings.unityBranch = UnityEditorInternal.InternalEditorUtility.GetUnityBuildBranch(); // Set unity branch
         }
     }
 }
