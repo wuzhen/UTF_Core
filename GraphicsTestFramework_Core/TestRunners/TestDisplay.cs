@@ -30,12 +30,34 @@ namespace GraphicsTestFramework
         }
 
         // Enable test viewer
-        public void EnableTestViewer(ResultsBase resultsObject)
+        public void EnableTestViewer(ResultsBase resultsObject, TestViewerToolbar.State toolbarState)
         {
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, this.GetType().Name + " enabling test viewer"); // Write to console
             ProgressScreen.Instance.SetState(false, ProgressType.LocalSave, ""); // Disable ProgressScreen
             TestViewer.Instance.SetState(true); // Set test viewer state
-            TestViewer.Instance.UpdateBars(GetViewerTabs(resultsObject)); // Set test viewer state
+            TestViewer.Instance.UpdateBars(GetViewerTabs(resultsObject), GetResultsTimeDisplay(resultsObject), toolbarState); // Set test viewer state
+        }
+
+        // Get time since results
+        string GetResultsTimeDisplay(ResultsBase resultsObject)
+        {
+            string output = ""; // Create output
+            System.DateTime resultTime = System.DateTime.Parse(resultsObject.common.DateTime); // Parse result time
+            System.DateTime now = System.DateTime.UtcNow; // Get time now
+            // Compare times
+            if ((now - resultTime).TotalDays >= 365) // If over a year ago
+                output = Mathf.Floor((float)(now - resultTime).TotalDays / 365) + " years ago"; // Round years
+            else if ((now - resultTime).TotalDays >= 31) // If over a month ago (approx)
+                output = Mathf.Floor((float)(now - resultTime).TotalDays / 31) + " months ago"; // Round months (approx)
+            else if ((now - resultTime).TotalDays >= 1) // If over a day ago
+                output = Mathf.Floor((float)(now - resultTime).TotalDays) + " days ago"; // Return days
+            else if ((now - resultTime).TotalHours >= 1) // If over an hour ago
+                output = Mathf.Floor((float)(now - resultTime).TotalHours) + " hours ago"; // Return hours
+            else if ((now - resultTime).TotalMinutes >= 1) // If over a minute ago
+                output = Mathf.Floor((float)(now - resultTime).TotalMinutes) + " minutes ago"; // Return minutes
+            else
+                output = "just now"; // Return just now
+            return "Results created "+output; // Return
         }
 
         // ------------------------------------------------------------------------------------

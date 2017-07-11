@@ -1,5 +1,4 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -40,7 +39,7 @@ namespace GraphicsTestFramework
         }
 
         // ------------------------------------------------------------------------------------
-        // Buttons
+        // Entries
 
         // On button click: Clear local data
         public void OnClickClearLocalData()
@@ -56,7 +55,13 @@ namespace GraphicsTestFramework
             }
             else
                 ClearLocalDataAction(); // Save baseline
-            
+
+        }
+
+        // On toggle change: Open TestViewer on Automation test fail
+        public void OnToggleOpenTestViewerOnAutomationFail(bool input)
+        {
+            Configuration.Instance.settings.testviewerOnAutomationTestFail = input; // Set
         }
 
         // Clear all local data

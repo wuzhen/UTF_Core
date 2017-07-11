@@ -44,12 +44,33 @@ namespace GraphicsTestFramework
         // Context & State
 
         // Set buttons based on baseline resolution mode
-        public void SetContext(bool isResolve)
+        public void SetContext(State input)
         {
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Setting context"); // Write to console
-            buttons.previousButton.interactable = !isResolve; // Set interactable
-            buttons.nextButton.interactable = !isResolve; // Set interactable
-            buttons.saveResultsButton.interactable = !isResolve; // Set interactable
+            buttons.previousButton.interactable = input.previous; // Set interactable
+            buttons.nextButton.interactable = input.next; // Set interactable
+            buttons.saveResultsButton.interactable = input.results; // Set interactable
+            buttons.saveBaselineButton.interactable = input.baseline; // Set interactable
+            buttons.restartTestButton.interactable = input.restart; // Set interactable
+        }
+
+        // State set
+        public class State
+        {
+            public bool previous;
+            public bool next;
+            public bool results;
+            public bool baseline;
+            public bool restart;
+
+            public State(bool prv, bool nxt, bool rlt, bool bsl, bool rst)
+            {
+                previous = prv;
+                next = nxt;
+                results = rlt;
+                baseline = bsl;
+                restart = rst;
+            }
         }
 
         // ------------------------------------------------------------------------------------
@@ -80,7 +101,8 @@ namespace GraphicsTestFramework
             if (!TestRunner.Instance.CheckEndOfRunner()) // Check for end of runner
             {
                 TestRunner.Instance.EndTest(); // End the current test
-                TestRunner.Instance.NextTest(); // Move to next test
+                if(TestRunner.Instance.runnerType != RunnerType.Automation) // If not automation (handled automatically)
+                    TestRunner.Instance.NextTest(); // Move to next test
             }
             else
                 OnClickReturnToMenu(); // Return to menu
