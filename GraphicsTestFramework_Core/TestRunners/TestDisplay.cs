@@ -44,19 +44,12 @@ namespace GraphicsTestFramework
             string output = ""; // Create output
             System.DateTime resultTime = System.DateTime.Parse(resultsObject.common.DateTime); // Parse result time
             System.DateTime now = System.DateTime.UtcNow; // Get time now
-            // Compare times
-            if ((now - resultTime).TotalDays >= 365) // If over a year ago
-                output = Mathf.Floor((float)(now - resultTime).TotalDays / 365) + " years ago"; // Round years
-            else if ((now - resultTime).TotalDays >= 31) // If over a month ago (approx)
-                output = Mathf.Floor((float)(now - resultTime).TotalDays / 31) + " months ago"; // Round months (approx)
-            else if ((now - resultTime).TotalDays >= 1) // If over a day ago
-                output = Mathf.Floor((float)(now - resultTime).TotalDays) + " days ago"; // Return days
-            else if ((now - resultTime).TotalHours >= 1) // If over an hour ago
-                output = Mathf.Floor((float)(now - resultTime).TotalHours) + " hours ago"; // Return hours
-            else if ((now - resultTime).TotalMinutes >= 1) // If over a minute ago
-                output = Mathf.Floor((float)(now - resultTime).TotalMinutes) + " minutes ago"; // Return minutes
+            Common.TimePeriod period = Common.TimePeriod.Closest; // Create time period
+            float result = Common.GetTimeDifference(resultTime, now, ref period); // Get time difference
+            if (period == Common.TimePeriod.Second) // If seconds dont return details
+                output = "just now"; // Set output
             else
-                output = "just now"; // Return just now
+                output = result.ToString() + " " + period.ToString().ToLower() + "s ago"; // Set output
             return "Results created "+output; // Return
         }
 
