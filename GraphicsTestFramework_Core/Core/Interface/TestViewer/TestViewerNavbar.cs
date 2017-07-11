@@ -26,7 +26,8 @@ namespace GraphicsTestFramework
 
         // Data
         public Text breadcrumbLabel;
-		public RectTransform tabContentRect;
+        public Text updateTimeLabel;
+        public RectTransform tabContentRect;
 		public GameObject tabPrefab;
         int selectedTab;
         TestViewerTab[] tabs;
@@ -35,12 +36,13 @@ namespace GraphicsTestFramework
         // Generation
 
         // Set navbar context
-        public void Generate(TestViewerTabData[] tabDatas)
+        public void Generate(TestViewerTabData[] tabDatas, string updateTime)
         {
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Generating navbar"); // Write to console
             Cleanup(); // Cleanup
             GenerateBreadcrumb(); // Generate breadcrumb
             GenerateTabs(tabDatas); // Generate tabs
+            SetUpdateTime(updateTime); // Set update time
             tabs[0].EnableTab(); // Enable first tab
         }
 
@@ -76,7 +78,13 @@ namespace GraphicsTestFramework
                 tabs[i] = newTab; // Set to array
                 newTab.SetupTab(i, tabDatas[i]); // Setup
             }
-        }        
+        }      
+        
+        // Set the update time
+        void SetUpdateTime(string updateTime)
+        {
+            updateTimeLabel.text = updateTime; // Set
+        }  
 
         // ------------------------------------------------------------------------------------
         // Buttons
