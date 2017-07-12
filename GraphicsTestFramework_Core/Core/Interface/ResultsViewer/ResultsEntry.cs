@@ -54,7 +54,7 @@ namespace GraphicsTestFramework
                     expandButton.onClick.AddListener(delegate { ToggleContext(); }); // Add expand button listener
                     break; 
                 case 2: // No results
-                    passFailText.text = "N/A"; // Set passfail label
+                    passFailText.text = "NONE"; // Set passfail label
                     passFailBackground.color = Menu.Instance.colors[1]; // Set passfail object color
                     expandButton.interactable = false; // Disable expand button
                     break;

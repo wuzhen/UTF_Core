@@ -58,7 +58,7 @@ namespace GraphicsTestFramework
             if (Common.GetArg("automation") == "true") // Check for automation arg
                 RunFullAutomation(); // Bypass menu and run full automation
             else
-                UpdateMenu(); // Update the menu
+                Initialize(); // Initialize the menu
         }
 
         // Generate the breadcrumb
@@ -124,6 +124,13 @@ namespace GraphicsTestFramework
 
         // ------------------------------------------------------------------------------------
         // Menu State
+
+        // First time initialize
+        void Initialize()
+        {
+            ResultsViewer.Instance.Setup(); // Setup results viewer
+            UpdateMenu(); // Update menu
+        }
 
         // Enable/disable menu
         public void SetMenuState(bool state)

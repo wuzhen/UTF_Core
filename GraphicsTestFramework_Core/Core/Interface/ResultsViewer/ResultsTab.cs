@@ -26,7 +26,7 @@ namespace GraphicsTestFramework
 
 
         // Setup the tab
-        public void Setup(TabType type, int id, string title)
+        /*public void Setup(TabType type, int id, string title)
         {
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Setting up results tab"); // Write to console
             tabType = type; // Set tab type
@@ -41,6 +41,6 @@ namespace GraphicsTestFramework
                     GetComponent<Button>().onClick.AddListener(delegate { ResultsViewer.Instance.SelectType(index); }); // Add listener
                     break;
             }
-        }
+        }*/
     }
 }
