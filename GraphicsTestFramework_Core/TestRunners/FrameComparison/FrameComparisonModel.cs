@@ -48,6 +48,7 @@ namespace GraphicsTestFramework
     // FrameComparisonModel
     // - Contains settings for FrameComparison
 
+	[Serializable]
     public class FrameComparisonModel : TestModel<FrameComparisonLogic>
     {
         public Dictionary<FrameResolution, Vector2> resolutionList { get { return Common.frameResolutionList; } }
@@ -68,6 +69,10 @@ namespace GraphicsTestFramework
 			get
 			{
 				return m_Settings;
+			}
+			set 
+			{
+				m_Settings = value;
 			}
 		}
 

@@ -63,9 +63,11 @@ namespace GraphicsTestFramework
             var typedSettings = (FlipBookSettings)model.settings; // Set settings to local type
             typedSettings.captureCamera.targetTexture = temporaryRt; // Set capture cameras target texture to temporary RT (logic specific)
 
+
+			float captureWaitTime = typedSettings.captureWaitType == SettingsBase.WaitType.Frames ? typedSettings.captureWaitFrames : typedSettings.captureWaitSeconds;
 			do {
 				doCapture = true; // Perform OnRenderImage logic (logic specific)
-				yield return WaitForTimer (typedSettings.captureWaitType, typedSettings.waitType == SettingsBase.WaitType.Frames ? typedSettings.captureWaitFrames : typedSettings.captureWaitSeconds); // Wait for OnRenderImage logic to complete all frame captures (logic specific)
+				yield return WaitForTimer (typedSettings.captureWaitType, captureWaitTime); // Wait for capture time to pass
 			} while (captureCount < typedSettings.framesToCapture);
 
 			m_TempData.resultFrames = resultFrames; // save to results data
@@ -88,6 +90,10 @@ namespace GraphicsTestFramework
         public override void TestPostProcess()
         {
             dummyCamera.enabled = false; // Disable dummy camera
+			temporaryRt.Release(); // Release main RT
+			var typedSettings = (FlipBookSettings)model.settings; // Set settings to local type
+			typedSettings.captureCamera.targetTexture = null; // Set target texture to null
+			captureCount = 0; // Reset capture count
             EndTest(); // End test
         }
 
@@ -113,16 +119,15 @@ namespace GraphicsTestFramework
             Graphics.Blit(source, destination); // Blit source to destination for Deferred
             if (doCapture) // If running blit operations
             {
+				Debug.LogWarning (Time.realtimeSinceStartup);
                 doCapture = false; // Reset
                 var typedSettings = (FlipBookSettings)model.settings; // Set settings to local type
                 Vector2 resolution = Vector2.zero; // Create vector2
                 model.resolutionList.TryGetValue(typedSettings.frameResolution, out resolution); // Get resolution
                 var rt1 = RenderTexture.GetTemporary((int)resolution.x, (int)resolution.y, 24, temporaryRt.format, RenderTextureReadWrite.sRGB); // Get a temporary RT for blitting to
-                Graphics.Blit(temporaryRt, rt1); // Blit models camera to the RT
+				Graphics.Blit(temporaryRt, rt1); // Blit models camera to the RT
 				resultFrames[captureCount] = Common.ConvertRenderTextureToTexture2D(activeTestEntry.testName + "_Result", rt1, resolution, typedSettings.textureFormat, typedSettings.filterMode); // Convert the resulting render texture to a Texture2D
-                typedSettings.captureCamera.targetTexture = null; // Set target texture to null
                 RenderTexture.ReleaseTemporary(rt1); // Release the temporary RT
-                temporaryRt.Release(); // Release main RT
                 Console.Instance.Write(DebugLevel.Logic, MessageLevel.Log, this.GetType().Name + " completed blit operations for test " + activeTestEntry.testName); // Write to console
 				captureCount++;// Increment the capture count
             }

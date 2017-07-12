@@ -5,7 +5,7 @@ using UnityEditor;
 
 namespace GraphicsTestFramework
 {
-	[CustomEditor(typeof(TestModelBase), true)]
+	[CustomEditor(typeof(TestModelBase))]
 	public class TestModelEditor : Editor {
 		
 		public virtual void DrawCommon(SettingsBase s_Target){

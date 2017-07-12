@@ -39,10 +39,13 @@ namespace GraphicsTestFramework
             {
                 case false:
                     var localResultData = (FlipBookResults)resultsObject; // Convert the input results object to this types class (mandatory)
-                    output = new TestViewerTabData[2] // Want two tabs
+                    output = new TestViewerTabData[5] // Want two tabs
                     {
                         new TestViewerTabData("Live Camera", TestViewerTabType.Camera, typedSettings.captureCamera, null), // Live camera showing capture camera
-                        new TestViewerTabData("Results Texture", TestViewerTabType.Texture, localResultData.resultFrames[0], null) // And the results texture
+                        new TestViewerTabData("Results Texture", TestViewerTabType.Texture, localResultData.resultFrames[0], null), // And the results texture
+						new TestViewerTabData("Results Texture", TestViewerTabType.Texture, localResultData.resultFrames[1], null), // And the results texture
+						new TestViewerTabData("Results Texture", TestViewerTabType.Texture, localResultData.resultFrames[2], null), // And the results texture
+						new TestViewerTabData("Results Texture", TestViewerTabType.Texture, localResultData.resultFrames[3], null) // And the results texture
                     };
                     break;
                 case true:

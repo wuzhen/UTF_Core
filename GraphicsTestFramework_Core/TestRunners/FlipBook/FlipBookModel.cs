@@ -43,7 +43,7 @@ namespace GraphicsTestFramework
 					framesToCapture = 4, // Number of images to capture
 					captureWaitType = WaitType.Frames,// Type of timing to use between captures
 					captureWaitFrames = 1,// Amount of frames to wait between each capture
-                    frameResolution = FrameResolution.qHD, //Resolution of the frame capture
+					frameResolution = FrameResolution.nHD, //Resolution of the frame capture
                     textureFormat = TextureFormat.RGB24, //Format of the frame capture
 					filterMode = FilterMode.Bilinear //Filter mode used for the capture rames
                 };
