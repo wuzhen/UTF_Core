@@ -388,16 +388,16 @@ namespace GraphicsTestFramework
         // Test Execution
 
         // Wait for specified timer (requires model data)
-        public IEnumerator WaitForTimer()
+		public IEnumerator WaitForTimer()
         {
             switch(model.settings.waitType)
             {
                 case SettingsBase.WaitType.Frames:
-                    for (int i = 0; i < Mathf.Round(model.settings.waitTimer); i++) // Wait for requested wait frame count
+					for (int i = 0; i < model.settings.waitFrames; i++) // Wait for requested wait frame count
                         yield return new WaitForEndOfFrame(); // Wait for end of frame
                     break;
                 case SettingsBase.WaitType.Seconds:
-                    while (waitTimer <= model.settings.waitTimer) // While timeris less than settings timer
+					while (waitTimer <= model.settings.waitSeconds) // While timeris less than settings timer
                     {
                         waitTimer += Time.deltaTime; // Increment
                         yield return null; // Wait
@@ -423,6 +423,43 @@ namespace GraphicsTestFramework
                     break;
             }
         }
+
+		// Wait for specified timer (generic, needs no info as it's passed it)
+		public IEnumerator WaitForTimer(SettingsBase.WaitType waitType, float waitTime)
+		{
+			switch(waitType)
+			{
+			case SettingsBase.WaitType.Frames:
+				for (int i = 0; i < waitTime; i++) // Wait for requested wait frame count
+					yield return new WaitForEndOfFrame(); // Wait for end of frame
+				break;
+			case SettingsBase.WaitType.Seconds:
+				while (waitTimer <= waitTime) // While timer is less than settings timer
+				{
+					waitTimer += Time.deltaTime; // Increment
+					yield return null; // Wait
+				}
+				waitTimer = 0f; // Reset
+				break;
+			case SettingsBase.WaitType.StableFramerate:
+				yield return WaitForStableFramerate(); // Test for stable framerate
+				break;
+			case SettingsBase.WaitType.Callback:
+				waitingForCallback = true; // Set waiting to true
+				while (waitingForCallback) // While waiting
+				{
+					waitTimer += Time.deltaTime; // Increment
+					if(waitTimer <= 60f)
+						yield return null;
+					else
+					{
+						waitTimer = 0f; // Reset
+						break;
+					}
+				} 
+				break;
+			}
+		}
 
         // ------------------------------------------------------------------------------------
         // Stable Framerate

@@ -59,7 +59,8 @@ namespace GraphicsTestFramework
         public enum WaitType { Frames, Seconds, StableFramerate, Callback }
 
         public WaitType waitType = WaitType.Frames; // Type of measurement for waiting
-        public float waitTimer = 0f; // Count of frames or seconds to wait before capture
+        public int waitFrames = 0; // Count of frames or seconds to wait before capture
+		public float waitSeconds = 0f; // Count of frames or seconds to wait before capture
         public float passFailThreshold = 0.1f; // Threshold for comparison pass/fail
     }
 }

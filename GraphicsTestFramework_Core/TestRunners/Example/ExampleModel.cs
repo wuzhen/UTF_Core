@@ -33,7 +33,7 @@ namespace GraphicsTestFramework
                 return new ExampleSettings
                 {
                     waitType = WaitType.Seconds, // Type of measurement for waiting
-                    waitTimer = 0f, // Count of frames or seconds to wait before capture
+                    waitSeconds = 0f, // Count of frames or seconds to wait before capture
                     passFailThreshold = 0.1f // Threshold for comparison pass/fail
                 };
             }
@@ -55,5 +55,15 @@ namespace GraphicsTestFramework
         {
             settings = m_Settings;
         }
+
+		// Get/Set public settings
+		public ExampleSettings p_Settings
+		{
+			get
+			{
+				return m_Settings;
+			}
+		}
+
     }
 }
