@@ -30,12 +30,16 @@ namespace GraphicsTestFramework
         }
 
         // Enable test viewer
+        // WIP
+        // Have to create breadcrumb label here rather than relying on TestRunner
+        // Need to access suite and type names from results, how?
         public void EnableTestViewer(ResultsBase resultsObject, TestViewerToolbar.State toolbarState)
         {
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, this.GetType().Name + " enabling test viewer"); // Write to console
+            string breadcrumbLabel = resultsObject.common.GroupName + " - " + resultsObject.common.TestName; // Build breadcrumb label
             ProgressScreen.Instance.SetState(false, ProgressType.LocalSave, ""); // Disable ProgressScreen
             TestViewer.Instance.SetState(true); // Set test viewer state
-            TestViewer.Instance.UpdateBars(GetViewerTabs(resultsObject), GetResultsTimeDisplay(resultsObject), toolbarState); // Set test viewer state
+            TestViewer.Instance.UpdateBars(GetViewerTabs(resultsObject), GetResultsTimeDisplay(resultsObject), breadcrumbLabel, toolbarState); // Set test viewer state
         }
 
         // Get time since results

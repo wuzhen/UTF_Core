@@ -44,11 +44,11 @@ namespace GraphicsTestFramework
         }
         
         // Update the viewer tool bar and nav bar context based on the active TestRunner RunnerType
-        public void UpdateBars(TestViewerTabData[] tabDatas, string updateTime, TestViewerToolbar.State toolbarState)
+        public void UpdateBars(TestViewerTabData[] tabDatas, string updateTime, string breadcrumbLabel, TestViewerToolbar.State toolbarState)
         {
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Updating bars"); // Write to console
             TestViewerToolbar.Instance.SetContext(toolbarState); // Set toolbar context mode
-            TestViewerNavbar.Instance.Generate(tabDatas, updateTime); // Update navigation bar
+            TestViewerNavbar.Instance.Generate(breadcrumbLabel, tabDatas, updateTime); // Update navigation bar
         }
 
         // Sets the viewers content

@@ -370,7 +370,9 @@ namespace GraphicsTestFramework
             contextObjectRect.anchoredPosition = new Vector2(0, (entryIndex+1) * -listEntries[0].GetComponent<RectTransform>().sizeDelta.y); // Set position
             listContentRect.sizeDelta = new Vector2(listContentRect.sizeDelta.x, listContentRect.sizeDelta.y + contextObjectRect.sizeDelta.y); // Set size
             NudgeDetailedResultsListEntries(entryIndex, -contextObjectRect.sizeDelta.y); // Nudge entries
-            display.SetupResultsContext(activeContextObject.GetComponent<ResultsContext>(), inputEntry); // Tell Display how to setup the results context
+            ResultsContext resultsContext = activeContextObject.GetComponent<ResultsContext>(); // Get results context reference
+            resultsContext.Setup(activeContextEntry); // Setup base of results context
+            display.SetupResultsContext(resultsContext, inputEntry); // Tell Display how to setup the results context
         }
 
         // Hide and destroy context object

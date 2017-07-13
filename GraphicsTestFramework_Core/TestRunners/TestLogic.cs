@@ -85,6 +85,8 @@ namespace GraphicsTestFramework
 
         public abstract void SetModel(TestModelBase inputModel);
 
+        public abstract TestModelBase GetModel();
+
         public abstract void SetDisplay();
 
         public abstract void SetResults();
@@ -391,6 +393,24 @@ namespace GraphicsTestFramework
         public override void SetModel(TestModelBase inputModel)
         {
             model = (M)inputModel; // Cast to type and set
+        }
+
+        // Get test model instance
+        // WIP
+        // Safer than accessing model directly, should probably use it
+        // But really its needed for when viewing test with null model
+        // Problem is it requires instance of settings to access when setting up viewer tabs
+        // This requires type reference for each models settings class...
+        public override TestModelBase GetModel()
+        {
+            if (model)
+                return model;
+            else
+            {
+                TestModelBase newModel = (TestModelBase)Activator.CreateInstance(typeof(M));
+                newModel.settings = new SettingsBase();
+                return newModel;
+            }
         }
 
         // Set test display type
