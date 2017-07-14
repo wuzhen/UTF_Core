@@ -71,9 +71,9 @@ namespace GraphicsTestFramework
         // However, should you want to add further debugs please use Console.Write()
 
         // Setup the results context object
-        public override void SetupResultsContext(ResultsContext context, ResultsEntry inputEntry)
+        public override void SetupResultsContext(ResultsContext context, ResultsIOData inputData)
         {
-            ExampleResults inputResults = (ExampleResults)logic.DeserializeResults(inputEntry.resultsData); // Deserialize input and cast to typed results
+            ExampleResults inputResults = (ExampleResults)logic.DeserializeResults(inputData); // Deserialize input and cast to typed results
             ExampleLogic.ComparisonData comparisonData = (ExampleLogic.ComparisonData)logic.GetComparisonData(inputResults); // Get comparison data
             context.objects[0].GetComponent<Text>().text = inputResults.SomeFloat.ToString(); // Set float
             context.objects[1].GetComponent<Text>().text = comparisonData.SomeFloatDiff.ToString(); // Set diff

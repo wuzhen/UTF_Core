@@ -318,6 +318,14 @@ namespace GraphicsTestFramework
             CheckViewButtonStatus(); // Check view button status
         }
 
+        // Called when results button is clicked
+        public void OnResultsButtonClick()
+        {
+            //ProgressScreen.Instance.SetState(true, ProgressType.LocalLoad, "Getting results data");
+            SetMenuState(false); // Disable Menu
+            ResultsViewer.Instance.SetState(3); // Open results viewer and generate filtered results
+        }
+
         // Called when run button is clicked
         public void OnRunButtonClick()
         {
@@ -336,7 +344,7 @@ namespace GraphicsTestFramework
         // Execution
 
         // Generate and execute a new test runner
-        void GenerateTestRunner(RunnerType type)
+        public void GenerateTestRunner(RunnerType type)
         {
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Generating a test runner"); // Write to console
             TestRunner newRunner; // Store a reference to call on

@@ -86,8 +86,11 @@ namespace GraphicsTestFramework
             if (currentCamera) // If a current camera exists
                 currentCamera.depth = cameraDepth; // Reset its depth
             currentCamera = (Camera)tabData.tabObject; // Get new current camera
-            cameraDepth = currentCamera.depth; // Get current depth
-            currentCamera.depth = 9; // Set its depth
+            if(currentCamera)
+            {
+                cameraDepth = currentCamera.depth; // Get current depth
+                currentCamera.depth = 9; // Set its depth
+            }
         }
     }
 }

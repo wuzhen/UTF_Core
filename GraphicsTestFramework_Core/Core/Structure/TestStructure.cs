@@ -338,10 +338,91 @@ namespace GraphicsTestFramework
             return output;
         }
 
+        // Get the index of an entry at any level based on its name
+        /*public int GetIndexOfEntry(int level, string entry, int suiteIndex, int typeIndex, int groupIndex)
+        {
+            for (int su = 0; su < testStructure.suites.Count; su++) // Iterate suites
+            {
+                if (level == 0 && testStructure.suites[su].suiteName == entry) // If searching for suite index
+                    return su; // return if matches
+                if (level >= 1) // If continue
+                {
+                    for (int ty = 0; ty < testStructure.suites[su].types.Count; ty++) // Iterate types
+                    {
+                        if (level == 1 && su == suiteIndex && testStructure.suites[su].types[ty].typeName == entry) // If searching for type index
+                            return ty; // Return if matches
+                        if (level >= 2) // If continue
+                        {
+                            for (int gr = 0; gr < testStructure.suites[su].types[ty].groups.Count; gr++) // Iterate groups
+                            {
+                                if (level == 2 && su == suiteIndex && ty == typeIndex && testStructure.suites[su].types[ty].groups[gr].groupName == entry) // If searching for group index
+                                    return gr; // Return if matchees
+                                if (level >= 3) // If continue
+                                {
+                                    for (int te = 0; te < testStructure.suites[su].types[ty].groups[gr].tests.Count; te++) // Iterate tests
+                                    {
+                                        if (level == 3 && su == suiteIndex && ty == typeIndex && gr == groupIndex && testStructure.suites[su].types[ty].groups[gr].tests[te].testName == entry) // If searching for test index
+                                            return te; // Return if matchees
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return -1;
+        }
+
+        // Get a types value from its index
+        public int GetTypeValueFromIndex(int suiteIndex, int typeIndex)
+        {
+            for (int su = 0; su < testStructure.suites.Count; su++) // Iterate suites
+            {
+                if(su == suiteIndex) // If matches suite
+                {
+                    for (int ty = 0; ty < testStructure.suites[su].types.Count; ty++) // Iterate types
+                    {
+                        if (ty == typeIndex) // If matches type
+                            return testStructure.suites[su].types[ty].typeIndex; // Return its value
+                    }
+                }
+            }
+            return -1;
+        }
+
+        // Get the index of an entry at any level based on its name
+        public string GetTestScenePathFromIndex(int suiteIndex, int typeIndex, int groupIndex, int testIndex)
+        {
+            for (int su = 0; su < testStructure.suites.Count; su++) // Iterate suites
+            {
+                if(suiteIndex == su) // If suite matches
+                {
+                    for (int ty = 0; ty < testStructure.suites[su].types.Count; ty++) // Iterate types
+                    {
+                        if (typeIndex == ty) // If type matches
+                        {
+                            for (int gr = 0; gr < testStructure.suites[su].types[ty].groups.Count; gr++) // Iterate groups
+                            {
+                                if (groupIndex == gr) // If group matches
+                                {
+                                    for (int te = 0; te < testStructure.suites[su].types[ty].groups[gr].tests.Count; te++) // Iterate tests
+                                    {
+                                        if (testIndex == te) // If test matches
+                                            return testStructure.suites[su].types[ty].groups[gr].tests[te].scenePath; // Return path
+                                    }
+                                } 
+                            }
+                        }  
+                    }
+                }
+            }
+            return null;
+        }*/
+
         // ------------------------------------------------------------------------------------
         // Set Selection
         // - TODO - Clean and comment this
-        
+
         public void SetSelectionState(MenuEntryData entryData)
         {
             switch (entryData.id.currentLevel)
@@ -522,6 +603,30 @@ namespace GraphicsTestFramework
             return output;
         }
 
+        // Build a TestEntry from TestStructure data
+        /*public TestEntry GetBuildTestEntry(string suiteName, string typeName, string groupName, string testName)
+        {
+            int suiteIndex = GetIndexOfEntry(0, suiteName, 0, 0, 0);
+            int typeIndex = GetIndexOfEntry(1, typeName, suiteIndex, 0, 0);
+            int groupIndex = GetIndexOfEntry(2, groupName, suiteIndex, typeIndex, 0);
+            int testIndex = GetIndexOfEntry(3, testName, suiteIndex, typeIndex, groupIndex);
+            int typeValue = GetTypeValueFromIndex(suiteIndex, typeIndex);
+            string scenePath = GetTestScenePathFromIndex(suiteIndex, typeIndex, groupIndex, testIndex);
+            return new TestEntry
+                (
+                    suiteName,
+                    groupName,
+                    scenePath,
+                    typeName,
+                    testName,
+                    typeIndex,
+                    suiteIndex,
+                    groupIndex,
+                    typeIndex,
+                    testIndex
+                );
+        }*/
+
         // ------------------------------------------------------------------------------------
         // Local Data Structures
 
@@ -567,42 +672,5 @@ namespace GraphicsTestFramework
             public int selectionState;
             public bool baseline;
         }
-
-        /*[Serializable]
-        public class Suite
-        {
-            public string suiteName;
-            public int selectionState;
-            public bool baseline;
-            public List<TestType> types = new List<TestType>();
-        }
-
-        [Serializable]
-        public class TestType
-        {
-            public string typeName;
-            public int typeIndex;
-            public int selectionState;
-            public bool baseline;
-            public List<Scene> scenes = new List<Scene>();
-        }
-
-        [Serializable]
-        public class Scene
-        {
-            public string sceneName;
-            public string scenePath;
-            public int selectionState;
-            public bool baseline;
-            public List<Test> tests = new List<Test>();
-        }
-
-        [Serializable]
-        public class Test
-        {
-            public string testName;
-            public bool baseline;
-            public int selectionState;
-        }*/
     }
 }

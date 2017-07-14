@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -30,7 +31,7 @@ namespace GraphicsTestFramework
         // Main
         int viewerState; // Track state
         public GameObject resultsViewerParent;
-        List<TestEntry> filteredResultsEntries = new List<TestEntry>();
+        List<ResultsEntryData> filteredResultsEntries = new List<ResultsEntryData>();
         // Home buttons
         public Button homeButton;
         public Button overviewButton;
@@ -78,7 +79,6 @@ namespace GraphicsTestFramework
                     resultsViewerParent.SetActive(false);
                     homeButton.gameObject.SetActive(false);
                     overviewButton.gameObject.SetActive(false);
-                    //SetResultsDropdownState(false);
                     break;
                 case 1: // Overview
                     overviewParent.SetActive(true);
@@ -86,7 +86,7 @@ namespace GraphicsTestFramework
                     resultsViewerParent.SetActive(true);
                     homeButton.gameObject.SetActive(true);
                     overviewButton.gameObject.SetActive(false);
-                    //SetResultsDropdownState(false);
+                    GenerateContent(false); // Main call for generation of viewer content
                     break;
                 case 2: // Detailed Results
                     overviewParent.SetActive(false);
@@ -94,10 +94,18 @@ namespace GraphicsTestFramework
                     resultsViewerParent.SetActive(true);
                     homeButton.gameObject.SetActive(false);
                     overviewButton.gameObject.SetActive(true);
-                    //SetResultsDropdownState(true);
+                    GenerateContent(false); // Main call for generation of viewer content
+                    break;
+                case 3: // First time overview
+                    overviewParent.SetActive(true);
+                    detailedResultsParent.SetActive(false);
+                    resultsViewerParent.SetActive(true);
+                    homeButton.gameObject.SetActive(true);
+                    overviewButton.gameObject.SetActive(false);
+                    viewerState = 1; // Set back for content generation
+                    GenerateContent(true); // Main call for generation of viewer content
                     break;
             }
-            GenerateContent(); // Main call for generation of viewer content
         }
 
         // ------------------------------------------------------------------------------------
@@ -156,26 +164,38 @@ namespace GraphicsTestFramework
         // Content Main
 
         // Generate all content for detailed results based on filters
-        public void GenerateContent()
+        public void GenerateContent(bool regenFilteredResults)
         {
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Generating content"); // Write to console
+            StartCoroutine(ProcessGenerateContent(regenFilteredResults)); // Process content generation
+        }
+
+        // Process generation of content
+        IEnumerator ProcessGenerateContent(bool regenFilteredResults)
+        {
+            ProgressScreen.Instance.SetState(true, ProgressType.LocalLoad, "Getting results data"); // Enable progress screen
+            while (!ProgressScreen.Instance.GetState()) // Wait for progress screen
+                yield return null;
             switch (viewerState)
             {
-                case 0: // Back to menud
+                case 0: // Back to menu
                     break;
                 case 1: // Overview
-                    GenerateFilteredResultList(); // Generate filtered result list
+                    if (regenFilteredResults) // If regenerate filteres results list
+                        yield return StartCoroutine(GenerateFilteredResultList()); // Generate filtered result list
                     GenerateOverview(); // Generate overview content
                     break;
                 case 2: // Detailed Results
-                    GenerateFilteredResultList(); // Generate filtered result list
-                    GenerateDetailedResultsList(); // Generate detailed results list
+                    if (regenFilteredResults) // If regenerate filteres results list
+                        yield return StartCoroutine(GenerateFilteredResultList()); // Generate filtered result list
+                    yield return StartCoroutine(GenerateDetailedResultsList()); // Generate detailed results list
                     break;
             }
+            ProgressScreen.Instance.SetState(false, ProgressType.LocalLoad, "Getting results data"); // Disable progress screen
         }
 
         // Generate a list of results based on selected filters
-        public void GenerateFilteredResultList()
+        public IEnumerator GenerateFilteredResultList()
         {
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Filtering results"); // Write to console
             filteredResultsEntries.Clear(); // Clear current
@@ -197,35 +217,37 @@ namespace GraphicsTestFramework
                                 for (int te = 0; te < structure.suites[su].types[ty].groups[gr].tests.Count; te++) // Iterate tests
                                 {
                                     string testName = structure.suites[su].types[ty].groups[gr].tests[te].testName; // Get test name
+                                    string scenePath = structure.suites[su].types[ty].groups[gr].tests[te].scenePath; // Get scene path
+                                    ResultsDataCommon common = BuildResultsDataCommon(groupName, testName); // Build results data common to retrieve results
+                                    ResultsIOData data = ResultsIO.Instance.RetrieveResult(suiteName, typeName, common); // Retrieve results data
                                     if (resultsDropdown.value != 0) // If filtering based on results
                                     {
-                                        ResultsDataCommon common = BuildResultsDataCommon(groupName, testName); // Build results data common to retrieve results
-                                        ResultsIOData data = ResultsIO.Instance.RetrieveResult(suiteName, typeName, common); // Retrieve results data
-                                        int passFail = 2; // Set default state (no results)
+                                         int passFail = 2; // Set default state (no results)
                                         if (data != null) // If results data exists
                                             passFail = data.resultsRow[0].resultsColumn[21] == "True" ? 0 : 1; // Set pass fail state
                                         switch(resultsDropdown.value)
                                         {
                                             case 1: // Pass
                                                 if(passFail == 0)
-                                                    filteredResultsEntries.Add(new TestEntry(suiteName, groupName, "", typeName, testName, typeIndex, su, gr, ty, te)); // Add to list
+                                                    filteredResultsEntries.Add(new ResultsEntryData (new TestEntry(suiteName, groupName, scenePath, typeName, testName, typeIndex, su, gr, ty, te), data)); // Add to list
                                                 break;
                                             case 2: // Fail
                                                 if (passFail == 1)
-                                                    filteredResultsEntries.Add(new TestEntry(suiteName, groupName, "", typeName, testName, typeIndex, su, gr, ty, te)); // Add to list
+                                                    filteredResultsEntries.Add(new ResultsEntryData(new TestEntry(suiteName, groupName, scenePath, typeName, testName, typeIndex, su, gr, ty, te), data)); // Add to list
                                                 break;
                                             case 3: // Ran
                                                 if (passFail != 2)
-                                                    filteredResultsEntries.Add(new TestEntry(suiteName, groupName, "", typeName, testName, typeIndex, su, gr, ty, te)); // Add to list
+                                                    filteredResultsEntries.Add(new ResultsEntryData(new TestEntry(suiteName, groupName, scenePath, typeName, testName, typeIndex, su, gr, ty, te), data)); // Add to list
                                                 break;
                                             case 4: // Not Ran
                                                 if (passFail == 2)
-                                                    filteredResultsEntries.Add(new TestEntry(suiteName, groupName, "", typeName, testName, typeIndex, su, gr, ty, te)); // Add to list
+                                                    filteredResultsEntries.Add(new ResultsEntryData(new TestEntry(suiteName, groupName, scenePath, typeName, testName, typeIndex, su, gr, ty, te), data)); // Add to list
                                                 break;
                                         }
                                     }
                                     else
-                                        filteredResultsEntries.Add(new TestEntry(suiteName, groupName, "", typeName, testName, typeIndex, su, gr, ty, te)); // Add to list
+                                        filteredResultsEntries.Add(new ResultsEntryData(new TestEntry(suiteName, groupName, scenePath, typeName, testName, typeIndex, su, gr, ty, te), data)); // Add to list
+                                    yield return null;
                                 }
                             }
                         }
@@ -245,11 +267,9 @@ namespace GraphicsTestFramework
             int testsFailed = 0; // Track tests failed
             for (int i = 0; i < filteredResultsEntries.Count; i++) // Iterate filtered results
             {
-                ResultsDataCommon common = BuildResultsDataCommon(filteredResultsEntries[i].groupName, filteredResultsEntries[i].testName); // Build results data common to retrieve results
-                ResultsIOData data = ResultsIO.Instance.RetrieveResult(filteredResultsEntries[i].suiteName, filteredResultsEntries[i].typeName, common); // Retrieve results data
                 int passFail = 2; // Set default state (no results)
-                if (data != null) // If results data exists
-                    passFail = data.resultsRow[0].resultsColumn[21] == "True" ? 0 : 1; // Set pass fail state
+                if (filteredResultsEntries[i].resultsData != null) // If results data exists
+                    passFail = filteredResultsEntries[i].resultsData.resultsRow[0].resultsColumn[21] == "True" ? 0 : 1; // Set pass fail state
                 switch(passFail)
                 {
                     case 0: // Pass
@@ -283,23 +303,27 @@ namespace GraphicsTestFramework
         // Detailed Results List
 
         // Generate main list
-        void GenerateDetailedResultsList()
+        IEnumerator GenerateDetailedResultsList()
         {
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Generating list"); // Write to console
+            yield return null;
             ClearDetailedResultsList(); // Clear current list
             DestroyContextEntry(); // Destroy the context object
+            TestLogicBase logic = null;
+            string previousType = "";
             for(int i = 0; i < filteredResultsEntries.Count; i++) // Iterate filtered results
             {
-                ResultsDataCommon common = BuildResultsDataCommon(filteredResultsEntries[i].groupName, filteredResultsEntries[i].testName); // Build results data common to retrieve results
-                ResultsIOData data = ResultsIO.Instance.RetrieveResult(filteredResultsEntries[i].suiteName, filteredResultsEntries[i].typeName, common); // Retrieve results data
-                TestLogicBase logic = TestTypeManager.Instance.GetLogicInstanceFromName(filteredResultsEntries[i].typeName); // Get logic instance
+                if(!logic || filteredResultsEntries[i].testEntry.typeName != previousType)
+                    logic = TestTypeManager.Instance.GetLogicInstanceFromName(filteredResultsEntries[i].testEntry.typeName); // Get logic instance
+                previousType = filteredResultsEntries[i].testEntry.typeName;
                 GameObject go = Instantiate(resultsEntryPrefab, listContentRect, false); // Create results entry instance
                 listEntries.Add(go); // Add to list
                 RectTransform goRect = go.GetComponent<RectTransform>(); // Get rect
                 goRect.anchoredPosition = new Vector2(0, entryHeight); // Set position
                 ResultsEntry newEntry = go.GetComponent<ResultsEntry>(); // Get ResultsEntry reference
-                newEntry.Setup(filteredResultsEntries[i].suiteName, common.GroupName, common.TestName, data, logic); // Setup the instance
+                newEntry.Setup(filteredResultsEntries[i], logic); // Setup the instance
                 entryHeight -= goRect.sizeDelta.y; // Track height for next entry
+                
             }
             listContentRect.sizeDelta = new Vector2(listContentRect.sizeDelta.x, -entryHeight); // Set content rect size
         }
@@ -372,7 +396,7 @@ namespace GraphicsTestFramework
             NudgeDetailedResultsListEntries(entryIndex, -contextObjectRect.sizeDelta.y); // Nudge entries
             ResultsContext resultsContext = activeContextObject.GetComponent<ResultsContext>(); // Get results context reference
             resultsContext.Setup(activeContextEntry); // Setup base of results context
-            display.SetupResultsContext(resultsContext, inputEntry); // Tell Display how to setup the results context
+            display.SetupResultsContext(resultsContext, inputEntry.resultsEntryData.resultsData); // Tell Display how to setup the results context
         }
 
         // Hide and destroy context object

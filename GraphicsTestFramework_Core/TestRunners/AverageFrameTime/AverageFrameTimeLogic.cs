@@ -8,7 +8,7 @@ namespace GraphicsTestFramework
     // - Results: Samples a number of frames and returns an average
     // - Comparison: Compares average frame time to baseline
 
-    public class AverageFrameTimeLogic : TestLogic<AverageFrameTimeModel, AverageFrameTimeDisplay, AverageFrameTimeResults>
+    public class AverageFrameTimeLogic : TestLogic<AverageFrameTimeModel, AverageFrameTimeDisplay, AverageFrameTimeResults, AverageFrameTimeSettings>
 	{
         // ------------------------------------------------------------------------------------
         // Variables

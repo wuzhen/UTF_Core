@@ -14,22 +14,21 @@ namespace GraphicsTestFramework
         public Button viewTestButton;
         public GameObject[] objects;
         // Data
-        ResultsEntry activeEntry;
+        ResultsEntry activeResultsEntry;
 
         // Setup the context object
-        public void Setup(ResultsEntry inputEntry)
+        public void Setup(ResultsEntry inputResults)
         {
-            activeEntry = inputEntry; // Track active results entry
+            activeResultsEntry = inputResults; // Track active results entry
             viewTestButton.onClick.AddListener(delegate { OnClickViewTest(); }); // Add listener for view test
         }
 
         // On button click: View Test
         public void OnClickViewTest()
         {
-            TestDisplayBase display = activeEntry.logic.GetComponent<TestDisplayBase>(); // Get display reference from logic
-            ResultsBase results = (ResultsBase)activeEntry.logic.DeserializeResults(activeEntry.resultsData); // Deserialize results for this results entry
+            Menu.Instance.GenerateTestRunner(RunnerType.Results); // Generate blank runner
+            TestRunner.Instance.CallLoadSpecificTest(activeResultsEntry.resultsEntryData.testEntry); // Load specific test
             ResultsViewer.Instance.SetState(0); // Disable results viewer
-            display.EnableTestViewer(results, new TestViewerToolbar.State(false, false, false, false, false)); // Enable test viewer with active results data
         }
     }
 }

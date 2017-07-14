@@ -109,16 +109,27 @@ namespace GraphicsTestFramework
             SetupResultsStructs(); // Setup the results structs to be filled
             CheckForBaseline(); // Check for baselines
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, this.GetType().Name + " set up test " + activeTestEntry.testName); // Write to console
-            if(runType == RunnerType.Manual) // If manual runner
+            ResultsIOData localResult; // Used for certain active run types
+            switch (activeRunType)
             {
-                ResultsIOData localResult = ResultsIO.Instance.RetrieveResult(suiteName, GetType().ToString().Replace("GraphicsTestFramework.", "").Replace("Logic", ""), activeResultData.common); // Try get local result
-                if (localResult == null) // If not found
+                case RunnerType.Automation:
                     TestPreProcess(); // Start pre-process
-                else // If found
+                    break;
+                case RunnerType.Manual:
+                    localResult = ResultsIO.Instance.RetrieveResult(suiteName, GetType().ToString().Replace("GraphicsTestFramework.", "").Replace("Logic", ""), activeResultData.common); // Try get local result
+                    if (localResult == null) // If not found
+                        TestPreProcess(); // Start pre-process
+                    else // If found
+                        UseLocalResult(localResult); // Use local
+                    break;
+                case RunnerType.Results:
+                    localResult = ResultsIO.Instance.RetrieveResult(suiteName, GetType().ToString().Replace("GraphicsTestFramework.", "").Replace("Logic", ""), activeResultData.common); // Try get local result
                     UseLocalResult(localResult); // Use local
+                    break;
+                case RunnerType.Resolve:
+                    TestPreProcess(); // Start pre-process
+                    break;
             }
-            else
-                TestPreProcess(); // Start pre-process
         }
 
         // First injection point for custom code. Runs before any test logic.
@@ -173,12 +184,20 @@ namespace GraphicsTestFramework
         public void EndTest()
         {
             Console.Instance.Write(DebugLevel.Logic, MessageLevel.Log, this.GetType().Name + " ending test " + activeTestEntry.testName); // Write to console
-            if (activeRunType == RunnerType.Automation) // If automation run
-                SubmitResults(baselineExists ? 0 : 1); // Submit results
-            else // If manual run
+            switch(activeRunType)
             {
-                bool resolve = TestRunner.Instance.runnerType == RunnerType.Resolve ? true : false; // Is resolve?
-                GetComponent<TestDisplayBase>().EnableTestViewer(activeResultData, new TestViewerToolbar.State(!resolve, !resolve, !resolve && testWasRan, true, true)); // Enable test viewer with active results data
+                case RunnerType.Automation:
+                    SubmitResults(baselineExists ? 0 : 1); // Submit results
+                    break;
+                case RunnerType.Manual:
+                    GetComponent<TestDisplayBase>().EnableTestViewer(activeResultData, new TestViewerToolbar.State(true, true, testWasRan, true, true)); // Enable test viewer with active results data
+                    break;
+                case RunnerType.Results:
+                    GetComponent<TestDisplayBase>().EnableTestViewer(activeResultData, new TestViewerToolbar.State(false, false, false, false, false)); // Enable test viewer with active results data
+                    break;
+                case RunnerType.Resolve:
+                    GetComponent<TestDisplayBase>().EnableTestViewer(activeResultData, new TestViewerToolbar.State(false, false, false, true, true)); // Enable test viewer with active results data
+                    break;
             }
         }
 
@@ -378,7 +397,7 @@ namespace GraphicsTestFramework
     // - Next level TestLogic class that all user facing logics derive from
     // - Adds an abstraction layer for defining model type
 
-    public abstract class TestLogic<M, D, R> : TestLogicBase where M : TestModelBase where D : TestDisplayBase where R : ResultsBase
+    public abstract class TestLogic<M, D, R, S> : TestLogicBase where M : TestModelBase where D : TestDisplayBase where R : ResultsBase where S : SettingsBase
     {
         // ------------------------------------------------------------------------------------
         // Variables
@@ -396,11 +415,6 @@ namespace GraphicsTestFramework
         }
 
         // Get test model instance
-        // WIP
-        // Safer than accessing model directly, should probably use it
-        // But really its needed for when viewing test with null model
-        // Problem is it requires instance of settings to access when setting up viewer tabs
-        // This requires type reference for each models settings class...
         public override TestModelBase GetModel()
         {
             if (model)
@@ -408,7 +422,7 @@ namespace GraphicsTestFramework
             else
             {
                 TestModelBase newModel = (TestModelBase)Activator.CreateInstance(typeof(M));
-                newModel.settings = new SettingsBase();
+                newModel.settings = (SettingsBase)Activator.CreateInstance(typeof(S));
                 return newModel;
             }
         }

@@ -150,9 +150,17 @@ namespace GraphicsTestFramework
         public void OnClickReturnToMenu()
 		{
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Clicked: Return to Menu"); // Write to console
-            TestRunner.Instance.EndTest(); // End the test
-			TestViewer.Instance.SetState(false); // Disable the TestViewer
-			Menu.Instance.SetMenuState(true); // Enable the Menu
+            if(TestRunner.Instance.runnerType != RunnerType.Results)
+            {
+                TestRunner.Instance.EndTest(); // End the test
+                TestViewer.Instance.SetState(false); // Disable the TestViewer
+                Menu.Instance.SetMenuState(true); // Enable the Menu
+            }
+            else
+            {
+                TestViewer.Instance.SetState(false); // Disable the TestViewer
+                ResultsViewer.Instance.SetState(2); // Enable the Result Viewer
+            }
 		}
 
         // On click toggle statistics button
