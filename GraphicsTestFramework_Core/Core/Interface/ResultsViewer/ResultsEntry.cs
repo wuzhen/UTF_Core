@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using UnityEngine.UI;
 
 namespace GraphicsTestFramework
@@ -20,26 +21,30 @@ namespace GraphicsTestFramework
         public Button expandButton;
 
         // Data
-        string suiteName; // Track suite name to send to context object
-        public ResultsIOData resultsData; // Results for this entry
+        public ResultsEntryData resultsEntryData; // Results for this entry
         public TestLogicBase logic; // Logic script reference
 
         // ------------------------------------------------------------------------------------
         // Initialization
 
+        // Setup a title entry
+        public void SetupTitle(string title)
+        {
+            testNameText.text = title; // Set title text
+        }
+
         // Setup the entry
-        public void Setup(string suite, string groupName, string testName, ResultsIOData inputData, TestLogicBase inputLogic)
+        public void Setup(ResultsEntryData inputData, TestLogicBase inputLogic)
         {
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Setting up results entry"); // Write to console
-            suiteName = suite; // Track suite name
-            groupNameText.text = groupName; // Set group name label
-            testNameText.text = testName; // Set test name label
-            resultsData = inputData; // Set results data
+            resultsEntryData = inputData; // Track resultsEntry data
             logic = inputLogic; // Track logic instance
+            groupNameText.text = resultsEntryData.testEntry.groupName; // Set group name label
+            testNameText.text = resultsEntryData.testEntry.testName; // Set test name label
 
             int passFail = 2; // Set default state (no results)
-            if (resultsData != null) // If results data exists
-                passFail = resultsData.resultsRow[0].resultsColumn[21] == "True" ? 1 : 0; // Set pass fail state
+            if (resultsEntryData.resultsData != null) // If results data exists
+                passFail = resultsEntryData.resultsData.resultsRow[0].resultsColumn[21] == "True" ? 1 : 0; // Set pass fail state
 
             switch (passFail) // Switch on pass fail
             {
@@ -54,7 +59,7 @@ namespace GraphicsTestFramework
                     expandButton.onClick.AddListener(delegate { ToggleContext(); }); // Add expand button listener
                     break; 
                 case 2: // No results
-                    passFailText.text = "N/A"; // Set passfail label
+                    passFailText.text = "NONE"; // Set passfail label
                     passFailBackground.color = Menu.Instance.colors[1]; // Set passfail object color
                     expandButton.interactable = false; // Disable expand button
                     break;
@@ -68,8 +73,21 @@ namespace GraphicsTestFramework
         public void ToggleContext()
         {
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Toggle context object"); // Write to console
-            logic.SetSuiteName(suiteName); // Set suite name on logic instance
+            logic.SetSuiteName(resultsEntryData.testEntry.suiteName); // Set suite name on logic instance
             ResultsViewer.Instance.ToggleContextObject(this, logic.GetComponent<TestDisplayBase>()); // Tell ResultsViewer to toggle context object on this entry
+        }
+    }
+
+    [Serializable]
+    public class ResultsEntryData
+    {
+        public TestEntry testEntry;
+        public ResultsIOData resultsData;
+
+        public ResultsEntryData(TestEntry inputEntry, ResultsIOData inputData)
+        {
+            testEntry = inputEntry;
+            resultsData = inputData;
         }
     }
 }

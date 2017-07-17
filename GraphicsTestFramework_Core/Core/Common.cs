@@ -84,6 +84,14 @@ namespace GraphicsTestFramework
         // ------------------------------------------------------------------------------------
         // Common Conversions
 
+        // Convert string to dropdown option data
+        public static UnityEngine.UI.Dropdown.OptionData ConvertStringToDropdownOptionData(string input)
+        {
+            UnityEngine.UI.Dropdown.OptionData newOption = new UnityEngine.UI.Dropdown.OptionData(); // Create new OptionData
+            newOption.text = input; // Set text
+            return newOption;
+        }
+
         // Convert Array types ready to be serialized for saving
         public static string ConvertStringArrayToString(string[] input)
         {
@@ -186,6 +194,12 @@ namespace GraphicsTestFramework
                     break;
             }
             return output; // Return
+        }
+
+        // Prevent divide by zero
+        static public float SafeDivision(float numerator, float denominator)
+        {
+            return (denominator == 0) ? 0 : numerator / denominator;
         }
 
         // Get a comparison value from a texture
