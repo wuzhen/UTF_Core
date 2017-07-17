@@ -27,6 +27,12 @@ namespace GraphicsTestFramework
         // ------------------------------------------------------------------------------------
         // Initialization
 
+        // Setup a title entry
+        public void SetupTitle(string title)
+        {
+            testNameText.text = title; // Set title text
+        }
+
         // Setup the entry
         public void Setup(ResultsEntryData inputData, TestLogicBase inputLogic)
         {

@@ -321,7 +321,6 @@ namespace GraphicsTestFramework
         // Called when results button is clicked
         public void OnResultsButtonClick()
         {
-            //ProgressScreen.Instance.SetState(true, ProgressType.LocalLoad, "Getting results data");
             SetMenuState(false); // Disable Menu
             ResultsViewer.Instance.SetState(3); // Open results viewer and generate filtered results
         }

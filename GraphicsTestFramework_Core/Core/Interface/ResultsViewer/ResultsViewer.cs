@@ -30,6 +30,7 @@ namespace GraphicsTestFramework
 
         // Main
         int viewerState; // Track state
+        bool isGenerated; // Track generation complete
         public GameObject resultsViewerParent;
         List<ResultsEntryData> filteredResultsEntries = new List<ResultsEntryData>();
         // Home buttons
@@ -48,11 +49,28 @@ namespace GraphicsTestFramework
         public GameObject detailedResultsParent;
         public RectTransform listContentRect;
         public GameObject resultsEntryPrefab;
+        public GameObject resultsEntryTitlePrefab;
         List<GameObject> listEntries = new List<GameObject>();
         float entryHeight;
+        float listHeight;
+        // Detailed results titles
+        public Transform viewportCorner;
+        public ResultsEntry hoverTitleEntry;
+        public List<ResultsEntry> titleEntriesAbove = new List<ResultsEntry>();
+        public List<ResultsEntry> titleEntriesBelow = new List<ResultsEntry>();
         // Context entry
         ResultsEntry activeContextEntry;
         GameObject activeContextObject;
+
+        // ------------------------------------------------------------------------------------
+        // Core
+
+        // Every update
+        private void Update()
+        {
+            if(viewerState == 2 && isGenerated) // If viewing detailed results and generation complete
+                CheckForTitleChange(); // Check for moving titles
+        }
 
         // ------------------------------------------------------------------------------------
         // State
@@ -71,6 +89,7 @@ namespace GraphicsTestFramework
         {
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Setting state"); // Write to console
             viewerState = input; // Track state
+            isGenerated = false; // Track is generated
             switch(viewerState) // Switch UI objects based on state
             {
                 case 0: // Back to menu
@@ -192,6 +211,7 @@ namespace GraphicsTestFramework
                     break;
             }
             ProgressScreen.Instance.SetState(false, ProgressType.LocalLoad, "Getting results data"); // Disable progress screen
+            isGenerated = true; // Track is generated
         }
 
         // Generate a list of results based on selected filters
@@ -308,24 +328,37 @@ namespace GraphicsTestFramework
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Generating list"); // Write to console
             yield return null;
             ClearDetailedResultsList(); // Clear current list
+            ClearDetailedResultsTitleEntryLists(); // Clear title lists
             DestroyContextEntry(); // Destroy the context object
-            TestLogicBase logic = null;
-            string previousType = "";
+            TestLogicBase logic = null; // Track previous logic
+            string previousSuite = ""; // Track previous suite
+            string previousType = ""; // Track previous type
             for(int i = 0; i < filteredResultsEntries.Count; i++) // Iterate filtered results
             {
-                if(!logic || filteredResultsEntries[i].testEntry.typeName != previousType)
+                if(previousSuite != filteredResultsEntries[i].testEntry.suiteName || previousType != filteredResultsEntries[i].testEntry.typeName) // New suite or type
+                    GenerateNewTitleEntry(filteredResultsEntries[i].testEntry); // Generate new title entry
+                if (!logic || filteredResultsEntries[i].testEntry.typeName != previousType) // If logic doesnt match previous type
                     logic = TestTypeManager.Instance.GetLogicInstanceFromName(filteredResultsEntries[i].testEntry.typeName); // Get logic instance
-                previousType = filteredResultsEntries[i].testEntry.typeName;
-                GameObject go = Instantiate(resultsEntryPrefab, listContentRect, false); // Create results entry instance
-                listEntries.Add(go); // Add to list
-                RectTransform goRect = go.GetComponent<RectTransform>(); // Get rect
-                goRect.anchoredPosition = new Vector2(0, entryHeight); // Set position
-                ResultsEntry newEntry = go.GetComponent<ResultsEntry>(); // Get ResultsEntry reference
+                previousSuite = filteredResultsEntries[i].testEntry.suiteName; // Track previous suite
+                previousType = filteredResultsEntries[i].testEntry.typeName; // Track previous type
+                ResultsEntry newEntry = GenerateResultsEntry(resultsEntryPrefab); // Generate a ResultsEntry
                 newEntry.Setup(filteredResultsEntries[i], logic); // Setup the instance
-                entryHeight -= goRect.sizeDelta.y; // Track height for next entry
-                
+                if (entryHeight == 0) // Track entry height
+                    entryHeight = newEntry.GetComponent<RectTransform>().sizeDelta.y;
+                listHeight -= entryHeight; // Track height for next entry
+
             }
-            listContentRect.sizeDelta = new Vector2(listContentRect.sizeDelta.x, -entryHeight); // Set content rect size
+            listContentRect.sizeDelta = new Vector2(listContentRect.sizeDelta.x, -listHeight); // Set content rect size
+        }
+
+        // Generate a results entry of a prefab type and return
+        ResultsEntry GenerateResultsEntry(GameObject prefab)
+        {
+            GameObject go = Instantiate(prefab, listContentRect, false); // Create results title entry instance
+            listEntries.Add(go); // Add to list
+            RectTransform goRect = go.GetComponent<RectTransform>(); // Get rect
+            goRect.anchoredPosition = new Vector2(0, listHeight); // Set position
+            return go.GetComponent<ResultsEntry>(); // Get ResultsEntry reference
         }
 
         // Clear main list
@@ -335,7 +368,7 @@ namespace GraphicsTestFramework
             foreach (GameObject go in listEntries) // Iterate current list entries
                 Destroy(go); // Delete them
             listEntries.Clear(); // Clear the list
-            entryHeight = 0; // Reset
+            listHeight = 0; // Reset
         }
 
         // Find an entries index from its instance
@@ -359,6 +392,78 @@ namespace GraphicsTestFramework
                 RectTransform entryRect = listEntries[i].GetComponent<RectTransform>(); // Get rect reference
                 entryRect.anchoredPosition = new Vector2(entryRect.anchoredPosition.x, entryRect.anchoredPosition.y + nudgeAmount); // Nudge the entry
             }
+        }
+
+        // ------------------------------------------------------------------------------------
+        // Detailed Results Title Entry
+
+        // Generate a new title entry
+        void GenerateNewTitleEntry(TestEntry input)
+        {
+            string title = input.suiteName + " - " + input.typeName; // If new suite add new suite name to title
+            ResultsEntry newEntry = GenerateResultsEntry(resultsEntryTitlePrefab); // Generate a results entry
+            newEntry.SetupTitle(title); // Setup the title instance
+            if (titleEntriesBelow.Count == 0) // If first entry
+                SetHoverTitleEntry(title); // Set hover title
+            titleEntriesBelow.Add(newEntry); // Add to list of titles below top of scroll rect
+            listHeight -= newEntry.GetComponent<RectTransform>().sizeDelta.y; // Track height for next entry
+        }
+
+        // Clear both detailed results entry lists
+        void ClearDetailedResultsTitleEntryLists()
+        {
+            titleEntriesAbove.Clear(); // Clear entries above top of scroll rect
+            titleEntriesBelow.Clear(); // Clear entries below top of scroll rect
+        }
+
+        // Check for a change in the active title (every frame)
+        void CheckForTitleChange()
+        {
+            if(titleEntriesAbove.Count > 0) // If there is any titles above the viewport
+            {
+                if (titleEntriesAbove[0].transform.position.y < viewportCorner.position.y) // If the first entry moves below viewport top
+                    MoveTitleEntryInLists(titleEntriesAbove[0]); // Move the entry
+            }
+            if (titleEntriesBelow.Count > 0) //  If there is any titles below the viewport
+            {
+                if (titleEntriesBelow[0].transform.position.y > viewportCorner.position.y) // If the first entry moves above viewport top
+                    MoveTitleEntryInLists(titleEntriesBelow[0]); // Move the entry
+            }
+        }
+
+        // Move a title entry from one loist to another and update hover entry
+        void MoveTitleEntryInLists(ResultsEntry input)
+        {
+            bool isAbove = false; // Set to track list found in
+            foreach(ResultsEntry r in titleEntriesAbove) // Iterate above list
+            {
+                if(r == input) // If requested
+                    isAbove = true; // Set true
+            }
+            if(isAbove) // If requested is above
+            {
+                titleEntriesAbove.Remove(input); // Remove from above
+                titleEntriesBelow.Insert(0, input); // Add to below
+            }
+            else
+            {
+                titleEntriesBelow.Remove(input); // Remove from below
+                titleEntriesAbove.Insert(0, input); // Add to above
+            }
+            SetHoverTitleEntry(); // Set hove title
+        }
+
+        // Set hover title entry to title above the viewport
+        void SetHoverTitleEntry()
+        {
+            if(titleEntriesAbove.Count > 0) // If title exists above the viewport
+                hoverTitleEntry.SetupTitle(titleEntriesAbove[0].testNameText.text); // Setup the title instance
+        }
+
+        // Set hover title entry to specified
+        void SetHoverTitleEntry(string input)
+        {
+            hoverTitleEntry.SetupTitle(input); // Setup the title instance
         }
 
         // ------------------------------------------------------------------------------------
