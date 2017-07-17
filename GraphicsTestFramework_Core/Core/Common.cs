@@ -84,7 +84,7 @@ namespace GraphicsTestFramework
         // ------------------------------------------------------------------------------------
         // Common Conversions
 
-        // Concert string to dropdown option data
+        // Convert string to dropdown option data
         public static UnityEngine.UI.Dropdown.OptionData ConvertStringToDropdownOptionData(string input)
         {
             UnityEngine.UI.Dropdown.OptionData newOption = new UnityEngine.UI.Dropdown.OptionData(); // Create new OptionData
