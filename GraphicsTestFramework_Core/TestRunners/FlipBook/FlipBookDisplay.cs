@@ -70,9 +70,9 @@ namespace GraphicsTestFramework
         // ResultsViewer
 
         // Setup the results context object
-        public override void SetupResultsContext(ResultsContext context, ResultsEntry inputEntry)
+        public override void SetupResultsContext(ResultsContext context, ResultsIOData inputData)
         {
-            FlipBookResults inputResults = (FlipBookResults)logic.DeserializeResults(inputEntry.resultsData); // Deserialize input and cast to typed results
+            FlipBookResults inputResults = (FlipBookResults)logic.DeserializeResults(inputData); // Deserialize input and cast to typed results
             FlipBookLogic.ComparisonData comparisonData = (FlipBookLogic.ComparisonData)logic.GetComparisonData(inputResults); // Get comparison data
             
             buttons = new Button[3]; // Create button array

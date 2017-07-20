@@ -10,7 +10,7 @@ namespace GraphicsTestFramework
     // - Results: Captures a screenshot from models test camera
     // - Comparison: Gets average value of pixel differences between results screenshot and baseline
 
-    public class FlipBookLogic : TestLogic<FlipBookModel, FlipBookDisplay, FlipBookResults>
+    public class FlipBookLogic : TestLogic<FlipBookModel, FlipBookDisplay, FlipBookResults, FlipBookSettings>
     {
         // ------------------------------------------------------------------------------------
         // Variables
