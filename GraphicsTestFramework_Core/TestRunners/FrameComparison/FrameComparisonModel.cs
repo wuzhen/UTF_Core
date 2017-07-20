@@ -33,7 +33,7 @@ namespace GraphicsTestFramework
                 return new FrameComparisonSettings
                 {
                     waitType = WaitType.Frames, // Type of measurement for waiting
-                    waitTimer = 1f, // Count of frames or seconds to wait before capture
+                    waitFrames = 1, // Count of frames to wait before capture
                     passFailThreshold = 0.1f, // Threshold for comparison pass/fail
                     captureCamera = null, //Reference to the camera used to capture
                     frameResolution = FrameResolution.qHD, //Resolution of the frame capture
@@ -48,6 +48,7 @@ namespace GraphicsTestFramework
     // FrameComparisonModel
     // - Contains settings for FrameComparison
 
+	[Serializable]
     public class FrameComparisonModel : TestModel<FrameComparisonLogic>
     {
         public Dictionary<FrameResolution, Vector2> resolutionList { get { return Common.frameResolutionList; } }
@@ -61,5 +62,19 @@ namespace GraphicsTestFramework
         {
             settings = m_Settings;
         }
+
+		// Get/Set public settings
+		public FrameComparisonSettings p_Settings
+		{
+			get
+			{
+				return m_Settings;
+			}
+			set 
+			{
+				m_Settings = value;
+			}
+		}
+
     }
 }
