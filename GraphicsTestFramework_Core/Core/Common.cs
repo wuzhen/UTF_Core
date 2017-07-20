@@ -38,8 +38,10 @@ namespace GraphicsTestFramework
         public static void QuitApplication()
         {
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Quitting application"); // Write to console
-            if (!Application.isEditor) System.Diagnostics.Process.GetCurrentProcess().Kill();
-            //Application.Quit();
+            if (!Application.isEditor && Application.platform != RuntimePlatform.IPhonePlayer) // If not editor or iOS
+                System.Diagnostics.Process.GetCurrentProcess().Kill(); // Kill process
+            else if (Application.platform == RuntimePlatform.IPhonePlayer) // If iOS
+                Application.Quit(); // Quit
 #if UNITY_EDITOR
             UnityEditor.EditorApplication.isPlaying = false;
 #endif
@@ -82,6 +84,14 @@ namespace GraphicsTestFramework
         // ------------------------------------------------------------------------------------
         // Common Conversions
 
+        // Convert string to dropdown option data
+        public static UnityEngine.UI.Dropdown.OptionData ConvertStringToDropdownOptionData(string input)
+        {
+            UnityEngine.UI.Dropdown.OptionData newOption = new UnityEngine.UI.Dropdown.OptionData(); // Create new OptionData
+            newOption.text = input; // Set text
+            return newOption;
+        }
+
         // Convert Array types ready to be serialized for saving
         public static string ConvertStringArrayToString(string[] input)
         {
@@ -123,6 +133,74 @@ namespace GraphicsTestFramework
 
         // ------------------------------------------------------------------------------------
         // Helper functions
+
+        public enum TimePeriod { Year, Month, Day, Hour, Minute, Second, Closest };
+
+        // Compare two DateTimes and return the difference
+        public static float GetTimeDifference(DateTime start, DateTime end, ref TimePeriod period)
+        {
+            float output = 0f; // Create output
+            switch(period) // Switch on incoming time period
+            {
+                case TimePeriod.Year:
+                    output = (float)(end - start).TotalDays / 365; // Return years
+                    break;
+                case TimePeriod.Month:
+                    output = (float)(end - start).TotalDays / 31; // Return months (approx)
+                    break;
+                case TimePeriod.Day:
+                    output = (float)(end - start).TotalDays; // Return days
+                    break;
+                case TimePeriod.Hour:
+                    output = (float)(end - start).TotalHours; // Return hours
+                    break;
+                case TimePeriod.Minute:
+                    output = (float)(end - start).TotalMinutes; // Return minutes
+                    break;
+                case TimePeriod.Second:
+                    output = (float)(end - start).TotalSeconds; // Return seconds
+                    break;
+                case TimePeriod.Closest:
+                    if ((end - start).TotalDays >= 365) // If over a year ago
+                    {
+                        output = Mathf.Floor((float)(end - start).TotalDays / 365); // Round years
+                        period = TimePeriod.Year; // Set period
+                    }
+                    else if ((end - start).TotalDays >= 31) // If over a month ago (approx)
+                    {
+                        output = Mathf.Floor((float)(end - start).TotalDays / 31); // Round months (approx)
+                        period = TimePeriod.Month; // Set period
+                    }
+                    else if ((end - start).TotalDays >= 1) // If over a day ago
+                    {
+                        output = Mathf.Floor((float)(end - start).TotalDays); // Return days
+                        period = TimePeriod.Day; // Set period
+                    }
+                    else if ((end - start).TotalHours >= 1) // If over an hour ago
+                    {
+                        output = Mathf.Floor((float)(end - start).TotalHours); // Return hours
+                        period = TimePeriod.Hour; // Set period
+                    }
+                    else if ((end - start).TotalMinutes >= 1) // If over a minute ago
+                    {
+                        output = Mathf.Floor((float)(end - start).TotalMinutes); // Return minutes
+                        period = TimePeriod.Minute; // Set period
+                    }
+                    else
+                    {
+                        output = Mathf.Floor((float)(end - start).TotalSeconds); // Return seconds
+                        period = TimePeriod.Second; // Set period
+                    }  
+                    break;
+            }
+            return output; // Return
+        }
+
+        // Prevent divide by zero
+        static public float SafeDivision(float numerator, float denominator)
+        {
+            return (denominator == 0) ? 0 : numerator / denominator;
+        }
 
         // Get a comparison value from a texture
         public static float GetTextureComparisonValue(Texture2D baselineInput, Texture2D resultsInput)

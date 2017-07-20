@@ -7,7 +7,7 @@ namespace GraphicsTestFramework
     // ExampleLogic
     // - Serves only as example of logic custom setup
 
-    public class ExampleLogic : TestLogic<ExampleModel, ExampleDisplay, ExampleResults> // Set types here for matching: < ModelType , DisplayType, ResultsType >
+    public class ExampleLogic : TestLogic<ExampleModel, ExampleDisplay, ExampleResults, ExampleSettings> // Set types here for matching: < ModelType , DisplayType, ResultsType, SettingsType >
 	{
         // ------------------------------------------------------------------------------------
         // Variables

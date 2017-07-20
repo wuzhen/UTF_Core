@@ -44,7 +44,7 @@ namespace GraphicsTestFramework
         public void SetState(bool active, ProgressType type, string message)
 		{
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Setting progress screen state to "+active); // Write to console
-            progressObject.SetActive(active); // Set active
+            
 			if(active == true) // If active
 			{
 				discs.localLoad.SetActive(false); // Disable all loading discs
@@ -69,7 +69,14 @@ namespace GraphicsTestFramework
 						break;
 				}
 			}
-		}
+            progressObject.SetActive(active); // Set active
+        }
+
+        // Get whether the progress screen is active
+        public bool GetState()
+        {
+            return progressObject.activeSelf; // Return active state
+        }
 
         // ------------------------------------------------------------------------------------
         // Local Reference Structures

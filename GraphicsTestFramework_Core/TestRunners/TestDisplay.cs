@@ -30,12 +30,21 @@ namespace GraphicsTestFramework
         }
 
         // Enable test viewer
-        public void EnableTestViewer(ResultsBase resultsObject)
+        public virtual void EnableTestViewer(ResultsBase resultsObject, TestViewerToolbar.State toolbarState) { }
+
+        // Get time since results
+        public string GetResultsTimeDisplay(ResultsBase resultsObject)
         {
-            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, this.GetType().Name + " enabling test viewer"); // Write to console
-            ProgressScreen.Instance.SetState(false, ProgressType.LocalSave, ""); // Disable ProgressScreen
-            TestViewer.Instance.SetState(true); // Set test viewer state
-            TestViewer.Instance.UpdateBars(GetViewerTabs(resultsObject)); // Set test viewer state
+            string output = ""; // Create output
+            System.DateTime resultTime = System.DateTime.Parse(resultsObject.common.DateTime); // Parse result time
+            System.DateTime now = System.DateTime.UtcNow; // Get time now
+            Common.TimePeriod period = Common.TimePeriod.Closest; // Create time period
+            float result = Common.GetTimeDifference(resultTime, now, ref period); // Get time difference
+            if (period == Common.TimePeriod.Second) // If seconds dont return details
+                output = "just now"; // Set output
+            else
+                output = result.ToString() + " " + period.ToString().ToLower() + "s ago"; // Set output
+            return "Results created "+output; // Return
         }
 
         // ------------------------------------------------------------------------------------
@@ -51,7 +60,7 @@ namespace GraphicsTestFramework
         }
 
         // Setup the results context entry
-        public abstract void SetupResultsContext(ResultsContext contextObject, ResultsEntry inputEntry);
+        public abstract void SetupResultsContext(ResultsContext contextObject, ResultsIOData inputData);
     }
 
     // ------------------------------------------------------------------------------------
@@ -73,6 +82,16 @@ namespace GraphicsTestFramework
         public override void SetLogic(TestLogicBase inputLogic)
         {
             logic = (L)inputLogic; // Cast to type and set
+        }
+
+        // Enable test viewer
+        public override void EnableTestViewer(ResultsBase resultsObject, TestViewerToolbar.State toolbarState)
+        {
+            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, this.GetType().Name + " enabling test viewer"); // Write to console
+            string breadcrumbLabel = logic.suiteName + " - " + logic.testTypeName + " - " + resultsObject.common.GroupName + " - " + resultsObject.common.TestName; // Build breadcrumb label
+            ProgressScreen.Instance.SetState(false, ProgressType.LocalSave, ""); // Disable ProgressScreen
+            TestViewer.Instance.SetState(true); // Set test viewer state
+            TestViewer.Instance.UpdateBars(GetViewerTabs(resultsObject), GetResultsTimeDisplay(resultsObject), breadcrumbLabel, toolbarState); // Set test viewer state
         }
     }
 }

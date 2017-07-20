@@ -337,11 +337,11 @@ namespace GraphicsTestFramework
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Returned name of entry " + output); // Write to console
             return output;
         }
-
+        
         // ------------------------------------------------------------------------------------
         // Set Selection
         // - TODO - Clean and comment this
-        
+
         public void SetSelectionState(MenuEntryData entryData)
         {
             switch (entryData.id.currentLevel)
@@ -567,42 +567,5 @@ namespace GraphicsTestFramework
             public int selectionState;
             public bool baseline;
         }
-
-        /*[Serializable]
-        public class Suite
-        {
-            public string suiteName;
-            public int selectionState;
-            public bool baseline;
-            public List<TestType> types = new List<TestType>();
-        }
-
-        [Serializable]
-        public class TestType
-        {
-            public string typeName;
-            public int typeIndex;
-            public int selectionState;
-            public bool baseline;
-            public List<Scene> scenes = new List<Scene>();
-        }
-
-        [Serializable]
-        public class Scene
-        {
-            public string sceneName;
-            public string scenePath;
-            public int selectionState;
-            public bool baseline;
-            public List<Test> tests = new List<Test>();
-        }
-
-        [Serializable]
-        public class Test
-        {
-            public string testName;
-            public bool baseline;
-            public int selectionState;
-        }*/
     }
 }

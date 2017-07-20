@@ -33,7 +33,7 @@ namespace GraphicsTestFramework
         // Setup viewer tabs
         public override TestViewerTabData[] GetViewerTabs(ResultsBase resultsObject)
         {
-            var typedSettings = (FrameComparisonSettings)logic.model.settings; // Set settings to local type
+            var typedSettings = (FrameComparisonSettings)logic.GetModel().settings; // Set settings to local type
             TestViewerTabData[] output = new TestViewerTabData[1]; // Create empty output (mandatory)
             switch (logic.baselineExists)  // Switch on baseline exists
             {
@@ -67,11 +67,10 @@ namespace GraphicsTestFramework
         // ResultsViewer
 
         // Setup the results context object
-        public override void SetupResultsContext(ResultsContext context, ResultsEntry inputEntry)
+        public override void SetupResultsContext(ResultsContext context, ResultsIOData inputData)
         {
-            FrameComparisonResults inputResults = (FrameComparisonResults)logic.DeserializeResults(inputEntry.resultsData); // Deserialize input and cast to typed results
+            FrameComparisonResults inputResults = (FrameComparisonResults)logic.DeserializeResults(inputData); // Deserialize input and cast to typed results
             FrameComparisonLogic.ComparisonData comparisonData = (FrameComparisonLogic.ComparisonData)logic.GetComparisonData(inputResults); // Get comparison data
-            
             buttons = new Button[3]; // Create button array
             for(int i = 0; i < buttons.Length; i++) // Iterate
             { 

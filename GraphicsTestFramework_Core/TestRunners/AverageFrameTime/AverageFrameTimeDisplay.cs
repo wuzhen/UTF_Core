@@ -46,9 +46,9 @@ namespace GraphicsTestFramework
         // ResultsViewer
 
         // Setup the results context object
-        public override void SetupResultsContext(ResultsContext context, ResultsEntry inputEntry)
+        public override void SetupResultsContext(ResultsContext context, ResultsIOData inputData)
         {
-            AverageFrameTimeResults inputResults = (AverageFrameTimeResults)logic.DeserializeResults(inputEntry.resultsData); // Deserialize input and cast to typed results
+            AverageFrameTimeResults inputResults = (AverageFrameTimeResults)logic.DeserializeResults(inputData); // Deserialize input and cast to typed results
             AverageFrameTimeLogic.ComparisonData comparisonData = (AverageFrameTimeLogic.ComparisonData)logic.GetComparisonData(inputResults); // Get comparison data
             context.objects[0].GetComponent<Text>().text = inputResults.avgFrameTime.ToString(); // Set average frame time
             context.objects[1].GetComponent<Text>().text = comparisonData.delta.ToString(); // Set delta

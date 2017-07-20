@@ -22,6 +22,7 @@ namespace GraphicsTestFramework
         public RunnerType activeRunType;
         public string suiteName;
         public bool waitingForCallback = false;
+        bool testWasRan; // Track whether the test was ran
 
         // Type Specific
         [HideInInspector] public string testTypeName; // Test type name
@@ -84,11 +85,15 @@ namespace GraphicsTestFramework
 
         public abstract void SetModel(TestModelBase inputModel);
 
+        public abstract TestModelBase GetModel();
+
         public abstract void SetDisplay();
 
         public abstract void SetResults();
 
         public abstract void SetSettings();
+
+        public abstract void UseLocalResult(ResultsIOData localResult);
 
         // ------------------------------------------------------------------------------------
         // Test Execution
@@ -97,13 +102,34 @@ namespace GraphicsTestFramework
         public void SetupTest(TestEntry inputEntry, RunnerType runType)
         {
             ProgressScreen.Instance.SetState(true, ProgressType.LocalSave, "Preparing test"); // Enable ProgressScreen
+            testWasRan = false; // Reset
             activeTestEntry = inputEntry; // Store active TestEntry
             activeRunType = runType; // Store active RunnerType
             SetSettings(); // Set settings to internal
             SetupResultsStructs(); // Setup the results structs to be filled
             CheckForBaseline(); // Check for baselines
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, this.GetType().Name + " set up test " + activeTestEntry.testName); // Write to console
-            TestPreProcess(); // Start pre-process
+            ResultsIOData localResult; // Used for certain active run types
+            switch (activeRunType)
+            {
+                case RunnerType.Automation:
+                    TestPreProcess(); // Start pre-process
+                    break;
+                case RunnerType.Manual:
+                    localResult = ResultsIO.Instance.RetrieveResult(suiteName, GetType().ToString().Replace("GraphicsTestFramework.", "").Replace("Logic", ""), activeResultData.common); // Try get local result
+                    if (localResult == null) // If not found
+                        TestPreProcess(); // Start pre-process
+                    else // If found
+                        UseLocalResult(localResult); // Use local
+                    break;
+                case RunnerType.Results:
+                    localResult = ResultsIO.Instance.RetrieveResult(suiteName, GetType().ToString().Replace("GraphicsTestFramework.", "").Replace("Logic", ""), activeResultData.common); // Try get local result
+                    UseLocalResult(localResult); // Use local
+                    break;
+                case RunnerType.Resolve:
+                    TestPreProcess(); // Start pre-process
+                    break;
+            }
         }
 
         // First injection point for custom code. Runs before any test logic.
@@ -118,6 +144,7 @@ namespace GraphicsTestFramework
         {
             ProgressScreen.Instance.SetState(true, ProgressType.LocalSave, "Running test"); // Enable ProgressScreen
             Console.Instance.Write(DebugLevel.Logic, MessageLevel.Log, this.GetType().Name + " started test " + activeTestEntry.testName); // Write to console
+            testWasRan = true; // Track
             StartCoroutine(ProcessResult()); // Process test results
         }
 
@@ -153,14 +180,34 @@ namespace GraphicsTestFramework
             EndTest(); // End test
         }
 
-        //Logic for test end. Call to end test logic.
+        // Logic for test end. Call to end test logic.
         public void EndTest()
         {
             Console.Instance.Write(DebugLevel.Logic, MessageLevel.Log, this.GetType().Name + " ending test " + activeTestEntry.testName); // Write to console
-            if (activeRunType == RunnerType.Automation) // If automation run
-                SubmitResults(baselineExists ? 0 : 1); // Submit results
-            else // If manual run
-                GetComponent<TestDisplayBase>().EnableTestViewer(activeResultData); // Enable test viewer with active results data
+            switch(activeRunType)
+            {
+                case RunnerType.Automation:
+                    SubmitResults(baselineExists ? 0 : 1); // Submit results
+                    break;
+                case RunnerType.Manual:
+                    GetComponent<TestDisplayBase>().EnableTestViewer(activeResultData, new TestViewerToolbar.State(true, true, testWasRan, true, true)); // Enable test viewer with active results data
+                    break;
+                case RunnerType.Results:
+                    GetComponent<TestDisplayBase>().EnableTestViewer(activeResultData, new TestViewerToolbar.State(false, false, false, false, false)); // Enable test viewer with active results data
+                    break;
+                case RunnerType.Resolve:
+                    GetComponent<TestDisplayBase>().EnableTestViewer(activeResultData, new TestViewerToolbar.State(false, false, false, true, true)); // Enable test viewer with active results data
+                    break;
+            }
+        }
+
+        // Check for test pass
+        public bool CheckForTestPass()
+        {
+            if (activeResultData != null) // Check null
+                return activeResultData.common.PassFail; // Return pass fail
+            else
+                return true; // Return true (continue)
         }
 
         // ------------------------------------------------------------------------------------
@@ -191,10 +238,26 @@ namespace GraphicsTestFramework
             if (TestTypeManager.Instance.GetActiveTestLogic() == this) // Check this is the active test logic
             {
                 Console.Instance.Write(DebugLevel.Logic, MessageLevel.Log, this.GetType().Name + " confirmed results save for test"); // Write to console
-                if (activeRunType == RunnerType.Resolve) // If Resolve update viewer
-                    TestViewerToolbar.Instance.OnClickNext(); // Emulate OnClickNext on ViewerToolbar
-                else
-                    BroadcastEndTestAction(); // Broadcast to TestList that rest is completed
+                switch(activeRunType)
+                {
+                    case RunnerType.Resolve:
+                        TestViewerToolbar.Instance.OnClickNext(); // Emulate OnClickNext on ViewerToolbar
+                        break;
+                    case RunnerType.Manual:
+                        BroadcastEndTestAction(); // Broadcast to TestList that rest is completed
+                        break;
+                    case RunnerType.Automation:
+                        if (Configuration.Instance.settings.testviewerOnAutomationTestFail) // Should test viewer open on auto fail?
+                        {
+                            if(CheckForTestPass()) // Did the test pass?
+                                BroadcastEndTestAction(); // Broadcast to TestList that rest is completed
+                            else
+                                GetComponent<TestDisplayBase>().EnableTestViewer(activeResultData, new TestViewerToolbar.State(false, true, false, false, true)); // Enable test viewer with active results data
+                        }
+                        else
+                            BroadcastEndTestAction(); // Broadcast to TestList that rest is completed
+                        break;
+                }
             }
         }
 
@@ -222,6 +285,7 @@ namespace GraphicsTestFramework
         // Called by the TestViewer when restarting the current test
         public void RestartTest()
         {
+            SetupResultsStructs(); // Update common
             StartTest(); // Restart
         }
 
@@ -333,7 +397,7 @@ namespace GraphicsTestFramework
     // - Next level TestLogic class that all user facing logics derive from
     // - Adds an abstraction layer for defining model type
 
-    public abstract class TestLogic<M, D, R> : TestLogicBase where M : TestModelBase where D : TestDisplayBase where R : ResultsBase
+    public abstract class TestLogic<M, D, R, S> : TestLogicBase where M : TestModelBase where D : TestDisplayBase where R : ResultsBase where S : SettingsBase
     {
         // ------------------------------------------------------------------------------------
         // Variables
@@ -348,6 +412,19 @@ namespace GraphicsTestFramework
         public override void SetModel(TestModelBase inputModel)
         {
             model = (M)inputModel; // Cast to type and set
+        }
+
+        // Get test model instance
+        public override TestModelBase GetModel()
+        {
+            if (model)
+                return model;
+            else
+            {
+                TestModelBase newModel = (TestModelBase)Activator.CreateInstance(typeof(M));
+                newModel.settings = (SettingsBase)Activator.CreateInstance(typeof(S));
+                return newModel;
+            }
         }
 
         // Set test display type
@@ -386,6 +463,14 @@ namespace GraphicsTestFramework
 
         // ------------------------------------------------------------------------------------
         // Test Execution
+
+        // Use local result in Manual mode if it exists
+        public override void UseLocalResult(ResultsIOData localResult)
+        {
+            ResultsBase typedResult = (R)DeserializeResults(localResult); // Deserialize result to typed
+            activeResultData = typedResult; // Set to active results
+            EndTest(); // End test
+        }
 
         // Wait for specified timer (requires model data)
 		public IEnumerator WaitForTimer()
@@ -482,17 +567,13 @@ namespace GraphicsTestFramework
         {
             while (stableFramerateParameters.frameTimes.Count < stableFramerateParameters.frameCount) // Still building frame list
             {
-                float x = TimestampLight();
-                Debug.Log("Stamping frame " + x);
-                stableFramerateParameters.frameTimes.Add(x); // Add timestamp
+                stableFramerateParameters.frameTimes.Add(TimestampLight()); // Add timestamp
                 yield return new WaitForEndOfFrame(); // Wait for frame
             }
             while (!EvaluateFramerateStability()) // Testing results for stability
             {
                 stableFramerateParameters.frameTimes.RemoveAt(0); // Remove first entry
-                float x = TimestampLight();
-                Debug.Log("Stamping frame " + x);
-                stableFramerateParameters.frameTimes.Add(x); // Add timestamp
+                stableFramerateParameters.frameTimes.Add(TimestampLight()); // Add timestamp
                 stableFramerateParameters.framesTested++; //Increment max frames
                 if (stableFramerateParameters.framesTested >= stableFramerateParameters.maxFrames) // Check whether hit max frames
                     break; // Exit
@@ -503,7 +584,6 @@ namespace GraphicsTestFramework
         // Evaulate the stored frames
         bool EvaluateFramerateStability()
         {
-            Debug.LogWarning("Evaluating frame stability");
             float[] array = stableFramerateParameters.frameTimes.ToArray(); // Convert to array
             Array.Sort(array); // Sort the array
             if (array[array.Length - 1] - array[0] < stableFramerateParameters.threshold) // If difference between fastest and slowest is within threshold

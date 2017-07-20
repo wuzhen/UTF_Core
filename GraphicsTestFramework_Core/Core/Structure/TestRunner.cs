@@ -13,6 +13,7 @@ namespace GraphicsTestFramework
     {
         Automation,
         Manual,
+        Results,
         Resolve
     };
 
@@ -77,7 +78,8 @@ namespace GraphicsTestFramework
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Setting up runner"); // Write to console
             ProgressScreen.Instance.SetState(true, ProgressType.LocalLoad, "Generating and processing new Test Runner"); // Enable ProgressScreen
             runnerType = runType; // Set runner type
-            GenerateTestRunner(TestStructure.Instance.GetStructure()); // Generate test runner
+            if(runnerType != RunnerType.Results) // If not results
+                GenerateTestRunner(TestStructure.Instance.GetStructure()); // Generate test runner
         }
 
         // Convert the test structure into a runner based on current selection and runner type
@@ -178,6 +180,25 @@ namespace GraphicsTestFramework
             }
             Console.Instance.Write(DebugLevel.Logic, MessageLevel.Log, "Loading test "+ runner.tests[currentTestIndex].testName); // Write to console
             StartTest(runner.tests[currentTestIndex], runnerType); // Start the test
+        }
+
+        public void CallLoadSpecificTest(TestEntry inputEntry)
+        {
+            StartCoroutine(LoadSpecificTest(inputEntry));
+        }
+
+        // Load specified test
+        public IEnumerator LoadSpecificTest(TestEntry inputEntry)
+        {
+            if (SceneManager.GetActiveScene().name != inputEntry.scenePath) // If current scene name does not match requested
+            {
+                SceneManager.LoadScene(inputEntry.scenePath); // Load requested scene
+                while (!levelWasLoaded) // Wait for load
+                    yield return null;
+                levelWasLoaded = false; // Reset
+            }
+            Console.Instance.Write(DebugLevel.Logic, MessageLevel.Log, "Loading test " + inputEntry.testName); // Write to console
+            StartTest(inputEntry, runnerType); // Start the test
         }
 
         // Load the currently selected test for view

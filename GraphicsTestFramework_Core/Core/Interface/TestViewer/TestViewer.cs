@@ -44,11 +44,11 @@ namespace GraphicsTestFramework
         }
         
         // Update the viewer tool bar and nav bar context based on the active TestRunner RunnerType
-        public void UpdateBars(TestViewerTabData[] tabDatas)
+        public void UpdateBars(TestViewerTabData[] tabDatas, string updateTime, string breadcrumbLabel, TestViewerToolbar.State toolbarState)
         {
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Updating bars"); // Write to console
-            TestViewerToolbar.Instance.SetContext(TestRunner.Instance.runnerType == RunnerType.Resolve ? true : false); // Set resolution mode
-            TestViewerNavbar.Instance.Generate(tabDatas); // Update navigation bar
+            TestViewerToolbar.Instance.SetContext(toolbarState); // Set toolbar context mode
+            TestViewerNavbar.Instance.Generate(breadcrumbLabel, tabDatas, updateTime); // Update navigation bar
         }
 
         // Sets the viewers content
@@ -86,8 +86,11 @@ namespace GraphicsTestFramework
             if (currentCamera) // If a current camera exists
                 currentCamera.depth = cameraDepth; // Reset its depth
             currentCamera = (Camera)tabData.tabObject; // Get new current camera
-            cameraDepth = currentCamera.depth; // Get current depth
-            currentCamera.depth = 9; // Set its depth
+            if(currentCamera)
+            {
+                cameraDepth = currentCamera.depth; // Get current depth
+                currentCamera.depth = 9; // Set its depth
+            }
         }
     }
 }
