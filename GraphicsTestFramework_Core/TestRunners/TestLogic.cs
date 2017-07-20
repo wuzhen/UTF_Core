@@ -286,7 +286,7 @@ namespace GraphicsTestFramework
         public void RestartTest()
         {
             SetupResultsStructs(); // Update common
-            StartTest(); // Restart
+            TestPreProcess(); // Restart
         }
 
         // ------------------------------------------------------------------------------------
