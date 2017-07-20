@@ -3,10 +3,11 @@ using UnityEditor;
 
 namespace GraphicsTestFramework.Experimental
 {
+    
     // ------------------------------------------------------------------------------------
     // Suite Scriptable Object GUI
     // - Draw GUI for Suite Scriptable Object
-
+    
     [CustomEditor(typeof(Suite))]
     public class SuiteEditor : Editor
     {
@@ -46,17 +47,7 @@ namespace GraphicsTestFramework.Experimental
                             for (int te = 0; te < testCount; te++)
                             {
                                 var test = tests.GetArrayElementAtIndex(te); // Get the item at this index
-                                EditorGUILayout.BeginHorizontal(); // Begin horizontal (keep test properties on one line)
-                                int testTypes = test.FindPropertyRelative("testTypes").intValue; // Get the value of the test types mask field
-                                testTypes = EditorGUILayout.MaskField(GUIContent.none, testTypes, testTypeEntries, GUILayout.ExpandWidth(true)); // Draw the mask field and assign
-                                HandleEverything(testTypes); // Handle everything selected case
-                                test.FindPropertyRelative("testTypes").intValue = testTypes; // Set back to property
-                                UnityEngine.Object scene = test.FindPropertyRelative("scene").objectReferenceValue; // Get the value of the scene field
-                                scene = EditorGUILayout.ObjectField(scene, typeof(UnityEngine.Object), false, GUILayout.ExpandWidth(true)); // Draw the object field and assign
-                                test.FindPropertyRelative("scene").objectReferenceValue = scene; // Set back to property
-                                string pathToScene = UnityEditor.AssetDatabase.GetAssetPath(scene); // Get scene path
-                                test.FindPropertyRelative("scenePath").stringValue = pathToScene; // Set to test instance
-                                EditorGUILayout.EndHorizontal(); // End horizontal (keep test properties on one line)
+                                EditorGUILayout.PropertyField(test, GUIContent.none);
                             }
                             EditorGUI.indentLevel -= 1; // Remove indent
                         }
@@ -86,4 +77,5 @@ namespace GraphicsTestFramework.Experimental
             }
         }
     }
+    
 }
