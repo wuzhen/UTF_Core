@@ -6,36 +6,56 @@ using UnityEditor;
 namespace GraphicsTestFramework
 {
 	[CustomEditor(typeof(FrameComparisonModel))]
-	public class FrameComparisonModelEditor : TestModelEditor{
+	public class FrameComparisonModelEditor : TestModelEditor
+    {
+        FrameComparisonModel m_Target; // Target
+        SerializedObject m_Object; // Object
 
-		bool showAdvanced;
+        // Serialized Properties
+        SerializedProperty m_PassFailThreshold;
+        SerializedProperty m_CaptureCamera;
+        SerializedProperty m_FrameResolution;
+        SerializedProperty m_TextureFormat;
+        SerializedProperty m_FilterMode;
 
-		[SerializeField]
-		FrameComparisonModel m_Target;
+        // Data
+        bool showAdvanced;
 
-		public override void OnInspectorGUI()
+        public override void OnInspectorGUI()
 		{
-			m_Target = (FrameComparisonModel)target;
-			FrameComparisonSettings s_Target = (FrameComparisonSettings)m_Target.p_Settings;
+            m_Target = (FrameComparisonModel)target; // Cast target
+            m_Object = new SerializedObject(m_Target); // Create serialized object
 
-			DrawCommon (m_Target.p_Settings);//Draw the SettingsBase settings
-			s_Target.passFailThreshold = EditorGUILayout.Slider ("Pass/Fail Threshold (% Difference)", s_Target.passFailThreshold, 0f, 100f);//slider for pass/fail as it is a percentage of pixel difference
-			EditorGUILayout.Space ();//some space before custom settings
+            m_Object.Update(); // Update object
 
-			EditorGUILayout.LabelField ("Frame Comparison Settings", EditorStyles.boldLabel);//Custom settings
-			s_Target.captureCamera = (Camera)EditorGUILayout.ObjectField ("Capture Camera ", s_Target.captureCamera, typeof(Camera), true);
-			if (m_Target.p_Settings.captureCamera == null)
-				EditorGUILayout.HelpBox ("Please select a camera for the Frame Comparison to use.", MessageType.Warning);
-			s_Target.frameResolution = (FrameResolution)EditorGUILayout.EnumPopup ("Capture Resolution", s_Target.frameResolution);
+            // Get properties
+            m_PassFailThreshold = m_Object.FindProperty("m_Settings.passFailThreshold");
+            m_CaptureCamera = m_Object.FindProperty("m_Settings.captureCamera");
+            m_FrameResolution = m_Object.FindProperty("m_Settings.frameResolution");
+            m_TextureFormat = m_Object.FindProperty("m_Settings.textureFormat");
+            m_FilterMode = m_Object.FindProperty("m_Settings.filterMode");
 
-			showAdvanced = EditorGUILayout.Foldout (showAdvanced, "Advanced");
-			if (showAdvanced){
-				EditorGUI.indentLevel++;
-				s_Target.textureFormat = (TextureFormat)EditorGUILayout.EnumPopup ("Image Format", s_Target.textureFormat);
-				s_Target.filterMode = (FilterMode)EditorGUILayout.EnumPopup ("Image Filtermode", s_Target.filterMode);
-				EditorGUI.indentLevel--;
-			}
-		}
+            DrawCommon(m_Object); // Draw the SettingsBase settings
+            EditorGUILayout.Slider(m_PassFailThreshold, 0f, 100f, new GUIContent("Pass / Fail Threshold(% Difference)"), new GUILayoutOption[0]); // Slider for pass/fail as it is a percentage of pixel difference
 
+            EditorGUILayout.Space(); // Some space before custom settings
+
+            EditorGUILayout.LabelField("Frame Comparison Settings", EditorStyles.boldLabel); // Custom settings
+            EditorGUILayout.ObjectField(m_CaptureCamera, typeof(Camera), new GUIContent("Capture Camera"), new GUILayoutOption[0]); // Draw capture camera
+            if (m_Target.p_Settings.captureCamera == null) // If capture camera is null
+                EditorGUILayout.HelpBox("Please select a camera for the Frame Comparison to use.", MessageType.Warning); // Draw warning
+            EditorGUILayout.PropertyField(m_FrameResolution, new GUIContent("Capture Resolution")); // Draw frame resolution
+
+            showAdvanced = EditorGUILayout.Foldout(showAdvanced, "Advanced"); // Get advanced state
+            if (showAdvanced) // If enabled
+            {
+                EditorGUI.indentLevel++; // Indent
+                EditorGUILayout.PropertyField(m_TextureFormat, new GUIContent("Texture Format")); // Draw texture format
+                EditorGUILayout.PropertyField(m_FilterMode, new GUIContent("Filter Mode")); // Draw filter mode
+                EditorGUI.indentLevel--; // Indent
+            }
+
+            m_Object.ApplyModifiedProperties(); // Apply modified
+        }
 	}
 }

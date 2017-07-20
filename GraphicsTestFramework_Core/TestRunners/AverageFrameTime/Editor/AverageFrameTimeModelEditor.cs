@@ -6,24 +6,42 @@ using UnityEditor;
 namespace GraphicsTestFramework
 {
 	[CustomEditor(typeof(AverageFrameTimeModel))]
-	public class AverageFrameTimeModelEditor : TestModelEditor{
+	public class AverageFrameTimeModelEditor : TestModelEditor
+    {
+        AverageFrameTimeModel m_Target; // Target
+        SerializedObject m_Object; // Object
 
-		public override void OnInspectorGUI()
+        // Serialized Properties
+        SerializedProperty m_PassFailThreshold;
+        SerializedProperty m_TimingType;
+        SerializedProperty m_CustomTimingMultiplier;
+        SerializedProperty m_SampleFrames;
+
+        public override void OnInspectorGUI()
 		{
-			AverageFrameTimeModel m_Target = (AverageFrameTimeModel)target;
-			AverageFrameTimeSettings s_Target = (AverageFrameTimeSettings)m_Target.p_Settings;
+            m_Target = (AverageFrameTimeModel)target; // Cast target
+            m_Object = new SerializedObject(m_Target); // Create serialized object
 
-			DrawCommon (s_Target);//Draw the SettingsBase settings
-			s_Target.passFailThreshold = EditorGUILayout.FloatField ("Pass/Fail Threshold (ms Difference)", s_Target.passFailThreshold);//slider for pass/fail as it is a percentage of pixel difference
-			EditorGUILayout.Space ();//some space before custom settings
+            m_Object.Update(); // Update object
 
-			EditorGUILayout.LabelField ("Average Frame Time Settings", EditorStyles.boldLabel);//Custom settings
-			s_Target.timingType = (AverageFrameTimeSettings.TimingType)EditorGUILayout.EnumPopup ("Timing Type", s_Target.timingType);
-			if (s_Target.timingType == AverageFrameTimeSettings.TimingType.Custom)
-				s_Target.customTimingMultiplier = EditorGUILayout.FloatField (new GUIContent ("Custom Timing Multiplier", "This number is used to multiply the ticks output by the sampling"), s_Target.customTimingMultiplier);
-			s_Target.sampleFrames = EditorGUILayout.IntField (new GUIContent ("Sample Frames", "The amount of rendered frames to capture performance over"), s_Target.sampleFrames);
+            // Get properties
+            m_PassFailThreshold = m_Object.FindProperty("m_Settings.passFailThreshold");
+            m_TimingType = m_Object.FindProperty("m_Settings.timingType");
+            m_CustomTimingMultiplier = m_Object.FindProperty("m_Settings.customTimingMultiplier");
+            m_SampleFrames = m_Object.FindProperty("m_Settings.sampleFrames");
 
-		}
+            DrawCommon(m_Object); // Draw the SettingsBase settings
+            EditorGUILayout.PropertyField(m_PassFailThreshold, new GUIContent("Pass/Fail Threshold (ms Difference)")); // Draw Pass fail
+            EditorGUILayout.Space(); // Some space before custom settings
+
+            EditorGUILayout.LabelField("Average Frame Time Settings", EditorStyles.boldLabel); // Custom settings
+            EditorGUILayout.PropertyField(m_TimingType, new GUIContent("Timing Type")); // Draw timing type
+            if((AverageFrameTimeSettings.TimingType)m_TimingType.intValue == AverageFrameTimeSettings.TimingType.Custom) // If using custom timing multiplier
+                EditorGUILayout.PropertyField(m_CustomTimingMultiplier, new GUIContent("Custom Timing Multiplier", "This number is used to multiply the ticks output by the sampling")); // Draw custom timing multiplier
+            EditorGUILayout.PropertyField(m_SampleFrames, new GUIContent("Sample Frames", "The amount of rendered frames to capture performance over")); // Draw sample frames
+
+            m_Object.ApplyModifiedProperties(); // Apply modified
+        }
 
 	}
 }
