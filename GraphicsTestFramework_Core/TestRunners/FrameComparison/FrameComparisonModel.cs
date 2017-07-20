@@ -21,10 +21,10 @@ namespace GraphicsTestFramework
     [Serializable]
     public class FrameComparisonSettings : SettingsBase
     {
-        public Camera captureCamera; //Reference to the camera used to capture
-        public FrameResolution frameResolution; //Resolution of the frame capture
-        public TextureFormat textureFormat; //Format of the frame capture
-        public FilterMode filterMode; //Filter mode of the frame capture
+        [SerializeField] public Camera captureCamera; //Reference to the camera used to capture
+        [SerializeField] public FrameResolution frameResolution; //Resolution of the frame capture
+        [SerializeField] public TextureFormat textureFormat; //Format of the frame capture
+        [SerializeField] public FilterMode filterMode; //Filter mode of the frame capture
 
         public static FrameComparisonSettings defaultSettings
         {
@@ -54,8 +54,7 @@ namespace GraphicsTestFramework
         public Dictionary<FrameResolution, Vector2> resolutionList { get { return Common.frameResolutionList; } }
 
         // Exposed settings
-        [SerializeField]
-        FrameComparisonSettings m_Settings = FrameComparisonSettings.defaultSettings;
+        [SerializeField] FrameComparisonSettings m_Settings = FrameComparisonSettings.defaultSettings;
 
         // Set the exposed settings to the internal
         public override void SetSettings()

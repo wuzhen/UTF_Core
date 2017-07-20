@@ -6,17 +6,28 @@ using UnityEditor;
 namespace GraphicsTestFramework
 {
 	[CustomEditor(typeof(ExampleModel))]
-	public class ExampleModelEditor : TestModelEditor{
+	public class ExampleModelEditor : TestModelEditor
+    {
+        ExampleModel m_Target; // Target
+        SerializedObject m_Object; // Object
 
-		public override void OnInspectorGUI()
+        // Serialized Properties
+        SerializedProperty m_PassFailThreshold;
+
+        public override void OnInspectorGUI()
 		{
-			ExampleModel m_Target = (ExampleModel)target;
-			ExampleSettings s_Target = (ExampleSettings)m_Target.p_Settings;
+            m_Target = (ExampleModel)target; // Cast target
+            m_Object = new SerializedObject(m_Target); // Create serialized object
 
-			DrawCommon (s_Target);//Draw the SettingsBase settings
-			s_Target.passFailThreshold = EditorGUILayout.FloatField ("Pass/Fail Threshold (ms Difference)", s_Target.passFailThreshold);//slider for pass/fail as it is a percentage of pixel difference
+            m_Object.Update(); // Update object
 
-		}
+            // Get properties
+            m_PassFailThreshold = m_Object.FindProperty("m_Settings.passFailThreshold");
 
+            DrawCommon(m_Object); // Draw the SettingsBase settings
+            EditorGUILayout.PropertyField(m_PassFailThreshold, new GUIContent("Pass/Fail Threshold (ms Difference)")); // Draw Pass fail
+
+            m_Object.ApplyModifiedProperties(); // Apply modified
+        }
 	}
 }

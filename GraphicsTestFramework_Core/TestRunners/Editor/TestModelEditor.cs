@@ -6,24 +6,37 @@ using UnityEditor;
 namespace GraphicsTestFramework
 {
 	[CustomEditor(typeof(TestModelBase))]
-	public class TestModelEditor : Editor {
-		
-		public virtual void DrawCommon(SettingsBase s_Target){
-			EditorGUILayout.LabelField ("Common Settings", EditorStyles.boldLabel);
+	public class TestModelEditor : Editor
+    {
+        // Serialized Properties
+        SerializedProperty m_Platforms;
+        SerializedProperty m_WaitType;
+        SerializedProperty m_WaitFrames;
+        SerializedProperty m_WaitSeconds;
 
+        public virtual void DrawCommon(SerializedObject inputObject)
+        {
+            // Get properties
+            m_Platforms = inputObject.FindProperty("settings.platformMask");
+            m_WaitType = inputObject.FindProperty("settings.waitType");
+            m_WaitFrames = inputObject.FindProperty("settings.waitFrames");
+            m_WaitSeconds = inputObject.FindProperty("settings.waitSeconds");
 
-			s_Target.waitType = (SettingsBase.WaitType)EditorGUILayout.EnumPopup (new GUIContent ("Wait Type", "Choose the type of start delay \nFrames=Wait 'X' rendered frames \nSeconds= Wait 'X' seconds \nStable Framerate=Wait for a steady framerate \nCallback=Wait for a custom callback from a script "), s_Target.waitType);
+            EditorGUILayout.LabelField ("Common Settings", EditorStyles.boldLabel); // Draw label
+            m_Platforms.intValue = EditorGUILayout.MaskField(new GUIContent("Platforms"), m_Platforms.intValue, System.Enum.GetNames(typeof(RuntimePlatform))); // Draw type
+            EditorGUILayout.PropertyField(m_WaitType, new GUIContent("Wait Type", "Choose the type of start delay: \nFrames = Wait 'X' rendered frames \nSeconds = Wait 'X' seconds \nStable Framerate = Wait for a steady framerate \nCallback = Wait for a custom callback from a script"));
 
-			switch(s_Target.waitType){
-			case SettingsBase.WaitType.Frames:
-				s_Target.waitFrames = EditorGUILayout.IntField ("Frames to wait", s_Target.waitFrames);
-				break;
-			case SettingsBase.WaitType.Seconds:
-				s_Target.waitSeconds = EditorGUILayout.FloatField ("Seconds to wait", s_Target.waitSeconds);
-				break;
-			default:
-				break;
-			}
-		}
+            switch ((SettingsBase.WaitType)m_WaitType.intValue)
+            {
+                case SettingsBase.WaitType.Frames:
+                    EditorGUILayout.PropertyField(m_WaitFrames, new GUIContent("Wait For Frames"));
+                    break;
+                case SettingsBase.WaitType.Seconds:
+                    EditorGUILayout.PropertyField(m_WaitSeconds, new GUIContent("Wait For Seconds"));
+                    break;
+                default:
+                    break;
+            }
+        }
 	}
 }
