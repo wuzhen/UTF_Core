@@ -47,8 +47,8 @@ namespace GraphicsTestFramework
 #if UNITY_EDITOR
                     return GenerateSettings(); // Create one
 #else
-                    Console.Instance.Write(DebugLevel.Critical, MessageLevel.LogError, "No Suite List found. Aborting."); // Write to console
-                    return null;
+                Console.Instance.Write(DebugLevel.Critical, MessageLevel.LogError, "No Suite List found. Aborting."); // Write to console
+                return null;
 #endif
             }
             else
@@ -81,6 +81,7 @@ namespace GraphicsTestFramework
                 {
                     for (int te = 0; te < settings.suiteList[su].groups[gr].tests.Count; te++) // Iterate tests on the group
                     {
+                        settings.suiteList[su].groups[gr].tests[te].scenePath = UnityEditor.AssetDatabase.GetAssetPath(settings.suiteList[su].groups[gr].tests[te].scene);
                         UnityEditor.EditorBuildSettingsScene scene = new UnityEditor.EditorBuildSettingsScene(settings.suiteList[su].groups[gr].tests[te].scenePath, true); // Create new build settings scene from asset path
                         if (!FindDuplicateScene(buildSettingsScenes, settings.suiteList[su].groups[gr].tests[te].scenePath)) // If no duplicate scene found
                             buildSettingsScenes.Add(scene); // Add to build settings scenes list
