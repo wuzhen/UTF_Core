@@ -30,5 +30,8 @@ namespace GraphicsTestFramework
         [SerializeField] public UnityEngine.Object scene;
         [SerializeField] [HideInInspector] public string scenePath;
         [SerializeField] public int testTypes;
+        [SerializeField] public int minimumUnityVersion;
+        [SerializeField] public int platforms = -1;
+        [SerializeField] public bool run = true;
     }
 }

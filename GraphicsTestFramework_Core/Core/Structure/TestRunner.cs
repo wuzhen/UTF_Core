@@ -258,20 +258,41 @@ namespace GraphicsTestFramework
         {
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Getting logic instance"); // Write to console
             TestLogicBase output; // Create logic instance
-            var ModelType = TestTypes.GetTypeFromIndex(activeEntry.typeValue); // Get the model type from its index
-            activeModelInstance = (TestModelBase)FindObjectOfType(ModelType); // Find a model insatnce within the scene
-            if(activeModelInstance == null) // If user did not set one up
-            {
-                GameObject go = new GameObject(); // Generate a new one
-                go.name = ModelType.ToString().Replace("GraphicsTestFramework.", ""); // Name it
-                activeModelInstance = (TestModelBase)go.AddComponent(ModelType); // Add model component of correct type
-            }
+            var modelType = TestTypes.GetTypeFromIndex(activeEntry.typeValue); // Get the model type from its index
+
+            if (!FindModelInstanceOfType(modelType, out activeModelInstance)) // Check for model instance matching criteria
+                activeModelInstance = CreateNewModelInstance(modelType); // Create model instance
+
             activeModelInstance.SetLogic(); // Set the logic reference on the model
             output = TestTypeManager.Instance.GetLogicInstanceFromName(activeModelInstance.logic.ToString().Replace("GraphicsTestFramework.", "").Replace("Logic", "")); // Get test  logic instance
             output.SetSuiteName(suiteName); // Set suite name on the logic
             output.SetModel(activeModelInstance); // Set the active test model in the logic
             TestTypeManager.Instance.SetActiveLogic(output); // Set as active test logic
             return output; // Return
+        }
+
+        // Find model instances of a specificed type that meet requirements
+        public bool FindModelInstanceOfType(Type modelType, out TestModelBase model)
+        {
+            TestModelBase[] foundModels = (TestModelBase[])FindObjectsOfType(modelType); // Find all models of type
+            for(int i = 0; i < foundModels.Length; i++) // Iterate found models
+            {
+                if(Common.IsCurrentPlatformInBitMask(foundModels[i].settings.platformMask)) // If model matches platform bitmask
+                {
+                    model = foundModels[i]; // Out model
+                    return true; // Return true
+                }
+            }
+            model = null; // Out null
+            return false; // Return false
+        }
+
+        // Create new model instance of a specified type
+        public TestModelBase CreateNewModelInstance(Type modelType)
+        {
+            GameObject go = new GameObject(); // Generate a new object
+            go.name = modelType.ToString().Replace("GraphicsTestFramework.", ""); // Set object name
+            return (TestModelBase)go.AddComponent(modelType); // Add model component of correct type
         }
 
         // End the current Test (called by TestLogic.EndTestAction)

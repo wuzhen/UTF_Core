@@ -60,6 +60,15 @@ namespace GraphicsTestFramework
             {FrameResolution.FullHD , new Vector2(1920, 1080) },
         };
 
+        // Unity Versions
+        public static string[] unityVersionList = new string[4]
+        {
+            "5.6",
+            "2017.1",
+            "2017.2",
+            "2017.3"
+        };
+
         // ------------------------------------------------------------------------------------
         // Get Common Data
 
@@ -133,6 +142,61 @@ namespace GraphicsTestFramework
 
         // ------------------------------------------------------------------------------------
         // Helper functions
+
+        // Check if a test is applicable
+        public static bool IsTestApplicable(Test input)
+        {
+            if (input.run == false) // If set to disabled
+                return false; // Return false
+            if (!IsCurrentPlatformInBitMask(input.platforms)) // If platform check fails
+                return false; // Return false
+            if (!IsUnityVersionAboveMinimum(input.minimumUnityVersion)) // If version check fails
+                return false; // Return false
+            return true; // All passed. Return true
+        }
+
+        // Find if current platform is selected within a platform bitmask
+        public static bool IsCurrentPlatformInBitMask(int input)
+        {
+            int[] selectedPlatforms = GetPlatformSelectionFromBitMask(input); // Get selected platform indices from bitmask
+            for (int i = 0; i < selectedPlatforms.Length; i++) // Iterate selected platforms
+            {
+                if (Enum.GetNames(typeof(RuntimePlatform))[selectedPlatforms[i]] == Application.platform.ToString()) // If index in full platform list matches current platform
+                    return true; // Set to continue
+            }
+            return false; // Return false
+        }
+
+        // Find if Unity version is above specified index from unityVersionList
+        public static bool IsUnityVersionAboveMinimum(int input)
+        {
+            Settings settings = SuiteManager.GetSettings(); // Get settings
+            int versionIndex = 0; // Create version index
+            for (int i = 0; i < unityVersionList.Length; i++) // Iterate version list
+            {
+                if (settings.unityVersion.Contains(unityVersionList[i])) // If unity version contains current index
+                    versionIndex = i; // Set output index
+            }
+            if (input > versionIndex) // If minimum is higher than current
+                return false; // Return false
+            else
+                return true; // Return true
+        }
+
+        // Get a platform selection array from bitmask
+        public static int[] GetPlatformSelectionFromBitMask(int bitMask)
+        {
+            int length = Enum.GetNames(typeof(RuntimePlatform)).Length; // Get length of platform list
+            List<int> intList = new List<int>(); // Create int list to track
+            for (int i = 0; i < length; i++) // Iterate platform list
+            {
+                if (bitMask == (bitMask | (1 << i))) // If bit mask returns true
+                {
+                    intList.Add(i); // Add to list
+                }
+            }
+            return intList.ToArray(); // Return list as array
+        }
 
         public enum TimePeriod { Year, Month, Day, Hour, Minute, Second, Closest };
 
