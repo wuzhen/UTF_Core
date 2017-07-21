@@ -146,27 +146,41 @@ namespace GraphicsTestFramework
         // Check if a test is applicable
         public static bool IsTestApplicable(Test input)
         {
-            bool output = false; // Create output
             if (input.run == false) // If set to disabled
                 return false; // Return false
-            int[] selectedPlatforms = GetPlatformSelectionFromBitMask(input.platforms); // Get selected platform indices from bitmask
+            if (!IsCurrentPlatformInBitMask(input.platforms)) // If platform check fails
+                return false; // Return false
+            if (!IsUnityVersionAboveMinimum(input.minimumUnityVersion)) // If version check fails
+                return false; // Return false
+            return true; // All passed. Return true
+        }
+
+        // Find if current platform is selected within a platform bitmask
+        public static bool IsCurrentPlatformInBitMask(int input)
+        {
+            int[] selectedPlatforms = GetPlatformSelectionFromBitMask(input); // Get selected platform indices from bitmask
             for (int i = 0; i < selectedPlatforms.Length; i++) // Iterate selected platforms
             {
                 if (Enum.GetNames(typeof(RuntimePlatform))[selectedPlatforms[i]] == Application.platform.ToString()) // If index in full platform list matches current platform
-                    output = true; // Set to continue
+                    return true; // Set to continue
             }
-            if (output == false) // If no platforms matched
-                return false; // Return false
+            return false; // Return false
+        }
+
+        // Find if Unity version is above specified index from unityVersionList
+        public static bool IsUnityVersionAboveMinimum(int input)
+        {
             Settings settings = SuiteManager.GetSettings(); // Get settings
             int versionIndex = 0; // Create version index
-            for(int i = 0; i < unityVersionList.Length; i++) // Iterate version list
+            for (int i = 0; i < unityVersionList.Length; i++) // Iterate version list
             {
                 if (settings.unityVersion.Contains(unityVersionList[i])) // If unity version contains current index
                     versionIndex = i; // Set output index
             }
-            if (input.minimumUnityVersion > versionIndex) // If minimum is higher than current
+            if (input > versionIndex) // If minimum is higher than current
                 return false; // Return false
-            return true; // All passed. Return true
+            else
+                return true; // Return true
         }
 
         // Get a platform selection array from bitmask
