@@ -114,18 +114,26 @@ namespace GraphicsTestFramework
 			//check local file for current platform/api baseline
 			foreach (SuiteBaselineData SBD in _suiteBaselineData) {
 				if (SBD.suiteName == suiteName) {
-					//suite exists
-					if (SBD.api == sysData.API) {
-						//API matches
-						if (SBD.pipeline == pipeline) {
-							//pipeline exists
-							foreach (SuiteData SD in SBD._suiteData) {
-								if (SD.testType == testType && SD.sceneName == sceneName && SD.testName == testName) {
-									return true;
-								}
-							}
-						}
-					}
+                    //Suite exists
+                    if (SBD.platform == sysData.Platform)
+                    {
+                        //Platform exists
+                        if (SBD.api == sysData.API)
+                        {
+                            //API matches
+                            if (SBD.pipeline == pipeline)
+                            {
+                                //pipeline exists
+                                foreach (SuiteData SD in SBD._suiteData)
+                                {
+                                    if (SD.testType == testType && SD.sceneName == sceneName && SD.testName == testName)
+                                    {
+                                        return true;
+                                    }
+                                }
+                            }
+                        }
+                    }
 				}
 			}
 			return false;
@@ -141,7 +149,7 @@ namespace GraphicsTestFramework
 			} else {
 				int matches = 0;
 				foreach (SuiteBaselineData SBD in _suiteBaselineData) {
-					if (SBD.suiteName == suiteName && SBD.api == sysData.API) {
+					if (SBD.suiteName == suiteName && SBD.platform == sysData.Platform && SBD.api == sysData.API) {
 						matches++;
 						System.DateTime localTimestamp = System.DateTime.Parse (SBD.suiteTimestamp);
 
@@ -295,7 +303,7 @@ namespace GraphicsTestFramework
 			int suiteBaselineDataIndex = -1;
 			int suiteIndex = 0;
 			foreach (SuiteBaselineData SBD in _suiteBaselineData) {
-				if (SBD.platform == Application.platform.ToString () && SBD.suiteName == suite && SBD.api == sysData.API && SBD.pipeline == renderPipe) {
+				if (SBD.platform == sysData.Platform && SBD.suiteName == suite && SBD.api == sysData.API && SBD.pipeline == renderPipe) {
 					suiteBaselineDataIndex = suiteIndex;
 				}
 				suiteIndex++;
@@ -304,7 +312,7 @@ namespace GraphicsTestFramework
 				SuiteBaselineData newSBD = new SuiteBaselineData ();
 				newSBD.api = sysData.API;
 				newSBD.pipeline = renderPipe;
-				newSBD.platform = Application.platform.ToString ();
+				newSBD.platform = sysData.Platform;
 				newSBD.suiteName = suite;
 				newSBD.suiteTimestamp = System.DateTime.UtcNow.ToString ();
 				_suiteBaselineData.Add (newSBD);

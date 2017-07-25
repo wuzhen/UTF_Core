@@ -48,7 +48,11 @@ namespace GraphicsTestFramework
             output.OS = SystemInfo.operatingSystem; // Get OS
             output.Device = SystemInfo.deviceModel + "|" + SystemInfo.graphicsDeviceName + "|" + SystemInfo.processorType;
 			output.Platform = Application.platform.ToString(); // Get platform
-			output.API = SystemInfo.graphicsDeviceType.ToString(); // Get graphics device type
+#if UNITY_EDITOR
+            if (!Common.IsStandaloneTarget(UnityEditor.EditorUserBuildSettings.activeBuildTarget)) // Check if target platform is emulated editor
+                output.Platform += "_" + UnityEditor.EditorUserBuildSettings.activeBuildTarget.ToString(); // Append build target
+#endif
+            output.API = SystemInfo.graphicsDeviceType.ToString(); // Get graphics device type
 			return output; // Return
 		}
 

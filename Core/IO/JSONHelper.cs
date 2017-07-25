@@ -35,7 +35,7 @@ namespace GraphicsTestFramework
 					for (int columns = 0; columns < inputData.resultsRow [rows].resultsColumn.Count; columns++) {
 						string value = inputData.resultsRow [rows].resultsColumn [columns];
 						//strip out large strings
-						if (value.Length > 100) {
+						if (value.Length > 256) {
 							string key = inputData.resultsRow [rows].resultsColumn [0] + inputData.resultsRow [rows].resultsColumn [8] + inputData.resultsRow [rows].resultsColumn [9];
 							string UID = CloudIO.Instance.ConvertLargeEntry (value, key);
 							LocalIO.Instance.LargeFileWrite (value, UID);

@@ -33,6 +33,7 @@ namespace GraphicsTestFramework
         // Setup for build
         public static void PrepareBuild()
         {
+            GetUnityVersionInfo(); // Get unity version info
             SuiteManager.GenerateSceneList(false); // Create suite structure
             int platformCount = Enum.GetNames(typeof(BuildTargetGroup)).Length; // Get platform count
             for (int i = 0; i < platformCount; i++) // Iterate all platforms
@@ -44,12 +45,20 @@ namespace GraphicsTestFramework
         // Setup for debug build
         public static void PrepareDebugBuild()
         {
+            GetUnityVersionInfo(); // Get unity version info
             SuiteManager.GenerateSceneList(true); // Create suite structure
             int platformCount = Enum.GetNames(typeof(BuildTargetGroup)).Length; // Get platform count
             for (int i = 0; i < platformCount; i++) // Iterate all platforms
                 PlayerSettings.SetApplicationIdentifier((BuildTargetGroup)i, "com.UnityTechnologies.RuntimeTestFramework"); // Set bundle identifiers
             SetScriptingDefines(); // Set defines
             PlayerSettings.bundleVersion = Common.applicationVersion; // Set application version
+        }
+
+        public static void GetUnityVersionInfo()
+        {
+            Settings settings = SuiteManager.GetSettings(); // Get settings
+            settings.unityVersion = UnityEditorInternal.InternalEditorUtility.GetFullUnityVersion(); // Set unity version
+            settings.unityBranch = UnityEditorInternal.InternalEditorUtility.GetUnityBuildBranch(); // Set unity branch
         }
 
         // Set scripting define symbols
@@ -79,9 +88,7 @@ namespace GraphicsTestFramework
 
         public void OnPreprocessBuild(BuildTarget target, string path)
         {
-            Settings settings = SuiteManager.GetSettings(); // Get settings
-            settings.unityVersion = UnityEditorInternal.InternalEditorUtility.GetFullUnityVersion(); // Set unity version
-            settings.unityBranch = UnityEditorInternal.InternalEditorUtility.GetUnityBuildBranch(); // Set unity branch
+            BuildSettings.GetUnityVersionInfo();
         }
     }
 }

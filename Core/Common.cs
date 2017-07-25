@@ -143,6 +143,33 @@ namespace GraphicsTestFramework
         // ------------------------------------------------------------------------------------
         // Helper functions
 
+#if UNITY_EDITOR
+        // Check if editor build target is standalone
+        public static bool IsStandaloneTarget(UnityEditor.BuildTarget target)
+        {
+            bool output = false; // Create output
+            foreach(UnityEditor.BuildTarget t in editorTargets) // Iterate editor target list
+            {
+                if (t == target) // If matches input target
+                    output = true; // Set output to true
+            }
+            return output; // Return
+        }
+
+        // Editor target list (editor targets that are not emulated)
+        public static UnityEditor.BuildTarget[] editorTargets = new UnityEditor.BuildTarget[8]
+        {
+            UnityEditor.BuildTarget.StandaloneLinux,
+            UnityEditor.BuildTarget.StandaloneLinux64,
+            UnityEditor.BuildTarget.StandaloneLinuxUniversal,
+            UnityEditor.BuildTarget.StandaloneOSXIntel,
+            UnityEditor.BuildTarget.StandaloneOSXIntel64,
+            UnityEditor.BuildTarget.StandaloneOSXUniversal,
+            UnityEditor.BuildTarget.StandaloneWindows,
+            UnityEditor.BuildTarget.StandaloneWindows64
+        };
+#endif
+
         // Check if a test is applicable
         public static bool IsTestApplicable(Test input)
         {

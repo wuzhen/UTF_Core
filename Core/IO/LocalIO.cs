@@ -126,7 +126,8 @@ namespace GraphicsTestFramework
 		public IEnumerator WriteDataFiles (string suite, string testType, ResultsIOData resultIOdata, string[] data, fileType filetype)
 		{
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Beginning to write suite " + suite + " testType " + testType + " which contains " + data.Length + " files to write"); // Write to console
-			string filePath = CreateDataDirectory (suite, resultIOdata.resultsRow [0].commonResultsIOData.API, resultIOdata.resultsRow [0].commonResultsIOData.RenderPipe, testType);  //dataPath + "/" + suite + "/" + resultIOdata.resultsRow [1].commonResultsIOData.API + "/" + resultIOdata.resultsRow [1].commonResultsIOData.RenderPipe + "/" + testType;
+            string platformAPI = resultIOdata.resultsRow[0].commonResultsIOData.Platform + "_" + resultIOdata.resultsRow[0].commonResultsIOData.API;
+            string filePath = CreateDataDirectory (suite, platformAPI, resultIOdata.resultsRow [0].commonResultsIOData.RenderPipe, testType);  //dataPath + "/" + suite + "/" + resultIOdata.resultsRow [1].commonResultsIOData.API + "/" + resultIOdata.resultsRow [1].commonResultsIOData.RenderPipe + "/" + testType;
 			string prefix = "InvalidData"; // prefix for whether a results file or baseline file
 
 			int suiteBaselineDataIndex = -1;
@@ -173,10 +174,10 @@ namespace GraphicsTestFramework
 		IEnumerator UpdateSuiteDataFiles ()
 		{
 			foreach(SuiteBaselineData SBD in ResultsIO.Instance._suiteBaselineData){
-				string filePath = dataPath + "/" + SBD.suiteName + "/" + SBD.api;
+				string filePath = dataPath + "/" + SBD.suiteName + "/" + SBD.platform + "_" + SBD.api;
 				if (!Directory.Exists (filePath)) // check to see ig folder exists if not create it
 					Directory.CreateDirectory (filePath);
-				string fileName = "SuiteData_" + SBD.suiteName + "_" + SBD.api + "_" + SBD.pipeline + ".txt";
+				string fileName = "SuiteData_" + SBD.suiteName + "_" + SBD.platform + "_" + SBD.api + "_" + SBD.pipeline + ".txt";
 
 				List<string> newFileContent= new List<string>();
 				newFileContent.Add (System.DateTime.UtcNow.ToString ());
@@ -211,11 +212,11 @@ namespace GraphicsTestFramework
 		/// </summary>
 		/// <returns>The data directory as a string.</returns>
 		/// <param name="suite">Suite.</param>
-		/// <param name="api">API.</param>
+		/// <param name="platformAPI">API.</param>
 		/// <param name="renderPipe">Render pipe.</param>
 		/// <param name="testType">Test type.</param>
-		public string CreateDataDirectory(string suite, string api, string renderPipe, string testType){
-			string filePath = dataPath + "/" + suite + "/" + api + "/" + renderPipe + "/" + testType; // format the folder hierachy
+		public string CreateDataDirectory(string suite, string platformAPI, string renderPipe, string testType){
+			string filePath = dataPath + "/" + suite + "/" + platformAPI + "/" + renderPipe + "/" + testType; // format the folder hierachy
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Checking directory:" + filePath); // Write to console
 			if (!Directory.Exists (filePath)) // check to see if folder exists if not create it
 				Directory.CreateDirectory (filePath);
@@ -234,18 +235,21 @@ namespace GraphicsTestFramework
 			List<SuiteBaselineData> baselineData = new List<SuiteBaselineData>();
 			string[] suites = Directory.GetDirectories (dataPath);
 			foreach(string s in suites){
-				string[] apis = Directory.GetDirectories (s);
-				foreach(string api in apis){
-					string[] pipes = Directory.GetDirectories (api);
+				string[] platformApis = Directory.GetDirectories (s);
+				foreach(string platformApi in platformApis)
+                {
+					string[] pipes = Directory.GetDirectories (platformApi);
 					foreach(string pipe in pipes){
-						string fileName = "SuiteData_" + Path.GetFileName (s) + "_" + Path.GetFileName (api) + "_" + Path.GetFileName (pipe) + ".txt";
-						if (File.Exists (api + "/" + fileName)) {
+						string fileName = "SuiteData_" + Path.GetFileName (s) + "_" + Path.GetFileName (platformApi) + "_" + Path.GetFileName (pipe) + ".txt";
+						if (File.Exists (platformApi + "/" + fileName)) {
 							SuiteBaselineData SBD = new SuiteBaselineData ();
 							SBD.suiteName = Path.GetFileName (s);
-							SBD.platform = sysData.Platform;
-							SBD.api = Path.GetFileName (api);
+                            string x = Path.GetFileName(platformApi); // Get platformAPI filename
+                            int apiIndex = x.LastIndexOf('_'); // Find start index of API
+                            SBD.platform = x.Substring(0, apiIndex); // Get substring of platform
+							SBD.api = x.Substring(apiIndex + 1); // Get substring of API
 							SBD.pipeline = Path.GetFileName (pipe);
-							string[] fileLines = File.ReadAllLines (api + "/" + fileName);
+							string[] fileLines = File.ReadAllLines (platformApi + "/" + fileName);
 							SBD.suiteTimestamp = fileLines[0];
 							List<SuiteData> sData = new List<SuiteData>();
 							for(int i = 1; i < fileLines.Length; i++){
@@ -271,7 +275,7 @@ namespace GraphicsTestFramework
 		public string FetchDataFile (string suite, string testType, ResultsDataCommon resultsDataCommon, bool baseline)
 		{
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Beginning fetch process"); // Write to console
-			string filePath = dataPath + "/" + suite + "/" + resultsDataCommon.API + "/" + resultsDataCommon.RenderPipe + "/" + testType;
+			string filePath = dataPath + "/" + suite + "/" + resultsDataCommon.Platform + "_" + resultsDataCommon.API + "/" + resultsDataCommon.RenderPipe + "/" + testType;
 			string fileName = "_" + resultsDataCommon.GroupName + "_" + resultsDataCommon.TestName + ".txt";
 
 			if (baseline)
