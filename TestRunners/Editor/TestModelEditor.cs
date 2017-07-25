@@ -17,10 +17,10 @@ namespace GraphicsTestFramework
         public virtual void DrawCommon(SerializedObject inputObject)
         {
             // Get properties
-            m_Platforms = inputObject.FindProperty("settings.platformMask");
-            m_WaitType = inputObject.FindProperty("settings.waitType");
-            m_WaitFrames = inputObject.FindProperty("settings.waitFrames");
-            m_WaitSeconds = inputObject.FindProperty("settings.waitSeconds");
+            m_Platforms = inputObject.FindProperty("m_Settings.platformMask");
+            m_WaitType = inputObject.FindProperty("m_Settings.waitType");
+            m_WaitFrames = inputObject.FindProperty("m_Settings.waitFrames");
+            m_WaitSeconds = inputObject.FindProperty("m_Settings.waitSeconds");
 
             EditorGUILayout.LabelField ("Common Settings", EditorStyles.boldLabel); // Draw label
             m_Platforms.intValue = EditorGUILayout.MaskField(new GUIContent("Platforms"), m_Platforms.intValue, System.Enum.GetNames(typeof(RuntimePlatform))); // Draw type

@@ -74,6 +74,5 @@ namespace GraphicsTestFramework
 				m_Settings = value;
 			}
 		}
-
     }
 }
