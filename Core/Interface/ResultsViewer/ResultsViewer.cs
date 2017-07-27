@@ -98,6 +98,7 @@ namespace GraphicsTestFramework
                     resultsViewerParent.SetActive(false);
                     homeButton.gameObject.SetActive(false);
                     overviewButton.gameObject.SetActive(false);
+                    Menu.Instance.SetMenuState(true);
                     break;
                 case 1: // Overview
                     overviewParent.SetActive(true);
@@ -533,6 +534,7 @@ namespace GraphicsTestFramework
         {
             ResultsDataCommon common = new ResultsDataCommon();
             SystemData systemData = Master.Instance.GetSystemData();
+            common.Platform = systemData.Platform;
             common.API = systemData.API;
             common.RenderPipe = "Standard Legacy"; // TODO - Implement SRP support
             common.GroupName = sceneName;
