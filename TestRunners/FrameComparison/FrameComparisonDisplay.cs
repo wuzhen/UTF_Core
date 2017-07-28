@@ -41,22 +41,24 @@ namespace GraphicsTestFramework
                     var localResultData = (FrameComparisonResults)resultsObject; // Convert the input results object to this types class (mandatory)
                     output = new TestViewerTabData[2] // Want two tabs
                     {
-                        new TestViewerTabData("Live Camera", TestViewerTabType.Camera, typedSettings.captureCamera, null), // Live camera showing capture camera
-                        new TestViewerTabData("Results Texture", TestViewerTabType.Texture, Common.ConvertStringToTexture("Tab_ResultsFrame", localResultData.resultFrame), null) // And the results texture
+                        new TestViewerTabData("Results Texture", TestViewerTabType.Texture, Common.ConvertStringToTexture("Tab_ResultsFrame", localResultData.resultFrame), null), // And the results texture
+                        new TestViewerTabData("Live Camera", TestViewerTabType.Camera, typedSettings.captureCamera, null) // Live camera showing capture camera
                     };
                     break;
                 case true:
                     var comparisonData = (FrameComparisonLogic.ComparisonData)logic.GetComparisonData(resultsObject); // Get the comparison data for this test in this types class (mandatory)
                     SetupMaterial(comparisonData.baselineTex, comparisonData.resultsTex); // Setup the material
-                    output = new TestViewerTabData[4] // Want four tabs
+                    output = new TestViewerTabData[3] // Want three tabs
                     {
-                        new TestViewerTabData("Live Camera", TestViewerTabType.Camera, typedSettings.captureCamera, null), // Live camera showing capture camera
-                        new TestViewerTabData("Results Texture", TestViewerTabType.Texture, comparisonData.resultsTex, null), // And the results texture
-                        new TestViewerTabData("Comparison Texture", TestViewerTabType.Material, material, new TestViewerTabData.TestViewerTabStatistic[] // And the material for the comparison display
+                        new TestViewerTabData("Results", TestViewerTabType.TextureSlider, new TestViewer.TextureSliderContext(comparisonData.resultsTex, "Result", comparisonData.baselineTex, "Baseline"), new TestViewerTabData.TestViewerTabStatistic[] // Create slider tab for results/baseline
                         {
                             new TestViewerTabData.TestViewerTabStatistic("Diff", comparisonData.DiffPercentage.ToString()) // Enable the statistics window and display the diff
                         }),
-                        new TestViewerTabData("Baseline Texture", TestViewerTabType.Texture, comparisonData.baselineTex, null) // And the baseline texture
+                        new TestViewerTabData("Comparison", TestViewerTabType.Material, material, new TestViewerTabData.TestViewerTabStatistic[] // And the material for the comparison display
+                        {
+                            new TestViewerTabData.TestViewerTabStatistic("Diff", comparisonData.DiffPercentage.ToString()) // Enable the statistics window and display the diff
+                        }),
+                        new TestViewerTabData("Live Camera", TestViewerTabType.Camera, typedSettings.captureCamera, null) // Live camera showing capture camera
                     };
                     break;
             }

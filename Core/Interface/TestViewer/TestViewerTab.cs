@@ -7,7 +7,7 @@ namespace GraphicsTestFramework
     // ------------------------------------------------------------------------------------
     // Global Enums
 
-    public enum TestViewerTabType { DefaultCamera, Camera, Texture, Material }
+    public enum TestViewerTabType { DefaultCamera, Camera, Texture, Material, TextureSlider, MaterialSlider }
 
     // ------------------------------------------------------------------------------------
     // Global Data Structures
