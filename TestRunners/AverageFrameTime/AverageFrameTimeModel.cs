@@ -35,7 +35,7 @@ namespace GraphicsTestFramework
                 {
                     waitType = WaitType.StableFramerate, // Type of measurement for waiting
                     waitSeconds = 0f, // Count of seconds to wait before capture
-                    passFailThreshold = 0.5f, // Threshold for comparison pass/fail
+                    passFailThreshold = 0.25f, // Threshold for comparison pass/fail
                     timingType = TimingType.Milliseconds, // Timing multiplier
                     customTimingMultiplier = 1f, // Custom timing multiplier
                     sampleFrames = 32 // Amount of frames to sample
