@@ -39,6 +39,7 @@ namespace GraphicsTestFramework
             for (int i = 0; i < platformCount; i++) // Iterate all platforms
                 PlayerSettings.SetApplicationIdentifier((BuildTargetGroup)i, "com.UnityTechnologies.RuntimeTestFramework"); // Set bundle identifiers
             SetScriptingDefines(); // Set defines
+            SetPlayerSettings(); // Set player settings
             PlayerSettings.bundleVersion = Common.applicationVersion; // Set application version
         }
 
@@ -51,6 +52,7 @@ namespace GraphicsTestFramework
             for (int i = 0; i < platformCount; i++) // Iterate all platforms
                 PlayerSettings.SetApplicationIdentifier((BuildTargetGroup)i, "com.UnityTechnologies.RuntimeTestFramework"); // Set bundle identifiers
             SetScriptingDefines(); // Set defines
+            SetPlayerSettings(); // Set player settings
             PlayerSettings.bundleVersion = Common.applicationVersion; // Set application version
         }
 
@@ -79,6 +81,13 @@ namespace GraphicsTestFramework
                 PlayerSettings.SetScriptingDefineSymbolsForGroup((BuildTargetGroup)i, output); // Add custom to current
             }
         }
+
+        // Set player settings
+        static void SetPlayerSettings()
+        {
+            PlayerSettings.gpuSkinning = true;
+            PlayerSettings.colorSpace = ColorSpace.Linear;
+        }
     }
 
     // Build preprocess steps
@@ -88,7 +97,9 @@ namespace GraphicsTestFramework
 
         public void OnPreprocessBuild(BuildTarget target, string path)
         {
+#if UNITY_EDITOR
             BuildSettings.GetUnityVersionInfo();
+#endif
         }
     }
 }

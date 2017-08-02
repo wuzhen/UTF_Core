@@ -133,8 +133,6 @@ namespace GraphicsTestFramework
             }
             return false; // No duplicate. Return false
         }
-
 #endif
-
     }
 }

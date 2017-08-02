@@ -565,6 +565,7 @@ namespace GraphicsTestFramework
         // Wait for stable framerate
         IEnumerator WaitForStableFramerate()
         {
+            stableFramerateParameters.frameTimes.Clear(); // Clear the list
             while (stableFramerateParameters.frameTimes.Count < stableFramerateParameters.frameCount) // Still building frame list
             {
                 stableFramerateParameters.frameTimes.Add(TimestampLight()); // Add timestamp
