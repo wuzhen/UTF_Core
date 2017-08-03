@@ -2,6 +2,8 @@
 using System.Text;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering;
+using UnityEngine.Experimental.Rendering;
 
 namespace GraphicsTestFramework
 {
@@ -85,10 +87,33 @@ namespace GraphicsTestFramework
             output.Device = systemData.Device; // Extract from SystemData
             output.Platform = systemData.Platform; // Extract from SystemData
             output.API = systemData.API; // Extract from SystemData
-            output.RenderPipe = "Standard Legacy"; // TODO - Remove hardcoding
+			output.RenderPipe = Pipeline (); // Get the currently assigned pipeline
             output.Custom = ""; // Futureproof
             return output; // Return
         }        
+
+		// Get Current Pipeline
+		public static string Pipeline(){
+
+			string defaultPipeline = "Standard Legacy"; // If no pipeline is loaded then will be set to this
+
+			#if UNITY_5_6
+
+			if(GraphicsSettings.renderPipelineAsset == null)
+				return defaultPipeline; // return the default pipeline string
+			else
+				return GraphicsSettings.renderPipelineAsset.name; // Gets the currently active pieplines name in 5.6
+
+			#elif UNITY_2017
+
+			if(RenderPipelineManager.currentPipeline == null)
+				return defaultPipeline; // return the default pipeline string
+			else
+				RenderPipelineManager.currentPipeline.name; // Gets the currently active pieplines name in 2017.1 TODO - not tested
+
+			#endif
+
+		}
 
         // ------------------------------------------------------------------------------------
         // Common Conversions
