@@ -35,6 +35,10 @@ namespace GraphicsTestFramework
 			if (LocalIO.Instance == null)
 				gameObject.AddComponent<LocalIO> ();
 			LocalIO.Instance.Init (sysData);
+			//setup SQL IO
+			if (SQL.SQLIO.Instance == null)
+				gameObject.AddComponent<SQL.SQLIO> ();
+			SQL.SQLIO.Instance.Init (sysData);
 			//setup cloud IO
 			if (CloudIO.Instance == null)
 				gameObject.AddComponent<CloudIO> ();
@@ -65,19 +69,29 @@ namespace GraphicsTestFramework
 				yield return new WaitForEndOfFrame ();
 			}
 
+			do {
+				yield return new WaitForEndOfFrame ();
+			} while(SQL.SQLIO.Instance.liveConnection == false);
+
 			//fetch suite names from the suite manager
 			string[] suiteNames = SuiteManager.GetSuiteNames ();
 			if (suiteNames.Length == 0) {
 				Console.Instance.Write (DebugLevel.Critical, MessageLevel.LogWarning, "No suites loaded in SuiteManager, unable to continue"); // Write to console
 			} else {
 				foreach (string suiteName in suiteNames) {
-					CloudIO.Instance.GetBaselineTimestamp (suiteName);
+					//New SQL code to replace code below
+
+					DateTime dt = SQL.SQLIO.Instance.GetbaselineTimestamp (suiteName);
+					if(dt != DateTime.MinValue)
+						CompareBaselineTimestamps (suiteName, dt.ToString ());
+					
+					/*CloudIO.Instance.GetBaselineTimestamp (suiteName);
 					while (CloudConnectorCore.isWaiting == true) {
 						yield return new WaitForEndOfFrame ();
-					}
+					}*/
 				}
 
-				yield return new WaitForSeconds (1f);
+				yield return new WaitForSeconds (1f);//delete once SQL change as no need to wait
 
 				if (suiteBaselinesPullList.Count > 0)
 					CloudIO.Instance.FetchCloudBaselines (suiteBaselinesPullList.ToArray ());
@@ -186,24 +200,25 @@ namespace GraphicsTestFramework
 		{
 			ProgressScreen.Instance.SetState (true, ProgressType.CloudSave, "Saving local and cloud data");
 
-			string[] data = JSONHelper.ToJSON (inputData);//REORG
+			//string[] data = JSONHelper.ToJSON (inputData);//REORG
 
 			fileType ft;
 			if (baseline == 1) {
 				ft = fileType.Baseline;
 				//Cloud upload for baseline
 				string sheetName = suiteName + "_" + testType + "_Baseline";
-
-				StartCoroutine (CloudIO.Instance.UploadData (data, sheetName, baseline, inputData.resultsRow [0].resultsColumn.ToArray ()));
+				StartCoroutine (SQL.SQLIO.Instance.AddEntry (inputData.resultsRow [1], inputData.resultsRow [0].resultsColumn.ToArray (), sheetName, 1));
+				//StartCoroutine (CloudIO.Instance.UploadData (data, sheetName, baseline, inputData.resultsRow [0].resultsColumn.ToArray ()));
 			} else {
 				ft = fileType.Result;
 				//cloud upload for results
 				string sheetName = suiteName + "_" + testType + "_Results";
-				StartCoroutine (CloudIO.Instance.UploadData (data, sheetName, baseline, inputData.resultsRow [0].resultsColumn.ToArray ()));
+				StartCoroutine (SQL.SQLIO.Instance.AddEntry (inputData.resultsRow [1], inputData.resultsRow [0].resultsColumn.ToArray (), sheetName, 0));
+				//StartCoroutine (CloudIO.Instance.UploadData (data, sheetName, baseline, inputData.resultsRow [0].resultsColumn.ToArray ()));
 				;
 			}
 
-			if (data != null) {
+			/*if (data != null) {
 				inputData.resultsRow.RemoveAt (0);
 
 				for (int i = 0; i < data.Length - 1; i++) {
@@ -214,7 +229,9 @@ namespace GraphicsTestFramework
 			} else {
 				Console.Instance.Write (DebugLevel.Critical, MessageLevel.LogWarning, "Results are empty for Suite: " + suiteName + " Type: " + testType + ". Nothing to write"); // Write to console
 				BroadcastEndResultsSave ();
-			}
+			}*/
+
+			BroadcastEndResultsSave ();
 		}
 
 		/// <summary>
