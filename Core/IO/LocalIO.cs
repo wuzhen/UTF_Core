@@ -87,7 +87,8 @@ namespace GraphicsTestFramework
 
 				if ((lastSuite != suite || lastTestType != testType || lastApi != api || pipe != lastPipe) && jsonRows.Count > 0) {
 					isWaiting = true;
-					StartCoroutine(WriteDataFiles(lastSuite, lastTestType, JSONHelper.FromJSON (jsonRows.ToArray ()), jsonRows.ToArray (), fileType.Baseline));//REORG
+					//SQLreplacement needed
+					//StartCoroutine(WriteDataFiles(lastSuite, lastTestType, JSONHelper.FromJSON (jsonRows.ToArray ()), jsonRows.ToArray (), fileType.Baseline));//REORG
 					while (isWaiting)
 						yield return null;
 					jsonRows.Clear ();
@@ -101,7 +102,8 @@ namespace GraphicsTestFramework
 				lastPipe = pipe;
 			}if(jsonRows.Count > 0){
 				isWaiting = true;
-				StartCoroutine(WriteDataFiles(lastSuite, lastTestType, JSONHelper.FromJSON (jsonRows.ToArray ()), jsonRows.ToArray (), fileType.Baseline));//REORG
+				//sql replacement needed
+				//StartCoroutine(WriteDataFiles(lastSuite, lastTestType, JSONHelper.FromJSON (jsonRows.ToArray ()), jsonRows.ToArray (), fileType.Baseline));//REORG
 				while (isWaiting)
 					yield return null;
 				jsonRows.Clear ();
@@ -123,42 +125,41 @@ namespace GraphicsTestFramework
 		/// <param name="resultIOdata">Result I odata.</param>
 		/// <param name="data">Data.</param>
 		/// <param name="filetype">Filetype.</param>
-		public IEnumerator WriteDataFiles (string suite, string testType, ResultsIOData resultIOdata, string[] data, fileType filetype)
+		public IEnumerator WriteDataFiles (string suite, string testType, ResultsIOData resultIOdata, List<string> data, fileType filetype)
 		{
-            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Beginning to write suite " + suite + " testType " + testType + " which contains " + data.Length + " files to write"); // Write to console
-            string platformAPI = resultIOdata.resultsRow[0].commonResultsIOData.Platform + "_" + resultIOdata.resultsRow[0].commonResultsIOData.API;
-            string filePath = CreateDataDirectory (suite, platformAPI, resultIOdata.resultsRow [0].commonResultsIOData.RenderPipe, testType);  //dataPath + "/" + suite + "/" + resultIOdata.resultsRow [1].commonResultsIOData.API + "/" + resultIOdata.resultsRow [1].commonResultsIOData.RenderPipe + "/" + testType;
+            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Beginning to write suite " + suite + " testType " + testType + " which contains " + data.Count + " files to write"); // Write to console
+            string platformAPI = resultIOdata.resultsRow[1].commonResultsIOData.Platform + "_" + resultIOdata.resultsRow[1].commonResultsIOData.API;
+            string filePath = CreateDataDirectory (suite, platformAPI, resultIOdata.resultsRow [1].commonResultsIOData.RenderPipe, testType);  //dataPath + "/" + suite + "/" + resultIOdata.resultsRow [1].commonResultsIOData.API + "/" + resultIOdata.resultsRow [1].commonResultsIOData.RenderPipe + "/" + testType;
 			string prefix = "InvalidData"; // prefix for whether a results file or baseline file
 
 			int suiteBaselineDataIndex = -1;
 			if (filetype == fileType.Baseline) { //if it's a baseline file we need to update latest baseline timesstamp
 				prefix = baselinePrefix;
 
-				ResultsIO.Instance.UpdateBaselineDictionary (suite, resultIOdata.resultsRow [0].commonResultsIOData.RenderPipe, out suiteBaselineDataIndex);
+				ResultsIO.Instance.UpdateBaselineDictionary (suite, resultIOdata.resultsRow [1].commonResultsIOData.RenderPipe, out suiteBaselineDataIndex);
 			} else {
 				prefix = resultsCurrentPrefix;
 			}
-			//go through all the results data
-			int fileCount = 0;
-			for (int i = 0; i < data.Length; i++) {// TODO - offset by one, single result always comes 
-				ResultsDataCommon commonData = resultIOdata.resultsRow [i].commonResultsIOData;
-				//write data to files
-				if (!Directory.Exists (filePath)) // check to see ig folder exists if not create it
-					Directory.CreateDirectory (filePath);
-				string fileName = prefix + "_" + commonData.GroupName + "_" + commonData.TestName + ".txt";
-				File.WriteAllText (filePath + "/" + fileName, data [i]);
-				while (!File.Exists (filePath + "/" + fileName)) {
-                    Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Writing..."); // Write to console
-					yield return new WaitForEndOfFrame ();
-				}
-				//update baseline dictionary(not a dictionary) if needed
-				if(filetype == fileType.Baseline){
-					ResultsIO.Instance.BaselineDictionaryEntry (suiteBaselineDataIndex, testType, commonData.GroupName, commonData.TestName, commonData.DateTime);
-				}
-
-				fileCount++;
+			// ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+			//Writing stuff - TODO
+			ResultsDataCommon commonData = resultIOdata.resultsRow [1].commonResultsIOData;
+			//write data to files
+			if (!Directory.Exists (filePath)) // check to see ig folder exists if not create it
+				Directory.CreateDirectory (filePath);
+			string fileName = prefix + "_" + commonData.GroupName + "_" + commonData.TestName + ".txt";
+			File.WriteAllLines (filePath + "/" + fileName, data.ToArray ());
+			while (!File.Exists (filePath + "/" + fileName)) {
+                Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Writing..."); // Write to console
+				yield return new WaitForEndOfFrame ();
 			}
-            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Wrote " + fileCount + " files to disk"); // Write to console
+			//update baseline dictionary(not a dictionary) if needed
+			if(filetype == fileType.Baseline){
+				ResultsIO.Instance.BaselineDictionaryEntry (suiteBaselineDataIndex, testType, commonData.GroupName, commonData.TestName, commonData.DateTime);
+			}
+			// ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Wrote file to disk"); // Write to console
 			//Write baseline dictionary for suite and update timestamp TODO might need work/tweaking
 			if (filetype == fileType.Baseline) {
 				StartCoroutine (UpdateSuiteDataFiles());
@@ -173,6 +174,7 @@ namespace GraphicsTestFramework
 		/// <returns>The suite data files.</returns>
 		IEnumerator UpdateSuiteDataFiles ()
 		{
+			Console.Instance.Write (DebugLevel.File, MessageLevel.Log, "Updating Suite baseline data files");
 			foreach(SuiteBaselineData SBD in ResultsIO.Instance._suiteBaselineData){
 				string filePath = dataPath + "/" + SBD.suiteName + "/" + SBD.platform + "_" + SBD.api;
 				if (!Directory.Exists (filePath)) // check to see ig folder exists if not create it
@@ -187,9 +189,13 @@ namespace GraphicsTestFramework
 					newFileContent.Add (JsonUtility.ToJson (SD));
 				}
 				File.WriteAllLines (filePath + "/" + fileName, newFileContent.ToArray ());
-				while (CloudConnectorCore.isWaiting)
+
+				SQL.SQLIO.Instance.SetSuiteTimestamp (SBD);
+
+				/*while (CloudConnectorCore.isWaiting)
 					yield return null;
-				CloudIO.Instance.SetBaselineTimestamp (SBD);// - todo
+				CloudIO.Instance.SetBaselineTimestamp (SBD);// - todo*/
+
 				yield return null;
 			}isWaiting = false;
 		}

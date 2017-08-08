@@ -11,9 +11,9 @@ using System.IO;
 public class CloudConnector : MonoBehaviour
 {
 	// -- Complete the following fields. --
-	static string webServiceUrl = "https://script.google.com/macros/s/AKfycby0jbK1THQxiUJmq4kExrf0yFg9vU-WYDDpEWHlM-qgUNFwkFc/exec";
-	static string spreadsheetId = "1JIZMzcGhBP31rI_PmZvkiuZ6Lt-A2Zbd-KUeQYpRKJI";
-    private string servicePassword = "passcode";
+	static string webServiceUrl = "shttps://script.google.com/macros/s/AKfycby0jbK1THQxiUJmq4kExrf0yFg9vU-WYDDpEWHlM-qgUNFwkFc/exec";
+	static string spreadsheetId = "s1JIZMzcGhBP31rI_PmZvkiuZ6Lt-A2Zbd-KUeQYpRKJI";
+    private string servicePassword = "spasscode";
 	private float timeOutLimit = 300f;
 	public bool usePOST = true;
 	// --

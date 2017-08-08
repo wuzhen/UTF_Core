@@ -29,9 +29,9 @@ namespace GraphicsTestFramework.SQL
 
 		// ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		//LOCAL VARIABLES
-		public bool liveConnection;
-		private NetworkReachability netStat;
-
+		public connectionStatus liveConnection;
+		private NetworkReachability netStat = NetworkReachability.NotReachable;
+		private List<string> SQLQueryBackup = new List<string>();
 
 		// ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		//INFORMATION
@@ -87,9 +87,13 @@ namespace GraphicsTestFramework.SQL
 			Console.Instance.Write (DebugLevel.File, MessageLevel.Log, "SQL connection is:" + connection.State.ToString ());//write the connection state to log
 		}
 
+		// ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+		// Query methods - TODO wip
+		// ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 		//simple test query, no return
 		public string SQLQuery ( string _query ) {
-			Debug.LogError (_query);
+			Console.Instance.Write (DebugLevel.File, MessageLevel.Log, "SQL Query Out:" + _query);
 			try {
 				SqlCommand cmd = new SqlCommand(_query, _connection);
 				string _returnQuery = (string) cmd.ExecuteScalar ();
@@ -102,7 +106,7 @@ namespace GraphicsTestFramework.SQL
 		}
 
 		public SqlDataReader SQLRequest(string _query){
-			Debug.LogError (_query);
+			Console.Instance.Write (DebugLevel.File, MessageLevel.Log, "SQL Query Out:" + _query);
 			try
 			{
 				SqlDataReader myReader = null;
@@ -128,19 +132,21 @@ namespace GraphicsTestFramework.SQL
 		// Query data - TODO wip
 		// ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
+		//Check to see if table exists(not ready) TODO
 		public bool TableExists(string tableName){
 			string s = SQLQuery ("IF object_id('dbo." + tableName + "') is not null PRINT 'HERE'");
 			Debug.Log (s);
 			return true;
 		}
 
+		//Gets the timestamp in DateTime format from the server
 		public DateTime GetbaselineTimestamp(string suiteName){
 			DateTime timestamp = DateTime.MinValue;//make date time min, we check this on the other end since it is not nullable
 			SqlDataReader reader = SQLRequest ("SELECT * FROM SuiteBaselineTimestamps WHERE api='" + sysData.API + "' AND suiteName='" + suiteName + "' AND platform='" + sysData.Platform + "';");
 			while(reader.Read ()){
 				timestamp = reader.GetDateTime (3);
 			}
-			reader.Close ();
+			reader.Close ();//close the reader after getting hte information
 			return timestamp;
 		}
 
@@ -154,36 +160,50 @@ namespace GraphicsTestFramework.SQL
 			string _stringRequest = SQLQuery("CREATE TABLE " + tableName + " (" + _columns + ");");
 		}
 
+		//Set the suite baseline timestamp
+		public void SetSuiteTimestamp(SuiteBaselineData SBD){
+			StringBuilder outputString = new StringBuilder();
+			string tableName = "SuiteBaselineTimestamps";
+			List<string> values = new List<string> (){ SBD.suiteName, SBD.platform, SBD.api, SBD.suiteTimestamp};
+			string[] fields = new string[]{ "suiteName", "platform", "api", "suiteTimestamp"};
+			//condition string
+			string comparisonString = "platform='" + SBD.platform +
+				"' AND api='" + SBD.api + 
+				"' AND suiteName='" + SBD.suiteName +
+				"'";//the condition to match
+
+			outputString.Append ("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE BEGIN TRANSACTION ");//using transaction and isolation to avoid double write issues
+			outputString.AppendFormat ("IF EXISTS (select 1 from {0} WHERE {2}) BEGIN UPDATE {0} SET {3} WHERE {2} END ELSE INSERT INTO {0} VALUES ({1});", new object[]{tableName, ConvertToValues (values), comparisonString, ConvertToValues (values, fields)});
+			outputString.Append (" COMMIT TRANSACTION");
+			SQLQuery (outputString.ToString ());//send the query
+		}
+
 		//Creates an entry of either result or baseline(replaces UploadData from old system)
 		public IEnumerator AddEntry(ResultsIORow data, string[] fields, string tableName, int baseline){
-			Console.Instance.Write (DebugLevel.File, MessageLevel.Log, "Starting SQL processing"); // Write to console
-
+			Console.Instance.Write (DebugLevel.File, MessageLevel.Log, "Starting SQL query creation"); // Write to console
 			StringBuilder outputString = new StringBuilder();
-			outputString.Append (tableName);
-
 			CreateTable (tableName, fields);
 
 			if(baseline == 1){//baseline sorting
-				outputString.Insert (0, "INSERT INTO ");//using the insert function
-				outputString.Append (" VALUES (" + ConvertToValues (data.resultsColumn) + ");");//fill it out with straight values
-
-				/*string comparisonString = " WHERE " +
-					"Platform='" + data.resultsColumn[5] +
-					"' AND API='" + data.resultsColumn[6] + 
+				//condition string
+				string comparisonString = "Platform='" + data.resultsColumn[5] +
+					"' AND API='" + data.resultsColumn[6] +
 					"' AND RenderPipe='" + data.resultsColumn[7] + 
 					"' AND GroupName='" + data.resultsColumn[8] + 
 					"' AND TestName='" + data.resultsColumn[9] + 
-					"';";//the condition to match
-
-				outputString.Insert (0, "UPDATE ");//using the update function
-				outputString.Append (" SET " + ConvertToValues (data.resultsColumn, fields));//fill it out with the values and column names
-				outputString.Append (comparisonString);//the condition to match
-*/
+					"'";//the condition to match
+				
+				outputString.Append ("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE BEGIN TRANSACTION ");//using transaction and isolation to avoid double write issues
+				outputString.AppendFormat ("IF EXISTS (select 1 from {0} WHERE {2}) BEGIN UPDATE {0} SET {3} WHERE {2} END ELSE INSERT INTO {0} VALUES ({1});", new object[]{tableName, ConvertToValues (data.resultsColumn), comparisonString, ConvertToValues (data.resultsColumn, fields)});
+				outputString.Append (" COMMIT TRANSACTION");
 			}else{//result sorting
-				outputString.Insert (0, "INSERT INTO ");//using the insert function
-				outputString.Append (" VALUES (" + ConvertToValues (data.resultsColumn) + ");");//fill it out with straight values
+				outputString.AppendFormat ("INSERT INTO {0} VALUES ({1});", tableName, ConvertToValues (data.resultsColumn));//using the insert function
 			}
-			SQLQuery (outputString.ToString ());
+
+			if (liveConnection == connectionStatus.Server)
+				SQLQuery (outputString.ToString ());//send the query
+			else
+				SQLQueryBackup.Insert (0, outputString.ToString ());//backup the query to send when connection is resumed
 
 			yield return new WaitForEndOfFrame ();
 		}
@@ -194,16 +214,32 @@ namespace GraphicsTestFramework.SQL
 
 		//Method to check for valid connection, Invoked from start
 		void CheckConnection(){
-			netStat = Application.internetReachability; //Get network state
-			if (netStat != NetworkReachability.ReachableViaLocalAreaNetwork && liveConnection == true){
-				Console.Instance.Write (DebugLevel.Key, MessageLevel.LogError, "Internet Connection Lost");
-				liveConnection = false; // connection is not available
+
+			if(netStat != Application.internetReachability) {
+				netStat = Application.internetReachability; //Get network state
+
+				switch (netStat) {
+				case NetworkReachability.NotReachable:
+					Console.Instance.Write (DebugLevel.Key, MessageLevel.LogError, "Internet Connection Lost");
+					liveConnection = connectionStatus.None; // connection is not available
+					break;
+				case NetworkReachability.ReachableViaCarrierDataNetwork:
+					Console.Instance.Write (DebugLevel.Key, MessageLevel.LogError, "Internet Connection Not Reliable, Please connect to Wi-fi");
+					liveConnection = connectionStatus.Mobile; // connection is not available
+					break;
+				case NetworkReachability.ReachableViaLocalAreaNetwork:
+					Console.Instance.Write (DebugLevel.Key, MessageLevel.Log, "Internet Connection Live");
+					liveConnection = connectionStatus.Internet; // connection is not available
+					OpenConnection (_connection);//try open a connection to the server
+					break;
+				}
 			}
-			else if (liveConnection == false){
-				Console.Instance.Write (DebugLevel.Key, MessageLevel.LogWarning, "Internet Connection Live");
-				liveConnection = true;// connection is available
-				OpenConnection (_connection);
-			}
+
+			if (liveConnection == connectionStatus.Internet && _connection.State == ConnectionState.Open)
+				liveConnection = connectionStatus.Server;
+			else if (liveConnection == connectionStatus.Internet && _connection.State == ConnectionState.Closed)
+				liveConnection = connectionStatus.Internet;
+			
 		}
 
 		//create column list for table creation, inclued data type
@@ -220,7 +256,7 @@ namespace GraphicsTestFramework.SQL
 			return sb.ToString ();
 		}
 
-		//create column list for insertion values
+		//create column list for un-named values
 		string ConvertToValues(List<string> values){
 			StringBuilder sb = new StringBuilder ();
 			for (int i = 0; i < values.Count; i++) {
@@ -231,7 +267,7 @@ namespace GraphicsTestFramework.SQL
 			return sb.ToString ();
 		}
 
-		//create column list for update values
+		//create column list for named values
 		string ConvertToValues(List<string> values, string[] fields){
 			StringBuilder sb = new StringBuilder ();
 			for (int i = 0; i < values.Count; i++) {

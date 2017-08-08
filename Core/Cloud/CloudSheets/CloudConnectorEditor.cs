@@ -8,9 +8,9 @@ using UnityEngine.Networking;
 public class CloudConnectorEditor
 {
 	// -- Complete the following fields. --
-	private static string webServiceUrl = "https://script.google.com/macros/s/AKfycby0jbK1THQxiUJmq4kExrf0yFg9vU-WYDDpEWHlM-qgUNFwkFc/exec";
-	private static string spreadsheetId = "1JIZMzcGhBP31rI_PmZvkiuZ6Lt-A2Zbd-KUeQYpRKJI"; // If this is a fixed value could also be setup on the webservice to save POST request size.
-	private static string servicePassword = "passcode";
+	private static string webServiceUrl = "shttps://script.google.com/macros/s/AKfycby0jbK1THQxiUJmq4kExrf0yFg9vU-WYDDpEWHlM-qgUNFwkFc/exec";
+	private static string spreadsheetId = "s1JIZMzcGhBP31rI_PmZvkiuZ6Lt-A2Zbd-KUeQYpRKJI"; // If this is a fixed value could also be setup on the webservice to save POST request size.
+	private static string servicePassword = "spasscode";
 	private static float timeOutLimit = 300f;
 	private static bool usePOST = true;
 	// --

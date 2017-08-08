@@ -60,7 +60,7 @@ namespace GraphicsTestFramework
 			_suiteBaselineData = LocalIO.Instance.ReadLocalBaselines ();// - TODO this needs to get called again at some point
 
 			//Hardcoded wait for SuiteManager to populate - TODO might be cleaner way to do later
-			float timeout = 0;
+			float timeout = 0f;
 			while (SuiteManager.GetSuiteNames ().Length == 0) {
 				timeout += Time.deltaTime;
 				if (timeout > 5f) {
@@ -69,9 +69,12 @@ namespace GraphicsTestFramework
 				yield return new WaitForEndOfFrame ();
 			}
 
+			//wait for the SQL connection to be made, timeout after 10seconds
+			timeout = 0f;
 			do {
 				yield return new WaitForEndOfFrame ();
-			} while(SQL.SQLIO.Instance.liveConnection == false);
+				timeout += Time.deltaTime;
+			} while(SQL.SQLIO.Instance.liveConnection != connectionStatus.Server && timeout < 10f);
 
 			//fetch suite names from the suite manager
 			string[] suiteNames = SuiteManager.GetSuiteNames ();
@@ -79,19 +82,11 @@ namespace GraphicsTestFramework
 				Console.Instance.Write (DebugLevel.Critical, MessageLevel.LogWarning, "No suites loaded in SuiteManager, unable to continue"); // Write to console
 			} else {
 				foreach (string suiteName in suiteNames) {
-					//New SQL code to replace code below
-
+					//Get timestamp for suite via SQL
 					DateTime dt = SQL.SQLIO.Instance.GetbaselineTimestamp (suiteName);
-					if(dt != DateTime.MinValue)
+					if(dt != DateTime.MinValue)//Min value is null(doesnt exist)
 						CompareBaselineTimestamps (suiteName, dt.ToString ());
-					
-					/*CloudIO.Instance.GetBaselineTimestamp (suiteName);
-					while (CloudConnectorCore.isWaiting == true) {
-						yield return new WaitForEndOfFrame ();
-					}*/
 				}
-
-				yield return new WaitForSeconds (1f);//delete once SQL change as no need to wait
 
 				if (suiteBaselinesPullList.Count > 0)
 					CloudIO.Instance.FetchCloudBaselines (suiteBaselinesPullList.ToArray ());
@@ -218,18 +213,13 @@ namespace GraphicsTestFramework
 				;
 			}
 
-			/*if (data != null) {
-				inputData.resultsRow.RemoveAt (0);
-
-				for (int i = 0; i < data.Length - 1; i++) {
-					data [i] = data [i + 1];
-				}
-				Array.Resize<string> (ref data, data.Length - 1);
-				StartCoroutine (LocalIO.Instance.WriteDataFiles (suiteName, testType, inputData, data, ft));
+			if (inputData.resultsRow [1] != null) {
+				
+				StartCoroutine (LocalIO.Instance.WriteDataFiles (suiteName, testType, inputData, inputData.resultsRow[1].resultsColumn, ft));
 			} else {
 				Console.Instance.Write (DebugLevel.Critical, MessageLevel.LogWarning, "Results are empty for Suite: " + suiteName + " Type: " + testType + ". Nothing to write"); // Write to console
 				BroadcastEndResultsSave ();
-			}*/
+			}
 
 			BroadcastEndResultsSave ();
 		}
@@ -442,6 +432,15 @@ namespace GraphicsTestFramework
 		Baseline,
 		SuiteData,
 		BaseData}
+	;
+
+	[System.Serializable]
+	public enum connectionStatus
+	{
+		Server,
+		Internet,
+		Mobile,
+		None}
 	;
 
 }
