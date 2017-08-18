@@ -38,7 +38,7 @@ namespace GraphicsTestFramework
                     passFailThreshold = 0.25f, // Threshold for comparison pass/fail
                     timingType = TimingType.Milliseconds, // Timing multiplier
                     customTimingMultiplier = 1f, // Custom timing multiplier
-                    sampleFrames = 32 // Amount of frames to sample
+                    sampleFrames = 64 // Amount of frames to sample
                 };
             }
         }

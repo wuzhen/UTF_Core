@@ -28,7 +28,7 @@ namespace GraphicsTestFramework
         {
             Menu.Instance.GenerateTestRunner(RunnerType.Results); // Generate blank runner
             TestRunner.Instance.CallLoadSpecificTest(activeResultsEntry.resultsEntryData.testEntry); // Load specific test
-            ResultsViewer.Instance.SetState(0); // Disable results viewer
+            ResultsViewer.Instance.SetState(4); // Disable results viewer
         }
     }
 }

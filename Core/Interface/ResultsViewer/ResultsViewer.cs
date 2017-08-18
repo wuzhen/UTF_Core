@@ -68,7 +68,7 @@ namespace GraphicsTestFramework
         // Every update
         private void Update()
         {
-            if(viewerState == 2 && isGenerated) // If viewing detailed results and generation complete
+            if (viewerState == 2 && isGenerated) // If viewing detailed results and generation complete
                 CheckForTitleChange(); // Check for moving titles
         }
 
@@ -90,7 +90,7 @@ namespace GraphicsTestFramework
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Setting state"); // Write to console
             viewerState = input; // Track state
             isGenerated = false; // Track is generated
-            switch(viewerState) // Switch UI objects based on state
+            switch (viewerState) // Switch UI objects based on state
             {
                 case 0: // Back to menu
                     overviewParent.SetActive(false);
@@ -106,7 +106,8 @@ namespace GraphicsTestFramework
                     resultsViewerParent.SetActive(true);
                     homeButton.gameObject.SetActive(true);
                     overviewButton.gameObject.SetActive(false);
-                    GenerateContent(false); // Main call for generation of viewer content
+                    GenerateContent(false); // Main call for generation of viewer content]
+                    Menu.Instance.SetMenuState(false);
                     break;
                 case 2: // Detailed Results
                     overviewParent.SetActive(false);
@@ -115,8 +116,11 @@ namespace GraphicsTestFramework
                     homeButton.gameObject.SetActive(false);
                     overviewButton.gameObject.SetActive(true);
                     GenerateContent(false); // Main call for generation of viewer content
+                    RefreshMenu(); // Refresh menu - WORKAROUND
+                    Menu.Instance.SetMenuState(false);
                     break;
                 case 3: // First time overview
+                    Setup();
                     overviewParent.SetActive(true);
                     detailedResultsParent.SetActive(false);
                     resultsViewerParent.SetActive(true);
@@ -124,8 +128,26 @@ namespace GraphicsTestFramework
                     overviewButton.gameObject.SetActive(false);
                     viewerState = 1; // Set back for content generation
                     GenerateContent(true); // Main call for generation of viewer content
+                    Menu.Instance.SetMenuState(false);
+                    break;
+                case 4: // View test
+                    overviewParent.SetActive(false);
+                    detailedResultsParent.SetActive(false);
+                    resultsViewerParent.SetActive(false);
+                    homeButton.gameObject.SetActive(false);
+                    overviewButton.gameObject.SetActive(false);
+                    Menu.Instance.SetMenuState(false);
                     break;
             }
+        }
+
+        // TODO - Workaround for ScrollRect update bug in 2017.1+
+        // Remove when bug is fixed
+        void RefreshMenu()
+        {
+            Canvas canvas = resultsViewerParent.GetComponent<Canvas>();
+            canvas.enabled = false;
+            canvas.enabled = true;
         }
 
         // ------------------------------------------------------------------------------------
@@ -136,10 +158,11 @@ namespace GraphicsTestFramework
         {
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Generating suites dropdown"); // Write to console
             List<Dropdown.OptionData> options = new List<Dropdown.OptionData>(); // Create new options list
+            options.Add(Common.ConvertStringToDropdownOptionData("All Suites"));
             string[] suites = SuiteManager.GetSuiteNames(); // Get suite names
-            for(int i = 0; i < suites.Length; i++) // Iterate suites
+            for (int i = 0; i < suites.Length; i++) // Iterate suites
                 options.Add(Common.ConvertStringToDropdownOptionData(suites[i])); // Convert string to option data and add
-            suitesDropdown.AddOptions(options); // Add options
+            suitesDropdown.options = options; // Add options
         }
 
         // Get type names and generate dropdown content
@@ -147,10 +170,11 @@ namespace GraphicsTestFramework
         {
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Generating types dropdown"); // Write to console
             List<Dropdown.OptionData> options = new List<Dropdown.OptionData>(); // Create new options list
+            options.Add(Common.ConvertStringToDropdownOptionData("All Types"));
             string[] types = TestTypes.GetTypeStringList(); // Get type names
             for (int i = 0; i < types.Length; i++) // Iterate types
                 options.Add(Common.ConvertStringToDropdownOptionData(types[i])); // Convert string to option data and add
-            typesDropdown.AddOptions(options); // Add options
+            typesDropdown.options = options; // Add options
         }
 
         // Generate results filter dropdown content
@@ -158,10 +182,11 @@ namespace GraphicsTestFramework
         {
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Generating results dropdown"); // Write to console
             List<Dropdown.OptionData> options = new List<Dropdown.OptionData>(); // Create new options list
+            options.Add(Common.ConvertStringToDropdownOptionData("All Results"));
             string[] results = new string[4] { "Pass", "Fail", "Ran", "Not Ran" }; // Get results entries
             for (int i = 0; i < results.Length; i++) // Iterate
                 options.Add(Common.ConvertStringToDropdownOptionData(results[i])); // Convert string to option data and add
-            resultsDropdown.AddOptions(options); // Add options
+            resultsDropdown.options = options; // Add options
         }
 
         // Set results dropdown state based on ResultsViewer state
@@ -243,14 +268,14 @@ namespace GraphicsTestFramework
                                     ResultsIOData data = ResultsIO.Instance.RetrieveResult(suiteName, typeName, common); // Retrieve results data
                                     if (resultsDropdown.value != 0) // If filtering based on results
                                     {
-                                         int passFail = 2; // Set default state (no results)
+                                        int passFail = 2; // Set default state (no results)
                                         if (data != null) // If results data exists
                                             passFail = data.resultsRow[0].resultsColumn[21] == "True" ? 0 : 1; // Set pass fail state
-                                        switch(resultsDropdown.value)
+                                        switch (resultsDropdown.value)
                                         {
                                             case 1: // Pass
-                                                if(passFail == 0)
-                                                    filteredResultsEntries.Add(new ResultsEntryData (new TestEntry(suiteName, groupName, scenePath, typeName, testName, typeIndex, su, gr, ty, te), data)); // Add to list
+                                                if (passFail == 0)
+                                                    filteredResultsEntries.Add(new ResultsEntryData(new TestEntry(suiteName, groupName, scenePath, typeName, testName, typeIndex, su, gr, ty, te), data)); // Add to list
                                                 break;
                                             case 2: // Fail
                                                 if (passFail == 1)
@@ -291,7 +316,7 @@ namespace GraphicsTestFramework
                 int passFail = 2; // Set default state (no results)
                 if (filteredResultsEntries[i].resultsData != null) // If results data exists
                     passFail = filteredResultsEntries[i].resultsData.resultsRow[0].resultsColumn[21] == "True" ? 0 : 1; // Set pass fail state
-                switch(passFail)
+                switch (passFail)
                 {
                     case 0: // Pass
                         testsPassed++; // Increment
@@ -334,9 +359,9 @@ namespace GraphicsTestFramework
             TestLogicBase logic = null; // Track previous logic
             string previousSuite = ""; // Track previous suite
             string previousType = ""; // Track previous type
-            for(int i = 0; i < filteredResultsEntries.Count; i++) // Iterate filtered results
+            for (int i = 0; i < filteredResultsEntries.Count; i++) // Iterate filtered results
             {
-                if(previousSuite != filteredResultsEntries[i].testEntry.suiteName || previousType != filteredResultsEntries[i].testEntry.typeName) // New suite or type
+                if (previousSuite != filteredResultsEntries[i].testEntry.suiteName || previousType != filteredResultsEntries[i].testEntry.typeName) // New suite or type
                     GenerateNewTitleEntry(filteredResultsEntries[i].testEntry); // Generate new title entry
                 if (!logic || filteredResultsEntries[i].testEntry.typeName != previousType) // If logic doesnt match previous type
                     logic = TestTypeManager.Instance.GetLogicInstanceFromName(filteredResultsEntries[i].testEntry.typeName); // Get logic instance
@@ -347,7 +372,6 @@ namespace GraphicsTestFramework
                 if (entryHeight == 0) // Track entry height
                     entryHeight = newEntry.GetComponent<RectTransform>().sizeDelta.y;
                 listHeight -= entryHeight; // Track height for next entry
-
             }
             listContentRect.sizeDelta = new Vector2(listContentRect.sizeDelta.x, -listHeight); // Set content rect size
         }
@@ -387,8 +411,8 @@ namespace GraphicsTestFramework
         // Nudge list entries up or down to create space for context object
         void NudgeDetailedResultsListEntries(int startIndex, float nudgeAmount)
         {
-            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Nudging list entries from start index "+startIndex); // Write to console
-            for (int i = startIndex+1; i < listEntries.Count; i++) // Iterate entries after the start index
+            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Nudging list entries from start index " + startIndex); // Write to console
+            for (int i = startIndex + 1; i < listEntries.Count; i++) // Iterate entries after the start index
             {
                 RectTransform entryRect = listEntries[i].GetComponent<RectTransform>(); // Get rect reference
                 entryRect.anchoredPosition = new Vector2(entryRect.anchoredPosition.x, entryRect.anchoredPosition.y + nudgeAmount); // Nudge the entry
@@ -420,7 +444,7 @@ namespace GraphicsTestFramework
         // Check for a change in the active title (every frame)
         void CheckForTitleChange()
         {
-            if(titleEntriesAbove.Count > 0) // If there is any titles above the viewport
+            if (titleEntriesAbove.Count > 0) // If there is any titles above the viewport
             {
                 if (titleEntriesAbove[0].transform.position.y < viewportCorner.position.y) // If the first entry moves below viewport top
                     MoveTitleEntryInLists(titleEntriesAbove[0]); // Move the entry
@@ -436,12 +460,12 @@ namespace GraphicsTestFramework
         void MoveTitleEntryInLists(ResultsEntry input)
         {
             bool isAbove = false; // Set to track list found in
-            foreach(ResultsEntry r in titleEntriesAbove) // Iterate above list
+            foreach (ResultsEntry r in titleEntriesAbove) // Iterate above list
             {
-                if(r == input) // If requested
+                if (r == input) // If requested
                     isAbove = true; // Set true
             }
-            if(isAbove) // If requested is above
+            if (isAbove) // If requested is above
             {
                 titleEntriesAbove.Remove(input); // Remove from above
                 titleEntriesBelow.Insert(0, input); // Add to below
@@ -457,7 +481,7 @@ namespace GraphicsTestFramework
         // Set hover title entry to title above the viewport
         void SetHoverTitleEntry()
         {
-            if(titleEntriesAbove.Count > 0) // If title exists above the viewport
+            if (titleEntriesAbove.Count > 0) // If title exists above the viewport
                 hoverTitleEntry.SetupTitle(titleEntriesAbove[0].testNameText.text); // Setup the title instance
         }
 
@@ -478,7 +502,7 @@ namespace GraphicsTestFramework
                 ExpandContextObject(inputEntry, display); // Create and expand
             else
             {
-                if(activeContextEntry == inputEntry) // If selected entry matches current context
+                if (activeContextEntry == inputEntry) // If selected entry matches current context
                     HideContextObject(inputEntry); // Hide it
                 else
                 {
@@ -486,7 +510,7 @@ namespace GraphicsTestFramework
                     ExpandContextObject(inputEntry, display); // Create and expand
                 }
             }
-                
+            RefreshMenu(); // Refresh menu - WORKAROUND   
         }
 
         // Create and expand context object
@@ -497,7 +521,7 @@ namespace GraphicsTestFramework
             activeContextEntry = inputEntry; // Track selected entry
             activeContextObject = Instantiate(display.resultsContextPrefab, listContentRect, false); // Create context object instance
             RectTransform contextObjectRect = activeContextObject.GetComponent<RectTransform>(); // Get rect
-            contextObjectRect.anchoredPosition = new Vector2(0, (entryIndex+1) * -listEntries[0].GetComponent<RectTransform>().sizeDelta.y); // Set position
+            contextObjectRect.anchoredPosition = new Vector2(0, (entryIndex + 1) * -listEntries[0].GetComponent<RectTransform>().sizeDelta.y); // Set position
             listContentRect.sizeDelta = new Vector2(listContentRect.sizeDelta.x, listContentRect.sizeDelta.y + contextObjectRect.sizeDelta.y); // Set size
             NudgeDetailedResultsListEntries(entryIndex, -contextObjectRect.sizeDelta.y); // Nudge entries
             ResultsContext resultsContext = activeContextObject.GetComponent<ResultsContext>(); // Get results context reference
@@ -513,6 +537,7 @@ namespace GraphicsTestFramework
             NudgeDetailedResultsListEntries(entryIndex, activeContextObject.GetComponent<RectTransform>().sizeDelta.y); // Nudge entries
             listContentRect.sizeDelta = new Vector2(listContentRect.sizeDelta.x, listContentRect.sizeDelta.y - activeContextObject.GetComponent<RectTransform>().sizeDelta.y); // Set size
             DestroyContextEntry(); // Destroy
+            Resources.UnloadUnusedAssets(); // Cleanup previous textures
         }
 
         // Destroy context object

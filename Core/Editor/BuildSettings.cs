@@ -8,7 +8,7 @@ namespace GraphicsTestFramework
     public class BuildSettings : EditorWindow
     {
         // Scripting defines for the core
-        static string[] coreScriptingDefines = new string[1] 
+        static string[] coreScriptingDefines = new string[1]
         {
             "UTF_EXISTS"
         };
@@ -35,9 +35,7 @@ namespace GraphicsTestFramework
         {
             GetUnityVersionInfo(); // Get unity version info
             SuiteManager.GenerateSceneList(false); // Create suite structure
-            int platformCount = Enum.GetNames(typeof(BuildTargetGroup)).Length; // Get platform count
-            for (int i = 0; i < platformCount; i++) // Iterate all platforms
-                PlayerSettings.SetApplicationIdentifier((BuildTargetGroup)i, "com.UnityTechnologies.RuntimeTestFramework"); // Set bundle identifiers
+            SetApplicationSettings(); // Set application settings
             SetScriptingDefines(); // Set defines
             SetPlayerSettings(); // Set player settings
             PlayerSettings.bundleVersion = Common.applicationVersion; // Set application version
@@ -48,9 +46,7 @@ namespace GraphicsTestFramework
         {
             GetUnityVersionInfo(); // Get unity version info
             SuiteManager.GenerateSceneList(true); // Create suite structure
-            int platformCount = Enum.GetNames(typeof(BuildTargetGroup)).Length; // Get platform count
-            for (int i = 0; i < platformCount; i++) // Iterate all platforms
-                PlayerSettings.SetApplicationIdentifier((BuildTargetGroup)i, "com.UnityTechnologies.RuntimeTestFramework"); // Set bundle identifiers
+            SetApplicationSettings(); // Set application settings
             SetScriptingDefines(); // Set defines
             SetPlayerSettings(); // Set player settings
             PlayerSettings.bundleVersion = Common.applicationVersion; // Set application version
@@ -61,10 +57,11 @@ namespace GraphicsTestFramework
             Settings settings = SuiteManager.GetSettings(); // Get settings
             settings.unityVersion = UnityEditorInternal.InternalEditorUtility.GetFullUnityVersion(); // Set unity version
             settings.unityBranch = UnityEditorInternal.InternalEditorUtility.GetUnityBuildBranch(); // Set unity branch
+            SuiteManager.SetSettings(settings);
         }
 
         // Set scripting define symbols
-        static void SetScriptingDefines()
+        public static void SetScriptingDefines()
         {
             Settings settings = SuiteManager.GetSettings(); // Get settings
             string output = ""; // Create output string
@@ -83,10 +80,45 @@ namespace GraphicsTestFramework
         }
 
         // Set player settings
-        static void SetPlayerSettings()
+        public static void SetPlayerSettings()
         {
             PlayerSettings.gpuSkinning = true;
             PlayerSettings.colorSpace = ColorSpace.Linear;
+            QualitySettings.vSyncCount = 0;
+        }
+
+        // Set various application specific settings
+        public static void SetApplicationSettings()
+        {
+            PlayerSettings.companyName = "Unity Technologies";
+            string productName;
+            Settings settings = SuiteManager.GetSettings();
+            if(settings)
+            {
+                if (settings.buildNameOverride.Length > 0)
+                    productName = settings.buildNameOverride;
+                else
+                {
+                    if (settings.suiteList.Count == 0)
+                    {
+                        Debug.LogError("No suites found on Settings object. Aborting.");
+                        return;
+                    }
+                    else if (settings.suiteList.Count > 1)
+                        productName = "UTF_Various";
+                    else
+                        productName = "UTF_" + settings.suiteList[0].suiteName;
+                }
+            }
+            else
+            {
+                Debug.LogError("No Settings object found. Aborting.");
+                return;
+            } 
+            PlayerSettings.productName = productName;
+            int platformCount = Enum.GetNames(typeof(BuildTargetGroup)).Length; // Get platform count
+            for (int i = 0; i < platformCount; i++) // Iterate all platforms
+                PlayerSettings.SetApplicationIdentifier((BuildTargetGroup)i, "com.UnityTechnologies."+productName); // Set bundle identifiers
         }
     }
 
@@ -98,7 +130,10 @@ namespace GraphicsTestFramework
         public void OnPreprocessBuild(BuildTarget target, string path)
         {
 #if UNITY_EDITOR
-            BuildSettings.GetUnityVersionInfo();
+            BuildSettings.GetUnityVersionInfo(); // Get unity version info
+            BuildSettings.SetApplicationSettings(); // Set application settings
+            BuildSettings.SetScriptingDefines(); // Set defines
+            BuildSettings.SetPlayerSettings(); // Set player settings
 #endif
         }
     }

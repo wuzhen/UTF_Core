@@ -285,6 +285,7 @@ namespace GraphicsTestFramework
         // Called by the TestViewer when restarting the current test
         public void RestartTest()
         {
+            Resources.UnloadUnusedAssets(); // Cleanup previous textures
             SetupResultsStructs(); // Update common
             TestPreProcess(); // Restart
         }
