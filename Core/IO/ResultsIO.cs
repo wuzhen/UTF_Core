@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System;
+using System.Reflection;
 
 namespace GraphicsTestFramework
 {
@@ -29,6 +30,7 @@ namespace GraphicsTestFramework
 
 		private void Start ()
 		{
+			//Grab the system data to share around
 			sysData = Master.Instance.GetSystemData ();
 
 			//setup local IO
@@ -39,7 +41,7 @@ namespace GraphicsTestFramework
 			if (SQL.SQLIO.Instance == null)
 				gameObject.AddComponent<SQL.SQLIO> ();
 			SQL.SQLIO.Instance.Init (sysData);
-			//setup cloud IO
+			//setup cloud IO - TODO - remove later
 			if (CloudIO.Instance == null)
 				gameObject.AddComponent<CloudIO> ();
 			CloudIO.Instance.Init (sysData);
@@ -55,8 +57,7 @@ namespace GraphicsTestFramework
 
 		public IEnumerator Init ()
 		{
-			//Show loading screen
-			ProgressScreen.Instance.SetState (true, ProgressType.LocalLoad, "Loading local data");
+			ProgressScreen.Instance.SetState (true, ProgressType.LocalLoad, "Loading local data"); //Show loading screen
 			_suiteBaselineData = LocalIO.Instance.ReadLocalBaselines ();// - TODO this needs to get called again at some point
 
 			//Hardcoded wait for SuiteManager to populate - TODO might be cleaner way to do later
@@ -88,22 +89,20 @@ namespace GraphicsTestFramework
 						CompareBaselineTimestamps (suiteName, dt.ToString ());
 				}
 
-				if (suiteBaselinesPullList.Count > 0)
-					CloudIO.Instance.FetchCloudBaselines (suiteBaselinesPullList.ToArray ());
-				else {
+				if (suiteBaselinesPullList.Count > 0) {
+					ResultsIOData[] data = SQL.SQLIO.Instance.FetchBaselines (suiteBaselinesPullList.ToArray (), sysData.Platform, sysData.API);
+					Console.Instance.Write (DebugLevel.File, MessageLevel.Log, "Cloud baselines pulled, writing local files");
+					foreach(ResultsIOData rd in data){
+						StartCoroutine (LocalIO.Instance.WriteDataFiles (rd, fileType.Baseline));
+					}
+					_suiteBaselineData = LocalIO.Instance.ReadLocalBaselines ();
+					BroadcastBaselineParsed ();
+				} else {
 					Console.Instance.Write (DebugLevel.Logic, MessageLevel.Log, "No cloud based baselines to pull"); // Write to console
 					BroadcastBaselineParsed ();
 				}
 			}
 		}
-
-		//cloud data recieved from CloudIO parsed by LocalIO and sent here
-		public void CloudBaselineDataRecieved (List<SuiteBaselineData> LocalBaselines)
-		{
-			_suiteBaselineData = LocalBaselines;
-			BroadcastBaselineParsed ();
-		}
-
 
 		/// ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		/// Initial checks
@@ -195,27 +194,24 @@ namespace GraphicsTestFramework
 		{
 			ProgressScreen.Instance.SetState (true, ProgressType.CloudSave, "Saving local and cloud data");
 
-			//string[] data = JSONHelper.ToJSON (inputData);//REORG
+			inputData.suite = suiteName;
+			inputData.testType = testType;
 
 			fileType ft;
 			if (baseline == 1) {
 				ft = fileType.Baseline;
 				//Cloud upload for baseline
 				string sheetName = suiteName + "_" + testType + "_Baseline";
-				StartCoroutine (SQL.SQLIO.Instance.AddEntry (inputData.resultsRow [1], inputData.resultsRow [0].resultsColumn.ToArray (), sheetName, 1));
-				//StartCoroutine (CloudIO.Instance.UploadData (data, sheetName, baseline, inputData.resultsRow [0].resultsColumn.ToArray ()));
+				StartCoroutine (SQL.SQLIO.Instance.AddEntry (inputData, sheetName, 1, false));
 			} else {
 				ft = fileType.Result;
 				//cloud upload for results
 				string sheetName = suiteName + "_" + testType + "_Results";
-				StartCoroutine (SQL.SQLIO.Instance.AddEntry (inputData.resultsRow [1], inputData.resultsRow [0].resultsColumn.ToArray (), sheetName, 0));
-				//StartCoroutine (CloudIO.Instance.UploadData (data, sheetName, baseline, inputData.resultsRow [0].resultsColumn.ToArray ()));
-				;
+				StartCoroutine (SQL.SQLIO.Instance.AddEntry (inputData, sheetName, 0, false));
 			}
 
-			if (inputData.resultsRow [1] != null) {
-				
-				StartCoroutine (LocalIO.Instance.WriteDataFiles (suiteName, testType, inputData, inputData.resultsRow[1].resultsColumn, ft));
+			if (inputData.resultsRow [0] != null) {
+				StartCoroutine (LocalIO.Instance.WriteDataFiles (inputData, ft));
 			} else {
 				Console.Instance.Write (DebugLevel.Critical, MessageLevel.LogWarning, "Results are empty for Suite: " + suiteName + " Type: " + testType + ". Nothing to write"); // Write to console
 				BroadcastEndResultsSave ();
@@ -233,8 +229,8 @@ namespace GraphicsTestFramework
 		/// <param name="inputData">Input data.</param>
 		public ResultsIOData RetrieveResult (string suiteName, string testType, ResultsDataCommon inputData)
 		{
-			string rawJSONdata = LocalIO.Instance.FetchDataFile (suiteName, testType, inputData, false);//fetch string from file
-			ResultsIOData data = JSONHelper.FromJSON (rawJSONdata);//take JSON convert to ResultsIOData //REORG
+			//string rawJSONdata = LocalIO.Instance.FetchDataFile (suiteName, testType, inputData, false);//fetch string from file
+			ResultsIOData data = LocalIO.Instance.FetchDataFile (suiteName, testType, inputData, false); //JSONHelper.FromJSON (rawJSONdata);//take JSON convert to ResultsIOData //REORG
 			return data;
 		}
 
@@ -247,8 +243,8 @@ namespace GraphicsTestFramework
 		/// <param name="inputData">Input data.</param>
 		public ResultsIOData RetrieveBaseline (string suiteName, string testType, ResultsDataCommon inputData)
 		{
-			string rawJSONdata = LocalIO.Instance.FetchDataFile (suiteName, testType, inputData, true);//fetch string from file
-			ResultsIOData data = JSONHelper.FromJSON (rawJSONdata);//take JSON convert to ResultsIOData //REORG
+			//string rawJSONdata = LocalIO.Instance.FetchDataFile (suiteName, testType, inputData, true);//fetch string from file
+			ResultsIOData data = LocalIO.Instance.FetchDataFile (suiteName, testType, inputData, true);//JSONHelper.FromJSON (rawJSONdata);//take JSON convert to ResultsIOData //REORG
 			return data;
 		}
 
@@ -376,6 +372,36 @@ namespace GraphicsTestFramework
 				baselinesParsed ();
 		}
 
+		//Convert list of strings to ResultsDataCommon
+		public ResultsDataCommon GenerateRDC(string[] inputData){
+			var common = new ResultsDataCommon(); //blank common data
+			BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
+			FieldInfo[] commonFields = typeof(ResultsDataCommon).GetFields(bindingFlags);
+			for (int cf = 0; cf < commonFields.Length; cf++)
+			{
+				string value = inputData[cf];
+				FieldInfo fieldInfo = common.GetType().GetField(commonFields[cf].Name);
+				fieldInfo.SetValue(common, Convert.ChangeType(value, fieldInfo.FieldType));
+			}
+			return common;
+		}
+
+		//Generates a single result from a string array to a ResultsIOData
+		public ResultsIOData GenerateRIOD(string[] inputData, string suite, string testType){
+			ResultsIOData RD = new ResultsIOData ();
+			ResultsIORow row = new ResultsIORow ();
+			row.resultsColumn = new List<string> ();
+			RD.resultsRow.Add (row);
+			RD.suite = suite;
+			RD.testType = testType;
+
+			for(int i = 0; i < inputData.Length / 2; i++){
+				RD.fieldNames.Add (inputData[i * 2]);
+				RD.resultsRow [0].resultsColumn.Add (inputData [(i * 2) + 1]);
+			}
+			return RD;
+		}
+
 	}
 
 	/// ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -384,16 +410,16 @@ namespace GraphicsTestFramework
 	[System.Serializable]
 	public class ResultsIOData
 	{
-		public List<ResultsIORow> resultsRow = new List<ResultsIORow> ();
-		//List of rows of results, row [0] is always the labels for the columns
+		public string suite;
+		public string testType;
+		public List<string> fieldNames = new List<string> ();//string list of fields
+		public List<ResultsIORow> resultsRow = new List<ResultsIORow> ();//list of row data
 	}
 
 	[System.Serializable]
 	public class ResultsIORow
 	{
-		public ResultsDataCommon commonResultsIOData = new ResultsDataCommon ();
-		public List<string> resultsColumn = new List<string> ();
-		//List of the actual results along the row, unless index [0] in results data then the labels
+		public List<string> resultsColumn = new List<string> ();//list of column values
 	}
 
 	[System.Serializable]
