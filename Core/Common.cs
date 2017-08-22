@@ -23,15 +23,18 @@ namespace GraphicsTestFramework
         public static string GetArg(string name)
         {
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Getting command line arguments"); // Write to console
-            var args = System.Environment.GetCommandLineArgs(); // Get all arguments
-            for (int i = 0; i < args.Length; i++) // Iterate
+            if(Application.platform != RuntimePlatform.Android) // Fails on these platforms
             {
-                if (args[i] == "-"+name && args.Length > i + 1) // If arg matches and has value
+                var args = System.Environment.GetCommandLineArgs(); // Get all arguments
+                for (int i = 0; i < args.Length; i++) // Iterate
                 {
-                    return args[i + 1]; // Return value of arg
+                    if (args[i] == "-" + name && args.Length > i + 1) // If arg matches and has value
+                    {
+                        return args[i + 1]; // Return value of arg
+                    }
                 }
             }
-            return null; // Fail
+            return ""; // Fail
         }
 
         // Quit application

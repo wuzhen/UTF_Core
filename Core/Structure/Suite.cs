@@ -28,7 +28,7 @@ namespace GraphicsTestFramework
     public class Test
     {
         [SerializeField] public UnityEngine.Object scene;
-        [SerializeField] [HideInInspector] public string scenePath;
+        [SerializeField] public string scenePath;
         [SerializeField] public int testTypes;
         [SerializeField] public int minimumUnityVersion;
         [SerializeField] public int platforms = -1;
