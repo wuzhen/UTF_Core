@@ -132,8 +132,8 @@ namespace GraphicsTestFramework
 #if UNITY_EDITOR
             BuildSettings.GetUnityVersionInfo(); // Get unity version info
             BuildSettings.SetApplicationSettings(); // Set application settings
-            BuildSettings.SetScriptingDefines(); // Set defines
-            BuildSettings.SetPlayerSettings(); // Set player settings
+            //BuildSettings.SetScriptingDefines(); // Set defines
+            //BuildSettings.SetPlayerSettings(); // Set player settings
 #endif
         }
     }
