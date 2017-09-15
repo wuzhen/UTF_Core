@@ -24,14 +24,18 @@ namespace GraphicsTestFramework.SQL
 		//CONNECTION VARIABLES
 		private string _conString = @"user id=UTF_admin;" +
 		                            @"password=chicken22;data source=10.44.41.115;" +
-		                            @"database=UTF_testbed;";
+		                            @"database=UTF_testbed;" +
+									@"timeout=600;" +
+		                            @"pooling=true";
 		private SqlConnection _connection = null;
 
 		// ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		//LOCAL VARIABLES
 		public connectionStatus liveConnection;
 		private NetworkReachability netStat = NetworkReachability.NotReachable;
-		private List<string> SQLQueryBackup = new List<string>();
+
+		//Query retry list - TODO - not hooked up or solved yet
+		private List<QueryBackup> SQLNonQueryBackup = new List<QueryBackup>();
 
 		// ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		//INFORMATION
@@ -52,38 +56,43 @@ namespace GraphicsTestFramework.SQL
 			_connection = new SqlConnection (_conString);//Create a new connnection with the _consString
 		}
 
-		void OnEnable(){
-			//OpenConnection (_connection); //Try open a conneciton to DB
-		}
-
 		void OnDisable(){
-			CloseConnection (_connection);//Close SQL conneciton on disable
+			CloseConnection ();//Close SQL conneciton on disable
 		}
 
 		//Opens a connection to the SQL DB
-		void OpenConnection(SqlConnection connection){
+		void OpenConnection(){
 			try
 			{
-				connection.Open();//open the connection
+				_connection.Open();//open the connection
 			}
-			catch(Exception e)
+			catch(SqlException _exception)
 			{
-				Console.Instance.Write(DebugLevel.Critical, MessageLevel.LogWarning, e.ToString());
+				Console.Instance.Write(DebugLevel.Critical, MessageLevel.LogError, _exception.ToString());
 			}
-			Console.Instance.Write (DebugLevel.File, MessageLevel.Log, "SQL connection is:" + connection.State.ToString ());//write the connection state to log
+			Console.Instance.Write (DebugLevel.File, MessageLevel.Log, "SQL connection is:" + _connection.State.ToString ());//write the connection state to log
 		}
 
 		//Closes the connection to the SQL DB
-		void CloseConnection(SqlConnection connection){
+		void CloseConnection(){
 			try
 			{
-				connection.Close ();//close the connection
+				_connection.Close ();//close the connection
 			}
-			catch(Exception e)
+			catch(SqlException _exception)
 			{
-				Console.Instance.Write(DebugLevel.Critical, MessageLevel.LogWarning, e.ToString());
+				Console.Instance.Write(DebugLevel.Critical, MessageLevel.LogError, _exception.ToString());
 			}
-			Console.Instance.Write (DebugLevel.File, MessageLevel.Log, "SQL connection is:" + connection.State.ToString ());//write the connection state to log
+			Console.Instance.Write (DebugLevel.File, MessageLevel.Log, "SQL connection is:" + _connection.State.ToString ());//write the connection state to log
+		}
+
+		//Resets the connection, opens it if its closed or cycles it if its already open
+		void ResetConnection(){
+			if (_connection.State == ConnectionState.Open) {
+				_connection.Close ();
+				OpenConnection ();
+			} else
+				OpenConnection ();
 		}
 
 		// ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -92,76 +101,77 @@ namespace GraphicsTestFramework.SQL
 
 		//simple test query, no return
 		public string SQLQuery ( string _query ) {
-			Console.Instance.Write (DebugLevel.File, MessageLevel.Log, "SQL Query Out:" + _query);
-			try {
-				SqlCommand cmd = new SqlCommand(_query, _connection);
-				string _returnQuery = (string) cmd.ExecuteScalar ();
-				return _returnQuery;
-				cmd.Dispose ();
-			}
-			catch (SqlException _exception) {
-				Debug.LogWarning(_exception.ToString());
-				return null;
+			Console.Instance.Write (DebugLevel.File, MessageLevel.Log, "Sending SQL Query of size:" + _query.Length);
+			using (SqlCommand cmd = new SqlCommand(_query, _connection)) {
+				ResetConnection ();
+				try {
+					cmd.CommandTimeout = 0;
+					string _returnQuery = (string) cmd.ExecuteScalar ();
+					cmd.Dispose ();
+					return _returnQuery;
+				}
+				catch (SqlException _exception) {
+					Console.Instance.Write (DebugLevel.Critical, MessageLevel.LogError, _exception.ToString ());//write error
+					cmd.Dispose ();
+					return null;
+				}
 			}
 		}
 
 		public int SQLNonQuery(string _input){
-			Console.Instance.Write (DebugLevel.File, MessageLevel.Log, "SQL Non Query Out:" + _input);
-			try {
-				SqlCommand cmd = new SqlCommand(_input, _connection);
-				cmd.CommandTimeout = 300;
-				int _rowsChanged = 
-					cmd.ExecuteNonQuery ();
-				return _rowsChanged;
-				cmd.Dispose ();
-			}
-			catch (SqlException _exception) {
-				Debug.LogWarning(_exception.ToString());
-				return -1;
+			//-----------------------------------------------------------------
+			//For Migration only - TODO
+			//LocalIO.Instance.LargeFileWrite (_input, "query");
+			//-----------------------------------------------------------------
+			Console.Instance.Write (DebugLevel.File, MessageLevel.Log, "Sending SQL NonQuery of size:" + _input.Length);
+			using (SqlCommand cmd = new SqlCommand (_input, _connection)) {
+				float t = Time.realtimeSinceStartup;
+				ResetConnection ();
+				try {
+					cmd.CommandTimeout = 0;
+					int _rowsChanged = cmd.ExecuteNonQuery ();
+					cmd.Dispose ();
+					return _rowsChanged;//return the amount of rows(entried) affected
+				}
+				catch (SqlException _exception) {
+					Console.Instance.Write (DebugLevel.Critical, MessageLevel.LogError, _exception.ToString ());//write error
+					cmd.Dispose ();
+					return -1;//return -1 as this is generally row changed, -1 will represent a failure and then can be handled
+				}
 			}
 		}
 
 		public SqlDataReader SQLRequest(string _query){
 			Console.Instance.Write (DebugLevel.File, MessageLevel.Log, "SQL Request Query Out:" + _query);
+			SqlDataReader myReader = null;
+			SqlCommand    myCommand = new SqlCommand(_query, _connection);
+			ResetConnection ();
 			try
 			{
-				SqlDataReader myReader = null;
-				SqlCommand    myCommand = new SqlCommand(_query, _connection);
 				myReader = myCommand.ExecuteReader();
 				return myReader;
 			}
-			catch (Exception e)
+			catch (SqlException _exception)
 			{
-				Debug.Log(e.ToString());
+				Console.Instance.Write (DebugLevel.Critical, MessageLevel.LogError, _exception.ToString ());//write error
 				return null;
 			}
 		}
 
-		//Testing method TODO - delete me
-		[ContextMenu("DoThing")]
-		public void DoThing(){
-			//CreateTable ("Example", new string[]{"Hello", "Name", "Age"});
-			GetbaselineTimestamp ("Debug");
-		}
-
 		// ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		// Query data - TODO wip
+		// Query data
 		// ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-		//Check to see if table exists(not ready) TODO
-		public bool TableExists(string tableName){
-			string s = SQLQuery ("IF object_id('dbo." + tableName + "') is not null PRINT 'HERE'");
-			Debug.Log (s);
-			return true;
-		}
 
 		//Gets the timestamp in DateTime format from the server
 		public DateTime GetbaselineTimestamp(string suiteName){
 			DateTime timestamp = DateTime.MinValue;//make date time min, we check this on the other end since it is not nullable
 			SqlDataReader reader = SQLRequest ("SELECT * FROM SuiteBaselineTimestamps WHERE api='" + sysData.API + "' AND suiteName='" + suiteName + "' AND platform='" + sysData.Platform + "';");
+			//string t = "";
 			while(reader.Read ()){
-				timestamp = reader.GetDateTime (3);
+				timestamp = System.DateTime.Parse (reader.GetString (3));
+				//timestamp = reader.GetDateTime (3);
 			}
+			//timestamp = System.DateTime.Parse (t);//, new System.Globalization.CultureInfo("en-US", false));
 			reader.Close ();//close the reader after getting hte information
 			return timestamp;
 		}
@@ -177,77 +187,62 @@ namespace GraphicsTestFramework.SQL
 					tables.Add (reader.GetString (0));//add the table name to the list to pull from
 				}reader.Close ();
 			}
-			//string lastSuite = "";
-			//string lastTestType = "";
 			int n = 0;
 			foreach(string table in tables){
-				string suite = table.Substring (0, table.IndexOf ("_"));
-				string testType = table.Substring (table.IndexOf ("_") + 1, table.LastIndexOf ("_") - (suite.Length + 1));
+				string suite = table.Substring (0, table.IndexOf ("_"));//grab the suite from the table name
+				string testType = table.Substring (table.IndexOf ("_") + 1, table.LastIndexOf ("_") - (suite.Length + 1));//grab the test type from the table name
 				data.Add (new ResultsIOData());
 				data [n].suite = suite;
 				data [n].testType = testType;
-				SqlDataReader reader = SQLRequest (String.Format ("SELECT * FROM {0} WHERE platform='{1}' AND api='{2}'", table, platform, api));
-				//ResultsDataCommon dataCommon = new ResultsDataCommon ();
+				//This line controls how baselines are selected, right now only Platform and API are unique
+				SqlDataReader reader = SQLRequest (String.Format ("SELECT * FROM {0} WHERE platform='{1}' AND api='{2}'", table, platform, api));//Select the entries that match both platform and API
 				while(reader.Read ()){
 					ResultsIORow row = new ResultsIORow();
 					for(int i = 0; i < reader.FieldCount; i++){
-						if(data[n].fieldNames.Count != reader.FieldCount)
-							data[n].fieldNames.Add (reader.GetName (i));
-						row.resultsColumn.Add (reader.GetValue (i).ToString ());//add the table name to the list to pull from
+						if(data[n].fieldNames.Count != reader.FieldCount)//Only when processing the first row we collect column names until we have enough that match the count
+							data[n].fieldNames.Add (reader.GetName (i));//gets the names of the column
+						row.resultsColumn.Add (reader.GetValue (i).ToString ());//add the value
 					}
 					data[n].resultsRow.Add (row);
-				}reader.Close ();
+				}
+				if (data [n].fieldNames.Count == 0)
+					data.RemoveAt (n);
+				reader.Close ();
 				n++;
 			}
 			return data.ToArray ();
 		}
 
 		// ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-		// Sending data - TODO wip
+		// Sending data
 		// ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-		//Creates a new table named 'tableName' and with the columns in 'columns'
-		public void CreateTable(string tableName, string[] columns){
-			string _columns = CreateColumns (columns);//gets a string formatted with data types
-			string _stringRequest = SQLQuery("CREATE TABLE " + tableName + " (" + _columns + ");");
-		}
-
-		//Set the suite baseline timestamp
-		public void SetSuiteTimestamp(SuiteBaselineData SBD){
-			StringBuilder outputString = new StringBuilder();
+		//Set the suite baseline timestamp based of given SuiteBaselineData
+		public string SetSuiteTimestamp(SuiteBaselineData SBD){
 			string tableName = "SuiteBaselineTimestamps";
 			List<string> values = new List<string> (){ SBD.suiteName, SBD.platform, SBD.api, SBD.suiteTimestamp};
-			string[] fields = new string[]{ "suiteName", "platform", "api", "suiteTimestamp"};
+			string[] fields = new string[]{ "suiteName", "platform", "api", "suiteTimestamp"};//TODO - currently hardcoded, may be a better way, but unimportant right now
 			//condition string
 			string comparisonString = "platform='" + SBD.platform +
 				"' AND api='" + SBD.api + 
 				"' AND suiteName='" + SBD.suiteName +
 				"'";//the condition to match
-
-			outputString.Append ("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE BEGIN TRANSACTION ");//using transaction and isolation to avoid double write issues
-			outputString.AppendFormat ("IF EXISTS (select 1 from {0} WHERE {2}) BEGIN UPDATE {0} SET {3} WHERE {2} END ELSE INSERT INTO {0} VALUES ({1});", new object[]{tableName, ConvertToValues (values), comparisonString, ConvertToValues (values, fields)});
-			outputString.Append (" COMMIT TRANSACTION");
-			SQLQuery (outputString.ToString ());//send the query
+			//this next line formats a SQL query, this is called at the end of uploading a new baseline
+			return string.Format ("IF EXISTS (select 1 from {0} WHERE {2}) BEGIN UPDATE {0} SET {3} WHERE {2} END ELSE INSERT INTO {0} VALUES ({1});", new object[]{tableName, ConvertToValues (values), comparisonString, ConvertToValues (values, fields)});
 		}
 
 		//Creates an entry of either result or baseline(replaces UploadData from old system)
-		public IEnumerator AddEntry(ResultsIOData inputData, string tableName, int baseline, bool batch){
+		public IEnumerator AddEntry(ResultsIOData inputData, string tableName, int baseline){
 			Console.Instance.Write (DebugLevel.File, MessageLevel.Log, "Starting SQL query creation"); // Write to console
-			StringBuilder outputString = new StringBuilder();
-			CreateTable (tableName, inputData.fieldNames.ToArray ());
-			int rowNum = 0;
+			StringBuilder outputString = new StringBuilder ();
+			outputString.Append ("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE; BEGIN TRANSACTION; ");//using transaction and isolation to avoid double write issues
+			outputString.Append (TableCheck (tableName, inputData.fieldNames.ToArray ()));//adds a table check/creation
 
-			if(baseline == 1){//baseline sorting
-				//condition string
-				if(batch)
-					outputString.Append ("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE BEGIN TRANSACTION ");//using transaction and isolation to avoid double write issues
-
+			int rowNum = 0;//Row counter
+			if (baseline == 1) {//baseline sorting
 				foreach (ResultsIORow row in inputData.resultsRow) {
 					rowNum++;
 					//condition string
-					if(!batch)
-						outputString.Append ("SET TRANSACTION ISOLATION LEVEL SERIALIZABLE BEGIN TRANSACTION ");//using transaction and isolation to avoid double write issues
-
 					string comparisonString = "Platform='" + row.resultsColumn [5] +
 					                          "' AND API='" + row.resultsColumn [6] +
 					                          "' AND RenderPipe='" + row.resultsColumn [7] +
@@ -255,57 +250,40 @@ namespace GraphicsTestFramework.SQL
 					                          "' AND TestName='" + row.resultsColumn [9] +
 					                          "'";//the condition to match
 				
-					outputString.AppendFormat ("IF EXISTS (select 1 from {0} WHERE {2}) BEGIN UPDATE {0} SET {3} WHERE {2} END ELSE INSERT INTO {0} VALUES ({1});", new object[] {
-						tableName,
-						ConvertToValues (row.resultsColumn),
-						comparisonString,
-						ConvertToValues (row.resultsColumn, inputData.fieldNames.ToArray ())
-					});
+					outputString.AppendFormat (string.Format ("UPDATE {0} SET {1} WHERE {2};", tableName, ConvertToValues (row.resultsColumn, inputData.fieldNames.ToArray ()), comparisonString));//try update a row
+					outputString.Append ("IF @@ROWCOUNT = 0 BEGIN ");//if no rows were changed then....
+					outputString.AppendFormat (string.Format ("INSERT INTO {0} VALUES ({1});", tableName, ConvertToValues (row.resultsColumn)));//insert a new row
+					outputString.Append ("END ");
 
-					if (!batch) {
-						outputString.Append (" COMMIT TRANSACTION");
-						if (liveConnection == connectionStatus.Server)
-							SQLQuery (outputString.ToString ());//send the query
-						else
-							SQLQueryBackup.Insert (0, outputString.ToString ());//backup the query to send when connection is resumed
-					}
-
+					yield return null;
 				}
-
-				if(batch)
-					outputString.Append (" COMMIT TRANSACTION");
-			}else{//result sorting
-				foreach (ResultsIORow row in inputData.resultsRow) {
+				foreach (SuiteBaselineData SBD in ResultsIO.Instance._suiteBaselineData) {
+					outputString.Append (SetSuiteTimestamp (SBD));
+				}
+			} else {//result sorting
+				outputString.AppendFormat ("INSERT INTO {0} VALUES ", tableName);
+				int count = inputData.resultsRow.Count;
+				for (int i = 0; i < count; i++) {
 					rowNum++;
-					if(batch)
-						outputString.AppendFormat ("INSERT INTO {0} VALUES ({1});", tableName, ConvertToValues (row.resultsColumn));//using the insert function
-					else{
-						Debug.Log ("Sending row " + rowNum);
-						int num;
-						if (liveConnection == connectionStatus.Server) {
-							Debug.LogWarning(row.resultsColumn [row.resultsColumn.Count - 1].Length);// TODO - temp cell count
-							num = SQLNonQuery (string.Format ("INSERT INTO {0} VALUES ({1});", tableName, ConvertToValues (row.resultsColumn)));//send the query
-							if (num == -1) {
-								Debug.LogError ("Failed to upload 1st time");
-								num = SQLNonQuery (string.Format ("INSERT INTO {0} VALUES ({1});", tableName, ConvertToValues (row.resultsColumn)));//send the query
-								if(num == -1)
-									Debug.LogError ("Failed to upload 2nd time");
-							}
-						}
-						else
-							SQLQueryBackup.Insert (0, string.Format ("INSERT INTO {0} VALUES ({1});", tableName, ConvertToValues (row.resultsColumn)));//backup the query to send when connection is resumed
-					}
+					outputString.AppendFormat ("({0})", ConvertToValues (inputData.resultsRow [i].resultsColumn));
+					if (i < count - 1)
+						outputString.Append (",");
 					yield return null;
 				}
 			}
 
-			if (batch) {
-				if (liveConnection == connectionStatus.Server)
-					SQLQuery (outputString.ToString ());//send the query
-			else
-					SQLQueryBackup.Insert (0, outputString.ToString ());//backup the query to send when connection is resumed
-
-				yield return new WaitForEndOfFrame ();
+			outputString.Append (" COMMIT TRANSACTION");//close transaction
+			int num = 0;
+			num = SQLNonQuery (outputString.ToString ());//send the query
+			if (num == -1) {
+				QueryBackup qb = new QueryBackup();//create a new backup
+				qb.type = QueryType.NonQuery;//the type is nonquery
+				qb.query = outputString.ToString();//store the query
+				SQLNonQueryBackup.Add (qb);//store the backup
+				Debug.Log(outputString.ToString());
+				Console.Instance.Write (DebugLevel.File, MessageLevel.LogError, "Failed to upload, backing up"); // Write error to console
+			} else {
+				Console.Instance.Write (DebugLevel.File, MessageLevel.Log, "Uploaded " + num + " row(s) successfully"); // Write to console
 			}
 		}
 
@@ -328,12 +306,11 @@ namespace GraphicsTestFramework.SQL
 					break;
 				case NetworkReachability.ReachableViaCarrierDataNetwork:
 					Console.Instance.Write (DebugLevel.Key, MessageLevel.LogError, "Internet Connection Not Reliable, Please connect to Wi-fi");
-					liveConnection = connectionStatus.Mobile; // connection is not available
+					liveConnection = connectionStatus.Mobile; // connection is not really available
 					break;
 				case NetworkReachability.ReachableViaLocalAreaNetwork:
 					Console.Instance.Write (DebugLevel.Key, MessageLevel.Log, "Internet Connection Live");
-					liveConnection = connectionStatus.Internet; // connection is not available
-					OpenConnection (_connection);//try open a connection to the server
+					liveConnection = connectionStatus.Internet; // connection is available
 					break;
 				}
 			}
@@ -345,6 +322,12 @@ namespace GraphicsTestFramework.SQL
 			
 		}
 
+		//Check to see if table exists
+		public string TableCheck(string tableName, string[] columns){
+			string _columns = CreateColumns (columns);//gets a string formatted with data types
+			return string.Format ("IF object_id('dbo.{0}') is null CREATE TABLE {0} ({1});", tableName, _columns);//query to check for table, otherwise create one
+		}
+
 		//create column list for table creation, inclued data type
 		string CreateColumns(string[] columns){
 			StringBuilder sb = new StringBuilder ();
@@ -353,7 +336,7 @@ namespace GraphicsTestFramework.SQL
 				if(i < 12)
 					dataType = dataTypes[i];
 				else
-					dataType = "nvarchar(MAX)";
+					dataType = "varchar(MAX)";
 				
 				sb.Append (columns[i] + " " + dataType);
 				if (i != columns.Length - 1)
@@ -384,8 +367,15 @@ namespace GraphicsTestFramework.SQL
 			return sb.ToString ();
 		}
 
+		class QueryBackup{
+			public QueryType type;
+			public string query;
+		}
+
+		enum QueryType{ Query, NonQuery, QueryRequest};
+
 		//SQL data types for common
-		private string[] dataTypes = new string[]{"DATETIME",//datetime
+		private string[] dataTypes = new string[]{"DATETIME2",//datetime
 												"varchar(255)",//UnityVersion
 												"varchar(10)",//AppVersion
 												"varchar(255)",//OS

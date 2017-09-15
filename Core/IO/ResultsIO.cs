@@ -36,15 +36,11 @@ namespace GraphicsTestFramework
 			//setup local IO
 			if (LocalIO.Instance == null)
 				gameObject.AddComponent<LocalIO> ();
-			LocalIO.Instance.Init (sysData);
+			LocalIO.Instance.Init ();
 			//setup SQL IO
 			if (SQL.SQLIO.Instance == null)
 				gameObject.AddComponent<SQL.SQLIO> ();
 			SQL.SQLIO.Instance.Init (sysData);
-			//setup cloud IO - TODO - remove later
-			if (CloudIO.Instance == null)
-				gameObject.AddComponent<CloudIO> ();
-			CloudIO.Instance.Init (sysData);
 
 			if (!companionMode)
 				StartCoroutine (Init ());
@@ -83,6 +79,7 @@ namespace GraphicsTestFramework
 				Console.Instance.Write (DebugLevel.Critical, MessageLevel.LogWarning, "No suites loaded in SuiteManager, unable to continue"); // Write to console
 			} else {
 				foreach (string suiteName in suiteNames) {
+					Console.Instance.Write (DebugLevel.File, MessageLevel.Log, "Fetching baseline timestamps from cloud");
 					//Get timestamp for suite via SQL
 					DateTime dt = SQL.SQLIO.Instance.GetbaselineTimestamp (suiteName);
 					if(dt != DateTime.MinValue)//Min value is null(doesnt exist)
@@ -95,6 +92,7 @@ namespace GraphicsTestFramework
 					foreach(ResultsIOData rd in data){
 						StartCoroutine (LocalIO.Instance.WriteDataFiles (rd, fileType.Baseline));
 					}
+					yield return new WaitForSeconds (0.5f);
 					_suiteBaselineData = LocalIO.Instance.ReadLocalBaselines ();
 					BroadcastBaselineParsed ();
 				} else {
@@ -152,23 +150,24 @@ namespace GraphicsTestFramework
 			System.DateTime cloudTimestamp = System.DateTime.Parse (dateTime);
 
 			if (_suiteBaselineData.Count == 0) {//TODO - shouldnt add this to pull baselines as has issue with iOS trying to pull baselines for OSX
-				Console.Instance.Write (DebugLevel.Full, MessageLevel.Log, "Putting " + suiteName + " in the pull list"); // Write to console
+				Console.Instance.Write (DebugLevel.File, MessageLevel.Log, "Putting " + suiteName + " in the pull list"); // Write to console
 				suiteBaselinesPullList.Add (suiteName);
 			} else {
 				int matches = 0;
 				foreach (SuiteBaselineData SBD in _suiteBaselineData) {
 					if (SBD.suiteName == suiteName && SBD.platform == sysData.Platform && SBD.api == sysData.API) {
 						matches++;
-						System.DateTime localTimestamp = System.DateTime.Parse (SBD.suiteTimestamp);
+						System.DateTime localTimestamp = System.DateTime.ParseExact (SBD.suiteTimestamp, Common.dateTimeFormat, null);
+						Console.Instance.Write (DebugLevel.File, MessageLevel.Log, string.Format ("Comparing cloud time {0} vs local time {1}", cloudTimestamp, localTimestamp));
 
 						int timeDiff = cloudTimestamp.CompareTo (localTimestamp);
 						if (timeDiff < 0f) {
-							Console.Instance.Write (DebugLevel.Full, MessageLevel.Log, "Cloud Timestamp is old"); // Write to console
+							Console.Instance.Write (DebugLevel.File, MessageLevel.Log, "Cloud Timestamp is old"); // Write to console
 						} else if (timeDiff > 0f) {
-							Console.Instance.Write (DebugLevel.Full, MessageLevel.Log, "Cloud Timestamp is newer, adding " + suiteName + " to pull list"); // Write to console
+							Console.Instance.Write (DebugLevel.File, MessageLevel.Log, "Cloud Timestamp is newer, adding " + suiteName + " to pull list"); // Write to console
 							suiteBaselinesPullList.Add (suiteName);
 						} else if (timeDiff == 0f) {
-							Console.Instance.Write (DebugLevel.Full, MessageLevel.Log, "Cloud Timestamp is the same"); // Write to console
+							Console.Instance.Write (DebugLevel.File, MessageLevel.Log, "Cloud Timestamp is the same"); // Write to console
 						}
 					}
 				}
@@ -202,12 +201,12 @@ namespace GraphicsTestFramework
 				ft = fileType.Baseline;
 				//Cloud upload for baseline
 				string sheetName = suiteName + "_" + testType + "_Baseline";
-				StartCoroutine (SQL.SQLIO.Instance.AddEntry (inputData, sheetName, 1, false));
+				StartCoroutine (SQL.SQLIO.Instance.AddEntry (inputData, sheetName, 1));
 			} else {
 				ft = fileType.Result;
 				//cloud upload for results
 				string sheetName = suiteName + "_" + testType + "_Results";
-				StartCoroutine (SQL.SQLIO.Instance.AddEntry (inputData, sheetName, 0, false));
+				StartCoroutine (SQL.SQLIO.Instance.AddEntry (inputData, sheetName, 0));
 			}
 
 			if (inputData.resultsRow [0] != null) {
@@ -317,11 +316,11 @@ namespace GraphicsTestFramework
 				newSBD.pipeline = renderPipe;
 				newSBD.platform = sysData.Platform;
 				newSBD.suiteName = suite;
-				newSBD.suiteTimestamp = System.DateTime.UtcNow.ToString ();
+				newSBD.suiteTimestamp = System.DateTime.UtcNow.ToString (Common.dateTimeFormat);
 				_suiteBaselineData.Add (newSBD);
 				suiteBaselineDataIndex = _suiteBaselineData.Count - 1;
 			}
-			_suiteBaselineData [suiteBaselineDataIndex].suiteTimestamp = System.DateTime.UtcNow.ToString ();
+			_suiteBaselineData [suiteBaselineDataIndex].suiteTimestamp = System.DateTime.UtcNow.ToString (Common.dateTimeFormat);
 			baselineIndex = suiteBaselineDataIndex;
 		}
 
@@ -348,7 +347,7 @@ namespace GraphicsTestFramework
 			if (check == -1) {
 				_suiteBaselineData [suiteIndex]._suiteData.Add (sData);
 			}
-			_suiteBaselineData [suiteIndex].suiteTimestamp = System.DateTime.UtcNow.ToString ();
+			_suiteBaselineData [suiteIndex].suiteTimestamp = System.DateTime.UtcNow.ToString (Common.dateTimeFormat);
 		}
 
 		/// ------------------------------------------------------------------------------------------------------------------------------------------------------------------------

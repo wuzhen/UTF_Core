@@ -166,7 +166,7 @@ public class CloudImagesConnector : MonoBehaviour
             yield return null;
         }
 
-        if (www.isError)
+        if (www.isNetworkError)
         {
             ProcessResponse(MSG_CONN_ERR + www.error, elapsedTime.ToString());
             yield break;

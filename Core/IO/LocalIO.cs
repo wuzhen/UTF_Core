@@ -18,8 +18,6 @@ namespace GraphicsTestFramework
 			}
 		}
 
-		//SystemData
-		private SystemData sysData;
 		//Data path for local files
 		private string dataPath;
 		//prefix for local baseline files
@@ -29,15 +27,13 @@ namespace GraphicsTestFramework
 		//Total disk space used by local files
 		public long spaceUsed;
 
-		public void Init (SystemData systemData)
+		public void Init ()
 		{
 			#if UNITY_EDITOR
 			dataPath = (Application.dataPath).Substring (0, Application.dataPath.Length - 6) + "EditorResults";
 			#else
 			dataPath = Application.persistentDataPath;
 			#endif
-
-			sysData = systemData;
 
 			if (!Directory.Exists (dataPath)) //directory check
 				Directory.CreateDirectory (dataPath);
@@ -63,7 +59,6 @@ namespace GraphicsTestFramework
 		{
 			string suite = resultIOdata.suite;
 			string testType = resultIOdata.testType;
-
 			ResultsDataCommon common = ResultsIO.Instance.GenerateRDC (resultIOdata.resultsRow [0].resultsColumn.ToArray ());
 			string[] fields = resultIOdata.fieldNames.ToArray ();
 			Console.Instance.Write(DebugLevel.File, MessageLevel.Log, "Beginning to write data for suite " + suite + " of the testType " + testType + " which contains " + resultIOdata.resultsRow.Count + " files to write"); // Write to console
@@ -121,13 +116,13 @@ namespace GraphicsTestFramework
 				string fileName = "SuiteData_" + SBD.suiteName + "_" + SBD.platform + "_" + SBD.api + "_" + SBD.pipeline + ".txt";
 
 				string[] newFileContent = new string[SBD._suiteData.Count + 1];
-				newFileContent[0] = System.DateTime.UtcNow.ToString ();
+				newFileContent[0] = System.DateTime.UtcNow.ToString (Common.dateTimeFormat);
 
 				for(int i = 1; i <= SBD._suiteData.Count; i++){
 					newFileContent[i] = JsonUtility.ToJson (SBD._suiteData[i-1]);//TODO - check if this is how we want it
 				}
 				File.WriteAllLines (filePath + "/" + fileName, newFileContent);
-				SQL.SQLIO.Instance.SetSuiteTimestamp (SBD);// SQL update
+				//SQL.SQLIO.Instance.SetSuiteTimestamp (SBD);// SQL update
 				yield return null;
 			}
 		}
@@ -138,6 +133,7 @@ namespace GraphicsTestFramework
 		/// <param name="value">Contents to write.</param>
 		/// <param name="key">Key for file(also file name).</param>
 		public void LargeFileWrite(string value, string key){
+			Console.Instance.Write (DebugLevel.File, MessageLevel.Log, "Writing large file to disk named " + key + "");
 			string filePath = dataPath + "/EXTERNAL_DATA";
 			string fileName = key + ".txt";
 			if (!Directory.Exists (filePath))

@@ -85,7 +85,7 @@ public class CloudConnector : MonoBehaviour
 			yield return null;
 		}
 		
-		if (www.isError)
+		if (www.isNetworkError)
 		{
 			CloudConnectorCore.ProcessResponse(CloudConnectorCore.MSG_CONN_ERR + "Connection error after " + elapsedTime.ToString() + " seconds: " + www.error, elapsedTime);
 			yield break;

@@ -60,6 +60,9 @@ namespace GraphicsTestFramework
             {FrameResolution.FullHD , new Vector2(1920, 1080) },
         };
 
+		// Date time format string
+		public static string dateTimeFormat = "yyyy-MM-dd\\THH:mm:ss\\Z";
+
         // Unity Versions
         public static string[] unityVersionList = new string[4]
         {
@@ -77,7 +80,7 @@ namespace GraphicsTestFramework
         {
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Getting common results data"); // Write to console
             ResultsDataCommon output = new ResultsDataCommon(); // Create new class instance
-			output.DateTime = Master.Instance.GetSystemTime ().ToString (); // Get SystemTime from Master
+			output.DateTime = Master.Instance.GetSystemTime ().ToString (dateTimeFormat); // Get SystemTime from Master
             SystemData systemData = Master.Instance.GetSystemData(); // Get SystemData from Master
             output.UnityVersion = systemData.UnityVersion; // Extract from SystemData
             output.AppVersion = systemData.AppVersion; // Extract from SystemData
