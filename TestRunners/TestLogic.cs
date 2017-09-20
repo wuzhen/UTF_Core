@@ -335,8 +335,7 @@ namespace GraphicsTestFramework
         public ResultsIOData SerializeResults()
         {
             ResultsIOData output = new ResultsIOData();
-            //for (int r = 0; r < 2; r++)
-                output.resultsRow.Add(new ResultsIORow());
+            output.resultsRow.Add(new ResultsIORow());
             BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
             FieldInfo[] commonFields = typeof(ResultsDataCommon).GetFields(bindingFlags);
             FieldInfo[] customFields = results.GetFields(bindingFlags);

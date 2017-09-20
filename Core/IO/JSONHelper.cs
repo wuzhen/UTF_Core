@@ -117,7 +117,6 @@ namespace GraphicsTestFramework
 				string[] splitData = JSONToStringArray (inputData);
 				ResultsIOData data = new ResultsIOData ();//new ResultsIOData
 				ResultsIORow row = new ResultsIORow ();
-				//row.commonResultsIOData = ArrayToResultsDataCommon (splitData);
 				data.resultsRow.Add (row);
 
 				for (int i = 0; i < splitData.Length; i++) {
@@ -147,7 +146,6 @@ namespace GraphicsTestFramework
 
 				for (int a = 0; a < inputData.Length; a++) {
 					string[] splitData = JSONToStringArray (inputData [a]);
-					//ResultsDataCommon RDC = ArrayToResultsDataCommon (splitData);
 					for (int i = 0; i < splitData.Length; i++) {
 						data.resultsRow.Add (new ResultsIORow ());
 						int cur = i;
@@ -162,7 +160,6 @@ namespace GraphicsTestFramework
 							}
 						}
 					}
-					//data.resultsRow [a].commonResultsIOData = RDC;
 				}
 				return data;
 			} else
