@@ -26,15 +26,15 @@ namespace GraphicsTestFramework
 		void OnEnable ()
 		{
 			// Suscribe for catching cloud responses.
-			CloudConnectorCore.processedResponseCallback.AddListener (ParseCloudData);
-			CloudImagesConnector.Instance.responseCallback.AddListener (ParseData);
+			//CloudConnectorCore.processedResponseCallback.AddListener (ParseCloudData);
+			//CloudImagesConnector.Instance.responseCallback.AddListener (ParseData);
 		}
 
 		void OnDisable ()
 		{
 			// Remove listeners.
-			CloudConnectorCore.processedResponseCallback.RemoveListener (ParseCloudData);
-			CloudImagesConnector.Instance.responseCallback.RemoveListener (ParseData);
+			//CloudConnectorCore.processedResponseCallback.RemoveListener (ParseCloudData);
+			//CloudImagesConnector.Instance.responseCallback.RemoveListener (ParseData);
 
 		}
 
@@ -186,7 +186,7 @@ namespace GraphicsTestFramework
 		/// </summary>
 		public void FetchCloudResults (string suiteName, string testType, ResultsDataCommon commonData)
 		{
-			string tableName = suiteName + "_" + testType + "_Results";
+			//string tableName = suiteName + "_" + testType + "_Results";
 
 		}
 
@@ -210,14 +210,13 @@ namespace GraphicsTestFramework
 		/// </summary>
 		public void ParseCloudData (CloudConnectorCore.QueryType query, List<string> objTypeNames, List<string> jsonData)
 		{
-
 			if (query == CloudConnectorCore.QueryType.tableExists) {
 				Console.Instance.Write (DebugLevel.Full, MessageLevel.Log, jsonData [0]); // Write to console
 			}
 
-			if (query == CloudConnectorCore.QueryType.getBaselineData) {
+			/*if (query == CloudConnectorCore.QueryType.getBaselineData) {
 				StartCoroutine (LocalIO.Instance.CreateLocalFromCloud (objTypeNames, jsonData));
-			}
+			}*/
 
 			if (query == CloudConnectorCore.QueryType.getObjects) {
 				if (objTypeNames [0] == "SuiteBaselineTimestamps") {
@@ -237,7 +236,7 @@ namespace GraphicsTestFramework
 		/// <summary>
 		/// Parses the data from Cloud image connector.
 		/// </summary>
-		void ParseData (string responseType, string response)
+		/*void ParseData (string responseType, string response)
 		{
 			if (responseType == "DATA_") {
 				//process cloud data coming down
@@ -245,7 +244,7 @@ namespace GraphicsTestFramework
 				string name = response.Remove (response.IndexOf ("_FILE_NAME_")).TrimEnd ((".png").ToCharArray ());
 				LocalIO.Instance.LargeFileWrite (value, name);
 			}
-		}
+		}*/
 
 		/// ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		/// Utilities - TODO wip

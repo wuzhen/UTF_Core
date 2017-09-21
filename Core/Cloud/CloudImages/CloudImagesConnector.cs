@@ -53,6 +53,7 @@ public class CloudImagesConnector : MonoBehaviour
     private const string MSG_TXT_SAVED = "DATA_SAVED";
     private const string MSG_IMG_SENT = "IMAGE_";
     private const string MSG_TXT_SENT = "DATA_";
+	private const string MSG_MTXT_SENT = "MDATA_";
     private const string MSG_NAME_SEPARATOR = "_FILE_NAME_";
 
     private static List<WWWForm> FormsToSend = new List<WWWForm>();
@@ -94,9 +95,27 @@ public class CloudImagesConnector : MonoBehaviour
         form.AddField("rtype", "txtRequest");
         form.AddField("name", name + ".png");
 
-        FormsToSend.Add(form);
-        //Instance.StartCoroutine(Instance.ExecuteRequest(form));
+        //FormsToSend.Add(form);
+        Instance.StartCoroutine(Instance.ExecuteRequest(form));
     }
+
+	public static void RequestMultiTxt(string[] names)
+	{
+		Debug.Log ("fetching " + names.Length + " images");
+		isWaiting = true;
+		responseCount++;
+		WWWForm form = new WWWForm();
+		form.AddField("rtype", "mtxtRequest");
+		form.AddField ("num", names.Length.ToString ());
+		int i = 0;
+
+		foreach (string n in names) {
+			form.AddField ("name" + i.ToString (), names[i] + ".png");
+			i++;
+		}
+
+		Instance.StartCoroutine(Instance.ExecuteRequest(form));
+	}
 
     public static void PersistImage(Texture2D texture, string name)
     {
@@ -147,7 +166,7 @@ public class CloudImagesConnector : MonoBehaviour
             yield return null;
         }
 
-        if (www.isError)
+        if (www.isNetworkError)
         {
             ProcessResponse(MSG_CONN_ERR + www.error, elapsedTime.ToString());
             yield break;
@@ -197,6 +216,13 @@ public class CloudImagesConnector : MonoBehaviour
             response = response.TrimStart(MSG_TXT_SENT.ToCharArray());
             UpdateStatus("Txt successfully retrieved." + response);
         }
+
+		if (response.StartsWith(MSG_MTXT_SENT))
+		{
+			responseType = MSG_MTXT_SENT;
+			response = response.TrimStart(MSG_MTXT_SENT.ToCharArray());
+			UpdateStatus("Txts successfully retrieved." + response);
+		}
 
         if (response.StartsWith(MSG_CONN_ERR))
         {
