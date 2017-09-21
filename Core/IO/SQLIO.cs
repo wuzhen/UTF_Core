@@ -168,7 +168,7 @@ namespace GraphicsTestFramework.SQL
 			SqlDataReader reader = SQLRequest ("SELECT * FROM SuiteBaselineTimestamps WHERE api='" + sysData.API + "' AND suiteName='" + suiteName + "' AND platform='" + sysData.Platform + "';");
 			//string t = "";
 			while(reader.Read ()){
-				timestamp = System.DateTime.Parse (reader.GetString (3));
+				timestamp = System.DateTime.Parse (reader.GetDateTime (3).ToString());
 				//timestamp = reader.GetDateTime (3);
 			}
 			//timestamp = System.DateTime.Parse (t);//, new System.Globalization.CultureInfo("en-US", false));
