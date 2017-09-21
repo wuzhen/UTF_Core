@@ -285,6 +285,7 @@ namespace GraphicsTestFramework
         // Called by the TestViewer when restarting the current test
         public void RestartTest()
         {
+            Resources.UnloadUnusedAssets(); // Cleanup previous textures
             SetupResultsStructs(); // Update common
             TestPreProcess(); // Restart
         }
@@ -562,6 +563,7 @@ namespace GraphicsTestFramework
         // Wait for stable framerate
         IEnumerator WaitForStableFramerate()
         {
+            stableFramerateParameters.frameTimes.Clear(); // Clear the list
             while (stableFramerateParameters.frameTimes.Count < stableFramerateParameters.frameCount) // Still building frame list
             {
                 stableFramerateParameters.frameTimes.Add(TimestampLight()); // Add timestamp

@@ -109,7 +109,7 @@ namespace GraphicsTestFramework
             if (TestStructure.Instance.CheckForBaselines()) // Baselines exist
             {
                 GenerateList(); // Generate list
-                for(int su = 0; su < list.entryList.Count; su++) // Iterate suites
+                for (int su = 0; su < list.entryList.Count; su++) // Iterate suites
                 {
                     list.entryList[su].GetComponent<MenuListEntry>().ChangeSelection(1); // Select all
                 }
@@ -128,16 +128,16 @@ namespace GraphicsTestFramework
         // First time initialize
         void Initialize()
         {
-            ResultsViewer.Instance.Setup(); // Setup results viewer
+            //ResultsViewer.Instance.Setup(); // Setup results viewer
             UpdateMenu(); // Update menu
         }
 
         // Enable/disable menu
         public void SetMenuState(bool state)
         {
-            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Setting menu state to "+state); // Write to console
+            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Setting menu state to " + state); // Write to console
             menuParent.SetActive(state); // Set active
-            if(state) // If enabling
+            if (state) // If enabling
                 UpdateMenu(); // Update
         }
 
@@ -156,13 +156,23 @@ namespace GraphicsTestFramework
             }
             else // Any or all baselines are missing
                 GenerateResolveList(); // Generate a resolve list
+            RefreshMenu(); // Refresh menu - WORKAROUND
+        }
+
+        // TODO - Workaround for ScrollRect update bug in 2017.1+
+        // Remove when bug is fixed
+        void RefreshMenu()
+        {
+            Canvas canvas = menuParent.GetComponent<Canvas>();
+            canvas.enabled = false;
+            canvas.enabled = true;
         }
 
         // ------------------------------------------------------------------------------------
         // Resolve Menu
         // - Overrides main menu
         // - Used for resolving problems with test structure (Missing baselines)
-        
+
         // Generate a resolve list
         void GenerateResolveList()
         {
@@ -177,16 +187,16 @@ namespace GraphicsTestFramework
         {
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Enabling resolve menu"); // Write to console
             resolveWindow.parent.SetActive(true); // Enable resolve menu
-            resolveWindow.message.text = TestRunner.Instance.runner.tests.Count+" baseline files are missing. This situation must be resolved before continuing. Manually resolve baselines for the listed tests."; // Set text
+            resolveWindow.message.text = TestRunner.Instance.runner.tests.Count + " baseline files are missing. This situation must be resolved before continuing. Manually resolve baselines for the listed tests."; // Set text
             float entryHeight = 0; // Reset
-            for(int i = 0; i < TestRunner.Instance.runner.tests.Count; i++) // Iterate items to resolve
+            for (int i = 0; i < TestRunner.Instance.runner.tests.Count; i++) // Iterate items to resolve
             {
                 TestEntry currentTest = TestRunner.Instance.runner.tests[i]; // Get data
                 GameObject go = Instantiate(listEntryPrefab, resolveWindow.contentRect, false); // Create instance
                 RectTransform goRect = go.GetComponent<RectTransform>(); // Get rect
                 goRect.anchoredPosition = new Vector2(0, entryHeight); // Set position
                 MenuResolveListEntry newEntry = go.GetComponent<MenuResolveListEntry>(); // Get script reference
-                newEntry.Setup(currentTest.suiteName+" - "+currentTest.typeName, currentTest.groupName+" - "+currentTest.testName); // Setup
+                newEntry.Setup(currentTest.suiteName + " - " + currentTest.typeName, currentTest.groupName + " - " + currentTest.testName); // Setup
                 entryHeight -= goRect.sizeDelta.y; // Add to position tracker
             }
             resolveWindow.contentRect.sizeDelta = new Vector2(resolveWindow.contentRect.sizeDelta.x, -entryHeight); // Set content rect size
@@ -205,7 +215,7 @@ namespace GraphicsTestFramework
         {
             Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Cleaning up resolve menu"); // Write to console
             int listCount = resolveWindow.contentRect.transform.childCount; // Get resolve list entries
-            for(int i = 0; i < listCount; i++) // Iterate
+            for (int i = 0; i < listCount; i++) // Iterate
                 Destroy(resolveWindow.contentRect.GetChild(i).gameObject); // Destroy them
             resolveWindow.parent.SetActive(false); // Disable the window
         }
@@ -237,6 +247,7 @@ namespace GraphicsTestFramework
             }
             else
                 Console.Instance.Write(DebugLevel.Critical, MessageLevel.Log, "Failed to generate list"); // Write to console
+            RefreshMenu();
         }
 
         // Clear current list
@@ -360,7 +371,7 @@ namespace GraphicsTestFramework
         // Get the name of a level for breadcrumb clearing
         public string GetLevelName(int index)
         {
-            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Getting name for level at index "+index); // Write to console
+            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Getting name for level at index " + index); // Write to console
             switch (index) // Switch on level index
             {
                 case 0:
@@ -378,7 +389,7 @@ namespace GraphicsTestFramework
         // Get a menu color from the palette
         public Color GetColor(int index)
         {
-            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Getting menu color for index "+index); // Write to console
+            Console.Instance.Write(DebugLevel.Full, MessageLevel.Log, "Getting menu color for index " + index); // Write to console
             return colors[index]; // Return requested color
         }
 

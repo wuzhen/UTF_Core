@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Text;
 
 namespace CoreUtilities
 {
@@ -11,10 +12,12 @@ namespace CoreUtilities
 		{
 			char[] array = input.ToCharArray ();
 			string output = "";
-			for (int i = 0; i < array.Length; i++) {
-				output += (int)array [i];
+			for (int i = 0; i < array.Length; i++)
+            {
+                if(char.IsLetter(array[i]) || char.IsDigit(array[i]))
+                    output += (int)array[i];
 			}
-			return output;
-		}
+            return output;
+        }
 	}
 }

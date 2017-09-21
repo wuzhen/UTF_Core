@@ -38,21 +38,38 @@ namespace GraphicsTestFramework
             return settings.suiteList[inputEntry.suiteIndex].groups[inputEntry.groupIndex].tests[inputEntry.testIndex]; // Return requested
         }
 
-        // Get the settings object
+        // Get the Settings object
         public static Settings GetSettings()
         {
             Settings[] settingsArray = Resources.LoadAll<Settings>(""); // Find all suite lists
             if (settingsArray.Length == 0) // If no suite list found
             {
 #if UNITY_EDITOR
-                    return GenerateSettings(); // Create one
+                return GenerateSettings(); // Create one
 #else
-                Console.Instance.Write(DebugLevel.Critical, MessageLevel.LogError, "No Suite List found. Aborting."); // Write to console
+                Console.Instance.Write(DebugLevel.Critical, MessageLevel.LogError, "No Settings object found. Aborting."); // Write to console
                 return null;
 #endif
             }
             else
                 return settingsArray[0]; // Return suite list
+        }
+
+        // Set the Settings object
+        public static void SetSettings(Settings input)
+        {
+            Settings[] settingsArray = Resources.LoadAll<Settings>(""); // Find all suite lists
+            if (settingsArray.Length == 0) // If no suite list found
+            {
+                Console.Instance.Write(DebugLevel.Critical, MessageLevel.LogError, "No Settings object found. Aborting."); // Write to console
+            }
+            else
+            {
+                settingsArray[0] = input;
+#if(UNITY_EDITOR)
+                UnityEditor.EditorUtility.SetDirty(settingsArray[0]);
+#endif
+            }
         }
 
         // ------------------------------------------------------------------------------------
@@ -67,7 +84,7 @@ namespace GraphicsTestFramework
             Settings settings = GetSettings(); //Get the suite list
             settings.suiteList.Clear(); // Clear suites list
             Suite[] foundSuites = Resources.LoadAll<Suite>(""); // Load all Suite scriptable objects into array
-            for(int i = 0; i < foundSuites.Length; i++)
+            for (int i = 0; i < foundSuites.Length; i++)
             {
                 if (debug && foundSuites[i].isDebugSuite || !debug && !foundSuites[i].isDebugSuite)
                     settings.suiteList.Add(foundSuites[i]);
@@ -82,6 +99,7 @@ namespace GraphicsTestFramework
                     for (int te = 0; te < settings.suiteList[su].groups[gr].tests.Count; te++) // Iterate tests on the group
                     {
                         settings.suiteList[su].groups[gr].tests[te].scenePath = UnityEditor.AssetDatabase.GetAssetPath(settings.suiteList[su].groups[gr].tests[te].scene);
+                        UnityEditor.EditorUtility.SetDirty(settings.suiteList[su]);
                         UnityEditor.EditorBuildSettingsScene scene = new UnityEditor.EditorBuildSettingsScene(settings.suiteList[su].groups[gr].tests[te].scenePath, true); // Create new build settings scene from asset path
                         if (!FindDuplicateScene(buildSettingsScenes, settings.suiteList[su].groups[gr].tests[te].scenePath)) // If no duplicate scene found
                             buildSettingsScenes.Add(scene); // Add to build settings scenes list
@@ -133,8 +151,6 @@ namespace GraphicsTestFramework
             }
             return false; // No duplicate. Return false
         }
-
 #endif
-
     }
 }

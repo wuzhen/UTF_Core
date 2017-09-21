@@ -68,11 +68,14 @@ namespace GraphicsTestFramework
         // ------------------------------------------------------------------------------------
         // ResultsViewer
 
+        FrameComparisonLogic.ComparisonData comparisonData;
+
         // Setup the results context object
         public override void SetupResultsContext(ResultsContext context, ResultsIOData inputData)
         {
+            CleanupResultsContext();
             FrameComparisonResults inputResults = (FrameComparisonResults)logic.DeserializeResults(inputData); // Deserialize input and cast to typed results
-            FrameComparisonLogic.ComparisonData comparisonData = (FrameComparisonLogic.ComparisonData)logic.GetComparisonData(inputResults); // Get comparison data
+            comparisonData = (FrameComparisonLogic.ComparisonData)logic.GetComparisonData(inputResults); // Get comparison data
             buttons = new Button[3]; // Create button array
             for(int i = 0; i < buttons.Length; i++) // Iterate
             { 
@@ -106,6 +109,17 @@ namespace GraphicsTestFramework
                     resultsContextImage.material = null; // Null material
                     resultsContextImage.texture = comparisonData.baselineTex; // Set texture
                     break;
+            }
+        }
+
+        public void CleanupResultsContext()
+        {
+            comparisonData = null;
+            if(resultsContextImage)
+            {
+                Texture tex = resultsContextImage.texture;
+                if (tex)
+                    Destroy(tex);
             }
         }
 

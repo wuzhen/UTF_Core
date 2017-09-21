@@ -65,7 +65,7 @@ namespace GraphicsTestFramework
 			foreach (string key in inputData.Keys) {
 				string value = inputData [key];
 				//strip out large strings
-				if (value.Length > 100) {
+				if (value.Length > 256) {
 					string keyCode = inputData ["DateTime"] + inputData ["GroupName"] + inputData ["TestName"];
 					string UID = CloudIO.Instance.ConvertLargeEntry (value, keyCode);
 					LocalIO.Instance.LargeFileWrite (value, UID);

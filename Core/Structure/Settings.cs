@@ -12,6 +12,7 @@ namespace GraphicsTestFramework
     public class Settings : ScriptableObject
     {
         [SerializeField]
+        public string buildNameOverride;
         [HideInInspector] public string unityVersion;
         [HideInInspector] public string unityBranch;
         [Header("Defines")]
