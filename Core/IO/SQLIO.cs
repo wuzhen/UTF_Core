@@ -25,7 +25,7 @@ namespace GraphicsTestFramework.SQL
 		private string _conString = @"user id=UTF_admin;" +
 		                            @"password=chicken22;data source=10.44.41.115;" +
 		                            @"database=UTF_testbed;" +
-									@"timeout=600;" +
+									@"timeout=30;" +
 		                            @"pooling=true";
 		private SqlConnection _connection = null;
 
@@ -46,7 +46,6 @@ namespace GraphicsTestFramework.SQL
 		// ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 		void Start(){
-			System.Net.ServicePointManager.Expect100Continue = false;
 			InvokeRepeating ("CheckConnection", 0f, 5f); //Invoke network check
 		}
 
