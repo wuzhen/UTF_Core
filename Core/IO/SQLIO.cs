@@ -46,6 +46,7 @@ namespace GraphicsTestFramework.SQL
 		// ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 		void Start(){
+			System.Net.ServicePointManager.Expect100Continue = false;
 			InvokeRepeating ("CheckConnection", 0f, 5f); //Invoke network check
 		}
 
