@@ -105,9 +105,9 @@ namespace GraphicsTestFramework
                         return;
                     }
                     else if (settings.suiteList.Count > 1)
-                        productName = "UTF-Various";
+                        productName = "UTFVarious";
                     else
-                        productName = "UTF-" + settings.suiteList[0].suiteName;
+                        productName = "UTF" + settings.suiteList[0].suiteName;
                 }
             }
             else
